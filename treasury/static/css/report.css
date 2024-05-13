@@ -1,0 +1,77 @@
+p {
+    font-size: 9px;
+    font-family: sans-serif;
+    margin-top: 1px;
+    margin-right: 1px;
+    margin-bottom: 1px;
+    margin-left: 1px;
+    font-weight: normal;
+}
+p.header {
+  font-size: 13px;
+  text-align: center;
+  font-weight: bold !important;
+}
+p.sub-header {
+  font-size: 8px;
+  text-align: center;
+  text-transform: uppercase;
+}
+p.header-text {
+  font-size: 7px;
+  text-align: center;
+  font-weight: bold ;
+}
+p.item-text {
+  font-size: 13px;
+  text-align:left ;
+  font-weight: normal ;
+}
+p.item-text-bold {
+  font-size: 13px;
+  text-align:left ;
+  font-weight: bold ;
+}
+p.item-text-green {
+  font-size: 13px;
+  font-weight: normal;
+  color: green;
+}
+p.item-text-red {
+  font-size: 13px;
+  font-weight: normal ;
+  color: darkred;
+}
+table {
+  border: 1px solid black;
+  width:100%;
+  border-collapse: collapse;
+}
+th {
+  border: 1px solid black;
+}
+
+th.description {
+  width:60%;
+}
+td {
+  border: 1px solid black;
+}
+row {
+
+}
+p.positive {
+  color: green;
+}
+p.negative {
+  color:red;
+}
+@page {
+    @top-right{
+        font-size: 9px;
+        font-family: sans-serif;
+        content: "Página " counter(page) " de " counter(pages);
+    }
+    margin: 1cm 2cm 2cm 1cm;
+    size: A4;
+}

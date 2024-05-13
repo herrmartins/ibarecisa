@@ -1,0 +1,30 @@
+{% extends 'core/base.html' %} {% block content %}
+{% load static %}
+
+<div class="container">
+  <div class="container text-center">
+    <p class="fs-3 fw-light">Modelos de Atas</p>
+  </div>
+  <div class="container">
+    <div class="col-12 mx-auto">
+      <div class="d-flex justify-content-center">
+          <a href="{% url 'secretarial:template-form' %}" class="btn btn-primary">Criar Modelo de Ata</a>
+      </div>
+      {% if templates %}
+      {% for t in templates %}
+      <div class="row">
+        <div class="col-3">
+          {{t.meeting_date}}<br>
+          <a href="{% url 'secretarial:minute-from-template-view' t.id %}" class="btn btn-primary">Criar ata</a>
+        </div>
+        <div class="col-9">
+          {{t.body|safe}}
+        </div>
+      </div>
+      {% endfor %}
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}

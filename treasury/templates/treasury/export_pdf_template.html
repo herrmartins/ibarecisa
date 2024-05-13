@@ -1,0 +1,60 @@
+{% load index %}
+{% load extras %}
+{% load static %}
+<!DOCTYPE html>
+<html>
+    <head>
+        <!-- Use "static" template tag and configure STATIC_URL as usual. -->
+        <link rel="stylesheet" href="{% static 'css/report.css' %}" />
+    </head>
+    <body>
+        <div class="card-body">
+            <div class="container">
+                <p class="header">{{church_info.name}} - {{church_info.CNPJ}}</p>
+                <p class="sub-header">MOVIMENTO DO MÊS DE {{month|month_name}} de {{year}}</p>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col" style="width: 10%"><p class="header-text">Data</p></th>
+                            <th scope="col" style="width: 60%"><p class="header-text">Descrição</p></th>
+                            <th scope="col" style="width: 10%"><p class="header-text">Entrada</p></th>
+                            <th scope="col" style="width: 10%"><p class="header-text">Saída</p></th>
+                            <th scope="col"><p class="header-text">Subtotal</p></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th scope="row"><p>{{last_month_date|date:"d/m/Y"}}</p></th>
+                            <th><p>Saldo Anterior</p></th>
+                            <th></th>
+                            <th></th>
+                            <th><p>R$ {{previous_balance}}</p></th>
+                        </tr>
+                        {% for fe in finance_entries %}
+                            <tr>
+                                <th scope="row"><p>{{fe.date|date:"d/m/Y"}}</p></th>
+                                <td><p>{{fe.description}} | {{fe.category}}</p></td>
+                                {% if fe.is_positive %}
+                                    <td><p class="positive">R$ {{fe.amount}}</p></td>
+                                    <td></td>
+                                {% else %}
+                                    <td></td>
+                                    <td><p class="negative">R$ {{fe.amount}}</p></td>
+                                {% endif %}
+                                <td><p>R$ {{ subtotal|index:forloop.counter0 }}</p></td>
+                            </tr>
+                        {% endfor %}
+                        <td><p>Total:</p></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td><p>R$ {{total}}</p></td>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+</body>
+</html>

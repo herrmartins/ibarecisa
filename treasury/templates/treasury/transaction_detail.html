@@ -1,0 +1,45 @@
+{% extends 'core/base.html' %}
+{% load static%}
+
+{% block content %}
+
+<div class="container text-center">
+    <p class="fs-3 fw-light">Detalhes da transação</p>
+</div>
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{{ transaction.description }} - {{ transaction.category }}</h5>
+                    <p class="card-text">
+                    <p>Date: {{ transaction.date }}</p>
+                    <p>Amount: R$ {{ transaction.amount }}</p>
+                    {% if transaction.acquittance_doc %}
+                        <img src="{{ transaction.acquittance_doc.url }}" alt="Receipt for {{ transaction.description }}" width="400" height="400">
+                    {% else %}
+                        <p>No receipt available.</p>
+                    {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card py-3 px-5">
+                <form action="{% url 'treasury:transaction-update' transaction.id %}" method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {{form}}
+                    <input type="submit" class="btn btn-primary my-3" value="Salvar"></a>
+                </form>
+                <form id="deleteForm" action="{% url 'treasury:transaction-delete' transaction.id %}" method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="_method" value="DELETE">
+                    <button type="button" class="btn btn-danger" onclick="deleteTransaction()">Deletar</button>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+<script src="{% static 'js/confirm.js' %}"></script>
+{% endblock %}

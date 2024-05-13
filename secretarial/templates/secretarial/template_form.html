@@ -1,0 +1,40 @@
+{% extends 'core/base.html' %} {% block content %}
+{% load static %}
+<div class="container">
+  <div class="col-12">
+    <div class="row justify-content-center">
+      <div class="col-7">
+        <form action="{% url 'secretarial:template-create' %}" method="POST">
+          {% csrf_token %}
+          {{form.media}} {{form}}
+          <input type="submit" value="Salvar Modelo" class="btn btn-primary" />
+          <a href="{% url 'secretarial:agenda-form' %}" class="btn btn-primary">Criar Assunto</a>
+        </form>
+        {% if excerpts_list %}
+          <div class="row my-3">
+            <div class="col-4">
+              <select name="minute_excerpts" class="form-select" id="id_minute_excerpts" multiple>
+
+
+                {% for e in excerpts_list %}
+                <option value="{{e.id}}" selected>{{e}}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-8 mx-auto">
+              <textarea name="" id="excerpt_t_area" class="form-control", rows=4></textarea>
+            </div>
+            <div class="container my-3">
+              <button class="btn btn-secondary" id="copy_button" disabled>
+                Copiar
+              </button>
+            </div>
+            {% endif %}
+          </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+<script src="{% static 'js/excerpt_utils.js' %}"></script>
+{% endblock %}

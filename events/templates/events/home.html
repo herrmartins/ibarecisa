@@ -1,0 +1,43 @@
+{% extends 'core/base.html' %} {% load static %}{% block content %}
+
+<p class="fs-3">Bem vindo, {{user}}!</p>
+<p class="fw-light">Veja nossos eventos...</p>
+<div class="container-sm my-4">
+  <div class="row justify-content-center">
+    <div class="col-sm-auto">
+{% for month, events_in_month in events.items %}
+  <div class="row mb-4">
+    <div class="col">
+      <h3>{{ month|title }}</h3>
+    </div>
+  </div>
+  <div class="row">
+    {% for event in events_in_month %}
+    <div class="col-sm-4 mb-4">
+      <div class="card">
+        <div class="card-body">
+          
+          <h5 class="card-title">{{ event.title }} {% if user.is_secretary %}<a href="{% url 'events:edit-event' event.id %}"><img src="{% static 'img/edit-black.svg' %}" alt="Edit"></a>{% endif %}</h5>
+          
+          <p class="card-text">{{ event.description }}</p>
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item">Data: {{ event.start_date }}</li>
+            <li class="list-group-item">Fim: {{ event.end_date }}</li>
+            <li class="list-group-item">Investimento: {{ event.price }}</li>
+            <li class="list-group-item">Categoria: {{ event.category }}</li>
+          </ul>
+        </div>
+        <div class="card-footer">
+          <small class="text-muted">Local: {{ event.location.name }}</small>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+{% endfor %}
+
+
+    </div>
+  </div>
+</div>
+{% endblock %}

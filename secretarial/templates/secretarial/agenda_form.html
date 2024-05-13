@@ -1,0 +1,28 @@
+{% extends 'core/base.html' %} {% block content %}
+{% load static %}
+<div class="container">
+  <div class="col-12">
+    <div class="row justify-content-center">
+      <p class="fs-3">Adicionar Assunto</p>
+      <div class="col-7">
+        <form action="{% url 'secretarial:agenda-create' %}" method="POST">
+          {% csrf_token %}
+          {{form.media}} {{form}}
+          <input type="submit" value="Salvar Assunto" class="btn btn-primary mt-2" />
+        </form>
+          </div>
+      </div>
+      <div class="row justify-content-center">
+        <div class="col-6">
+          <div class="container">
+            <p class="fw-bold">Assuntos cadastrados</p>
+          {% for at in agenda_titles %}
+          <p>{{at}}</p>
+          {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

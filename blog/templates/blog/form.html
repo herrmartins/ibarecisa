@@ -1,0 +1,31 @@
+{% extends 'core/base.html' %} {% load static %}{% block content %}
+
+{% if 'edit' in request.resolver_match.view_name %}
+<p class="fs-3 fw-light">Altere o post {{post.title}}</p>
+{% else %}
+<p class="fs-3 fw-light">Escreva um post..</p>
+{% endif %}
+<div class="container my-2">
+    <div class="row justify-content-center">
+        <div class="col-md-auto">
+            {% if 'edit' in request.resolver_match.view_name %}
+            <form method="POST" , action="{% url 'blog:update-post' instance.id %}">
+                {% else %}
+                <form method="POST" , action="{% url 'blog:create-post' %}">
+                    {% endif %}
+                    {% csrf_token %}
+                    {{form.media}}
+                    {{form.as_p}}
+                    {% if 'edit' in request.resolver_match.view_name %}
+                    <input type="submit" value="Alterar" class="btn btn-primary">
+                    {% else %}
+                    <input type="submit" value="Cadastrar" class="btn btn-primary">
+                    {% endif %}
+                </form>
+        </div>
+        <div class="row">
+            <a href="{% url 'blog:create-category' %}">
+                <p class="fs-3">Adicionar categoria</p>
+            </a>
+        </div>
+        {% endblock %}

@@ -1,0 +1,1 @@
+from .index_view_test import IndexViewTests

@@ -1,0 +1,27 @@
+{% extends 'core/base.html' %}
+{% load static%}
+{% block content %}
+
+
+<div class="container text-center">
+    <p class="fs-3 fw-light">Lista de relatórios disponíveis</p>
+    <p class="fw-light">Apenas relatórios a partir do primeiro mês, inserido ao início do uso do sistema.</p>
+</div>
+<div class="container col-10">
+    <div class="row">
+        <div class="col-md-6 text-center">
+            {% for r in reports %}
+            {% if not r.is_first_month %}
+            <div class="row"><a href="{% url 'treasury:monthly-transactions' r.month.year r.month.month %}"><p>Relatório de {{r.month.month}}/{{r.month.year}} - {{r.balance}} </p></a></div>
+            {% endif %}
+            {% endfor %}
+        </div>
+        <div class="col-md-6 text-center">
+            {% for r in analytical_reports %}
+            <div class="row"><a href="{% url 'treasury:analytical-report' r.id %}"><p>Relatório Analítico de {{r.month.month}}/{{r.month.year}} - {{r.balance}} </p></a></div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

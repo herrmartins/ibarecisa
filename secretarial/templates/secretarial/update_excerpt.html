@@ -1,0 +1,23 @@
+{% extends 'core/base.html' %}
+{% block content %}
+{% load static %}
+
+<div class="container">
+  <div class="container text-center">
+    <p class="fs-3 fw-light">Editar trecho </p>
+  </div>
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-8">
+        <form method="POST" {% if is_update %}action="{% url 'secretarial:update-excerpt' pk %}"{% else %}action="{% url 'secretarial:create-excerpt' %}"{% endif %}>
+          {% csrf_token %}
+          {{form.media}}
+          {{form}}
+          <input type="submit" value="{% if is_update %}Atualizar{% else %}Criar{% endif %}" class="btn {% if is_update %}btn-warning{% else %}btn-primary{% endif %}">
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

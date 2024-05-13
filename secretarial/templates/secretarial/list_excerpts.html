@@ -1,0 +1,35 @@
+{% extends 'core/base.html' %} {% block content %}
+{% load static %}
+
+<div class="container">
+  <div class="container text-center">
+    <p class="fs-3 fw-light">Trechos de Atas</p> <a href="{% url 'secretarial:excerpt-form' %}"
+      class="btn btn-primary">Criar trecho</a>
+  </div>
+  <div class="container my-3">
+    <div class="col-12 mx-auto">
+      {% if excerpts %}
+      {% for e in excerpts %}
+      <div class="row">
+        <div class="col-3">
+          <a href="{% url 'secretarial:excerpt-detail' e.id %}">
+          {{e.title}}</a><br>
+          <a href="{% url 'secretarial:excerpt-update-form' e.id %}" class="btn btn-warning my-2">Editar</a>
+          <form action="{% url 'secretarial:delete-excerpt' e.id %}" method="POST">
+            {% csrf_token%}
+            <input type="submit" name="Delete" value="Deletar" class="btn btn-danger my-2">
+          </form>
+
+
+        </div>
+        <div class="col-9">
+          {{e.excerpt|safe}}
+        </div>
+      </div>
+      {% endfor %}
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}

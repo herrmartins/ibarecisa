@@ -1,0 +1,110 @@
+{% extends 'core/base.html' %} {% load index %} {% load static%} {% block content %}
+
+<div class="container text-center">
+  <p class="fs-3 fw-light">{{church_info.name}}</p>
+  <p class="fs-3 fw-light">Relatório detalhado de {{month}}/{{year}}</p>
+  <p class="fs-6 fw-light">Saldo anterior: {{balance}}</p>
+  <div class="container py-2">
+    <a
+      href="{% url 'treasury:export-pdf-monthly-report' month year %}"
+      class="btn btn-primary"
+      >Gerar PDF</a
+    >
+    {% if ncd and user.is_treasurer %}
+    {% if not is_report %}
+    <a href="{% url 'treasury:gen-report' month year %}" class="btn btn-success"
+      >Gerar Relatório Analítico</a
+    >
+    {% endif %} {% endif %}
+  </div>
+</div>
+
+<div class="container-fluid col-10">
+  <div class="card">
+    <div class="card-header">Mês atual:</div>
+    <div class="card-body">
+      <div class="container">
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">Data</th>
+              <th scope="col">Descrição</th>
+              <th scope="col">Valor</th>
+              <th scope="col">Subtotal</th>
+              {% if user.is_treasurer %}<th scope="col">Controle</th> {% endif %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for fe in finance_entries %}
+            <tr>
+              <th scope="row">{{fe.date}}</th>
+              <td>{{fe.description}} | {{fe.category}}</td>
+              {% if fe.is_positive %}
+              <td>
+                <p class="text-success">{{fe.amount}}</p>
+              </td>
+              {% else %}
+              <td>
+                <p class="text-danger">{{fe.amount}}</p>
+              </td>
+              {% endif %}
+              <td>
+                <p class="text-secondary">
+                  {{ subtotal|index:forloop.counter0 }}
+                </p>
+              </td>
+              {% if user.is_treasurer %}
+              <td>
+                <div class="container-fluid">
+                  <a
+                    href="{% url 'treasury:transaction-detail' fe.id  %}"
+                    class="link-secondary"
+                    ><img src="{% static 'img/edit-black.svg' %}" alt="Trash"
+                  /></a>
+                  <form
+                    action="{% url 'treasury:transaction-delete' fe.id %}"
+                    method="POST"
+                    class="d-inline"
+                  >
+                    {% csrf_token %}
+                    <button
+                      type="submit"
+                      class="link-danger"
+                      style="border: none; background: none; cursor: pointer"
+                    >
+                      <img
+                        src="{% static 'img/trash-black.svg' %}"
+                        alt="Trash"
+                      />
+                    </button>
+                  </form>
+                </div>
+              </td>
+              {% endif %}
+            </tr>
+
+            {% endfor %}
+            <td>
+              <p class="fw-bold my-1">Total:</p>
+            </td>
+            <td></td>
+            <td></td>
+            <td>{{total}}</td>
+            <td></td>
+            <tr>
+              <td>
+                <p class="fw-bold my-1">Resultado do Mês:</p>
+                <td></td>
+                <td></td>
+                <td>{{monthly_result}}</td>
+                <td></td>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="container-fluid"></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
