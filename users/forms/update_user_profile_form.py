@@ -26,6 +26,13 @@ class UpdateUserProfileModelForm(ModelForm):
             except ValueError:
                 raise ValidationError("Invalid date format. Please use YYYY-MM-DD.")
         return date_of_birth
+    
+    def clean_profile_image(self):
+        profile_image = self.cleaned_data.get('profile_image')
+        if profile_image:
+            if not profile_image.name.endswith(('.png', '.jpg', '.jpeg', '.JPEG', '.JPG', '.PNG')):
+                raise ValidationError('Invalid file type. Only PNG, JPG, and JPEG files are allowed.')
+        return profile_image
 
     class Meta:
         model = CustomUser
@@ -99,7 +106,7 @@ class UpdateUserProfileModelForm(ModelForm):
             "profile_image": ClearableFileInput(
                 attrs={
                     "class": "form-control mt-2",
-                    "accept": "image/*",
+                    "accept": "image/png, image/jpeg, image/jpg",
                 }
             ),
         }
