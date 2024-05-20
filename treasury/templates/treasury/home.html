@@ -57,7 +57,9 @@
 <div class="container">
   <div class="row">
     <div class="col-md-4 col-12">
+
       {% if user.is_treasurer or user.is_superuser %} {% if not form_balance %}
+
       <p class="text-center">Adicionar Transação</p>
       <form action="" method="POST" id="transaction_form" enctype="multipart/form-data">
         {% csrf_token %} {{form_transaction}}

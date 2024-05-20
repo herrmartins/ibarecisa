@@ -71,6 +71,15 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
+    
+    def save(self, *args, **kwargs):
+        try:
+            this = CustomUser.objects.get(id=self.id)
+            if this.profile_image != self.profile_image:
+                this.profile_image.delete(save=False)
+        except CustomUser.DoesNotExist:
+            pass
+        super(CustomUser, self).save(*args, **kwargs)
 
 
 @receiver(post_save, sender=CustomUser)

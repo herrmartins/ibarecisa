@@ -1,6 +1,10 @@
 media/img/profile/
 media/treasury/receipts/
 static/
+media/
+migrations/
+
+>>>>>>> 3db703e63a47a6f26680f6ab560b015ae0707aa2
 data.json
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -117,3 +121,4 @@ static_collected
 
 htmlcov/*
 .coveragerc
+core/static/json/church_info.json
