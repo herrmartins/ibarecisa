@@ -39,6 +39,15 @@ class CustomUser(AbstractUser):
     is_secretary = models.BooleanField(blank=True, default=False)
     is_treasurer = models.BooleanField(blank=True, default=False)
 
+    def save(self, *args, **kwargs):
+        try:
+            this = CustomUser.objects.get(id=self.id)
+            if this.profile_image != self.profile_image:
+                this.profile_image.delete(save=False)
+        except CustomUser.DoesNotExist:
+            pass
+        super(CustomUser, self).save(*args, **kwargs)
+
     class Types(models.TextChoices):
         # Um membro
         REGULAR = "REGULAR", "Membro"

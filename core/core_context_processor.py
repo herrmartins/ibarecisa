@@ -8,7 +8,7 @@ def context_user_data(request):
 
     church_info = {}
     try:
-        with open(file_path, "r") as file:
+        with open(file_path, "r", encoding="utf-8") as file:
             church_info = json.load(file)
     except FileNotFoundError:
         print("Erro: File not found")

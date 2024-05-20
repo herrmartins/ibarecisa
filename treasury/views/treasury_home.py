@@ -37,7 +37,7 @@ class TreasuryHomeView(PermissionRequiredMixin, TemplateView):
             )
             context["previous_month_account_balance"] = f"R$ {previous_month_balance.balance}"
         except MonthlyBalance.DoesNotExist:
-            print("Não há primeiro mês...")
+            print("Não há registro do mês passado...")
 
         form = TransactionForm(user=self.request.user)
         context["form_transaction"] = form
