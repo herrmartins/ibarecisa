@@ -2,6 +2,7 @@
 {% load static %}
 
 {% block content %}
+<div class="container">
 <div id="user-info" comment-author-id="{{ user.id }}"></div>
 <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 <div class="container mt-4" id="posts-container">
@@ -62,14 +63,11 @@
     {% endfor %}
     <!-- End of Post loop -->
 </div>
-</div>
-</div>
 <!-- Pagination controls -->
-<div class="row">
-    <div class="col-md-12">
+    <div class="col-md-10">
         <!-- Pagination -->
-        <nav aria-label="Page navigation example">
-            <ul class="pagination justify-content-center">
+        <nav aria-label="Blog page navigation">
+            <ul class="pagination justify-content-end">
                 {% if is_paginated %}
                 {% if page_obj.has_previous %}
                 <li class="page-item">

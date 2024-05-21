@@ -52,7 +52,7 @@ class TransactionModel(BaseModel):
                 try:
                     default_storage.delete(old_doc)
                 except Exception as e:
-                    print(f"Failed to delete old document: {e}")
+                    print(f"Erro ao deletar documento: {e}")
 
         super().save(*args, **kwargs)
 
