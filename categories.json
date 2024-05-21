@@ -1,0 +1,182 @@
+[
+  {
+    "model": "treasury.categorymodel",
+    "pk": 1,
+    "fields": {
+      "created": "2023-12-27",
+      "modified": "2023-12-27",
+      "ativo": true,
+      "name": "dízimo"
+    }
+  },
+  {
+    "model": "treasury.categorymodel",
+    "pk": 2,
+    "fields": {
+      "created": "2023-12-27",
+      "modified": "2023-12-27",
+      "ativo": true,
+      "name": "oferta voluntária"
+    }
+  },
+  {
+    "model": "treasury.categorymodel",
+    "pk": 3,
+    "fields": {
+      "created": "2023-12-27",
+      "modified": "2023-12-27",
+      "ativo": true,
+      "name": "oferta direcionada"
+    }
+  },
+  {
+    "model": "treasury.categorymodel",
+    "pk": 4,
+    "fields": {
+      "created": "2023-12-27",
+      "modified": "2023-12-27",
+      "ativo": true,
+      "name": "despesas mensais"
+    }
+  },
+  {
+    "model": "treasury.categorymodel",
+    "pk": 5,
+    "fields": {
+      "created": "2023-12-27",
+      "modified": "2023-12-27",
+      "ativo": true,
+      "name": "manutenção patrimônio"
+    }
+  },
+  {
+    "model": "treasury.categorymodel",
+    "pk": 6,
+    "fields": {
+      "created": "2023-12-27",
+      "modified": "2023-12-27",
+      "ativo": true,
+      "name": "salários/prebendas"
+    }
+  },
+  {
+    "model": "treasury.categorymodel",
+    "pk": 7,
+    "fields": {
+      "created": "2023-12-27",
+      "modified": "2023-12-27",
+      "ativo": true,
+      "name": "aquisições"
+    }
+  },
+  {
+    "model": "treasury.categorymodel",
+    "pk": 8,
+    "fields": {
+      "created": "2023-12-27",
+      "modified": "2023-12-27",
+      "ativo": true,
+      "name": "ajuda de custo"
+    }
+  },
+  {
+    "model": "treasury.categorymodel",
+    "pk": 9,
+    "fields": {
+      "created": "2023-12-27",
+      "modified": "2023-12-27",
+      "ativo": true,
+      "name": "despesas trabalistas/inss"
+    }
+  },
+  {
+    "model": "treasury.categorymodel",
+    "pk": 10,
+    "fields": {
+      "created": "2023-12-27",
+      "modified": "2023-12-27",
+      "ativo": true,
+      "name": "oferta diaconal"
+    }
+  },
+  {
+    "model": "treasury.categorymodel",
+    "pk": 11,
+    "fields": {
+      "created": "2023-12-27",
+      "modified": "2023-12-27",
+      "ativo": true,
+      "name": "serviços"
+    }
+  },
+  {
+    "model": "treasury.categorymodel",
+    "pk": 12,
+    "fields": {
+      "created": "2023-12-27",
+      "modified": "2023-12-27",
+      "ativo": true,
+      "name": "oferta missionária"
+    }
+  },
+  {
+    "model": "treasury.categorymodel",
+    "pk": 13,
+    "fields": {
+      "created": "2023-12-27",
+      "modified": "2023-12-27",
+      "ativo": true,
+      "name": "outros"
+    }
+  },
+  {
+    "model": "treasury.categorymodel",
+    "pk": 14,
+    "fields": {
+      "created": "2023-12-27",
+      "modified": "2023-12-27",
+      "ativo": true,
+      "name": "oferta urna"
+    }
+  },
+  {
+    "model": "treasury.categorymodel",
+    "pk": 15,
+    "fields": {
+      "created": "2023-12-27",
+      "modified": "2023-12-27",
+      "ativo": true,
+      "name": "manutenção materiais"
+    }
+  },
+  {
+    "model": "treasury.categorymodel",
+    "pk": 16,
+    "fields": {
+      "created": "2023-12-27",
+      "modified": "2023-12-27",
+      "ativo": true,
+      "name": "despesa governamental"
+    }
+  },
+  {
+    "model": "treasury.categorymodel",
+    "pk": 17,
+    "fields": {
+      "created": "2023-12-27",
+      "modified": "2023-12-27",
+      "ativo": true,
+      "name": "oferta"
+    }
+  },
+  {
+    "model": "treasury.categorymodel",
+    "pk": 18,
+    "fields": {
+      "created": "2023-12-27",
+      "modified": "2023-12-27",
+      "ativo": true,
+      "name": "despesa/receita bancária"
+    }
+  }
+]
