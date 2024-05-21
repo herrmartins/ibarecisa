@@ -56,35 +56,13 @@
 
 <div class="container">
   <div class="row">
-    <div class="col-md-4 col-12">
-
-      {% if perms.treasury.add_transactionmodel %} {% if not form_balance %}
-
-      <p class="text-center">Adicionar Transação</p>
-      <form action="" method="POST" id="transaction_form" enctype="multipart/form-data">
-        {% csrf_token %} {{form_transaction}}
-        <input type="submit" class="btn btn-primary my-2" value="Salvar" />
-        <button class="btn btn-warning">Limpar</button>
-      </form>
-
-      {% else %}
-      <p class="text-center">Você deve adicionar a primeira transação...</p>
-      <p class="text-justify">
-        Antes de registrar sua primeira transação no sistema de gerenciamento
-        financeiro da igreja, é fundamental definir um 'saldo inicial'. Esse
-        saldo representa o ponto de partida para suas finanças e deve
-        corresponder ao saldo no último dia do mês anterior. Isso garante que o
-        sistema comece com uma base precisa e ajuda a manter um registro
-        financeiro consistente e atualizado.
-      </p>
-      <form action="{% url 'treasury:create-initial-balance' %}" method="POST">
-        {% csrf_token %} {{form_balance}}
-        <button type="submit" class="btn btn-primary my-2">Salvar</button>
-        <button type="reset" class="btn btn-warning">Limpar</button>
-      </form>
-      {% endif %} {% else %} {%endif %}
-    </div>
-    <div class="col-md-8 col-12" id="transactions_list">
+      {% if perms.treasury.add_transactionmodel %}
+        {% include 'treasury/transaction_form_chunck.html' %}
+        <div class="col-md-8 col-12" id="transactions_list">
+        {% else %}
+        <div class="col-12" id="transactions_list">
+      {%endif %}
+    
       <div class="table-responsive mx-auto">
         <table class="table table-striped table-rounded mx-auto">
           <thead>

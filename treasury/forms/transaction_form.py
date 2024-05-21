@@ -32,7 +32,7 @@ class TransactionForm(forms.ModelForm):
         self.fields['date'].widget = forms.DateInput(
             attrs={'class': 'form-control', 'type': 'date'})
         self.fields['acquittance_doc'].widget = FileInput(attrs={
-            'class': 'form-control-file',
+            'class': 'form-control',
             'accept': 'image/jpeg,image/png'
         })
 
