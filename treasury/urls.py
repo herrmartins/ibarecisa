@@ -13,6 +13,10 @@ from treasury.views import (
     MonthlyAnalyticalReportDetailView,
     GenerateMonthlyPDFAnReportView,
     AnReportDeleteView,
+    CategoryCreateView,
+    CategoryFormView,
+    CategoryUpdateView,
+    CategoriesListView,
 )
 
 app_name = "treasury"
@@ -68,5 +72,30 @@ urlpatterns = [
         "anreport/pdf/<int:pk>",
         GenerateMonthlyPDFAnReportView,
         name="export-anreport-pdf",
+    ),
+    path(
+        "category",
+        CategoryFormView.as_view(),
+        name="category-form",
+    ),
+    path(
+        "category/edit/<int:pk>",
+        CategoryUpdateView.as_view(),
+        name="edit-category",
+    ),
+    path(
+        "category/create",
+        CategoryCreateView.as_view(),
+        name="create-category",
+    ),
+    path(
+        "category/update/<int:pk>",
+        CategoryUpdateView.as_view(),
+        name="update-category",
+    ),
+    path(
+        "category/list",
+        CategoriesListView.as_view(),
+        name="list-categories",
     ),
 ]

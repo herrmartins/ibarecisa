@@ -20,12 +20,13 @@
                     <input type="submit" value="Alterar" class="btn btn-primary">
                     {% else %}
                     <input type="submit" value="Cadastrar" class="btn btn-primary">
+                    <a href="{% url 'blog:create-category' %}"><span class="btn btn-primary">Adicionar categoria</span></a>
                     {% endif %}
                 </form>
         </div>
         <div class="row">
-            <a href="{% url 'blog:create-category' %}">
-                <p class="fs-3">Adicionar categoria</p>
-            </a>
+           
+               
+            
         </div>
         {% endblock %}

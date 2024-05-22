@@ -5,9 +5,15 @@ from .detailed_report_view import TransactionMonthArchiveView
 from .transaction_detail_view import TransactionDetailView
 from .transaction_update_view import TransactionUpdateView
 from .transaction_delete_view import TransactionDeleteView
-from .generate_monthly_pdf_transaction_list_view import GenerateMonthlyPDFTransactionListView
+from .generate_monthly_pdf_transaction_list_view import (
+    GenerateMonthlyPDFTransactionListView,
+)
 from .generate_monthly_pdf_analytical_report_view import GenerateMonthlyPDFAnReportView
 from .generate_report_view import GenerateMonthlyReportView
 from .create_monthly_report import MonthlyReportCreateView
 from .analytical_detailed_report_view import MonthlyAnalyticalReportDetailView
 from .analytical_report_delete_view import AnReportDeleteView
+from .category_create_view import CategoryCreateView
+from .category_form_view import CategoryFormView
+from .category_update_view import CategoryUpdateView
+from .categories_list_view import CategoriesListView

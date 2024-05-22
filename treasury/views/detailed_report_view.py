@@ -31,7 +31,7 @@ class TransactionMonthArchiveView(PermissionRequiredMixin, MonthArchiveView):
         # If no transactions exist, add a message and redirect
         if not transactions_exist:
             messages.info(request, "Não há transações para o mês selecionado.")
-            return redirect('/treasury/reports')
+            return redirect("/treasury/reports")
 
         # If transactions exist, proceed with the normal flow
         return super().get(request, *args, **kwargs)
@@ -47,14 +47,17 @@ class TransactionMonthArchiveView(PermissionRequiredMixin, MonthArchiveView):
 
         try:
             report = MonthlyReportModel.objects.get(
-                month__month=context["month"], month__year=context["year"])
+                month__month=context["month"], month__year=context["year"]
+            )
             context["is_report"] = True
         except MonthlyReportModel.DoesNotExist:
             context["is_report"] = False
         except MultipleObjectsReturned:
             context["is_report"] = True
             messages.info(
-                self.request, "Há mais de um relatório analítico para este mês, verifique o(s) incorreto(s) e o(s) delete...")
+                self.request,
+                "Há mais de um relatório analítico para este mês, verifique o(s) incorreto(s) e o(s) delete...",
+            )
 
         if (
             current_date.month == context["month"]
@@ -74,8 +77,7 @@ class TransactionMonthArchiveView(PermissionRequiredMixin, MonthArchiveView):
 
         previous_month += relativedelta(months=-1)
         try:
-            balance_for_calc = MonthlyBalance.objects.get(
-                month=previous_month).balance
+            balance_for_calc = MonthlyBalance.objects.get(month=previous_month).balance
             previous_month_balance = balance_for_calc
         except MonthlyBalance.DoesNotExist:
             balance_for_calc = 0
