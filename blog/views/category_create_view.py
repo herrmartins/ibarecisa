@@ -11,10 +11,13 @@ class CategoryCreateView(PermissionRequiredMixin, SuccessMessageMixin, CreateVie
     permission_required = "blog.add_post"
     model = Category
     form_class = CategoryForm
-    template_name = 'blog/category_form.html'
-    success_url = reverse_lazy('blog:create-post')
-    success_message = "Post criado com sucesso..."
+    template_name = "blog/category_form.html"
+    success_url = reverse_lazy("blog:create-post")
+    success_message = "Categoria adicionada com sucesso..."
 
     def form_invalid(self, form):
-        messages.error(self.request, "Erro no formulário...",)
+        messages.error(
+            self.request,
+            "Erro no formulário...",
+        )
         return super().form_invalid(form)

@@ -9,4 +9,4 @@ class AgendaCreateView(PermissionRequiredMixin, CreateView):
     model = MeetingAgendaModel
     template_name = 'secretarial/agenda_form.html'
     fields = ['agenda_title',]
-    success_url = reverse_lazy("secretarial:agenda-create")
+    success_url = reverse_lazy("secretarial:agenda-form")

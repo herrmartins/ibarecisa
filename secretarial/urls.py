@@ -23,6 +23,7 @@ from secretarial.views import (
     TemplateFormView,
     AgendaFormView,
     AgendaCreateView,
+    CategoryUpdateView,
 )
 
 
@@ -82,6 +83,6 @@ urlpatterns = [
         name="delete-excerpt",
     ),
     path("meeting/agenda", AgendaFormView.as_view(), name="agenda-form"),
-    path("meeting/agenda/<int:pk>", AgendaFormView.as_view(), name="agenda-update"),
+    path("meeting/agenda/<int:pk>", CategoryUpdateView.as_view(), name="agenda-update"),
     path("meeting/agenda/create", AgendaCreateView.as_view(), name="agenda-create"),
 ]

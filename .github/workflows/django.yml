@@ -8,7 +8,6 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 4
@@ -34,3 +33,14 @@ jobs:
         DEBUG: 'True'  # Set DEBUG environment variable here, adjust the value as needed
       run: |
         python manage.py test
+    - name: Send Slack Notification
+      if: always()  # Ensure this step runs even if previous steps fail
+      uses: slackapi/slack-github-action@v1.23.0
+      with:
+        payload: |
+          {
+            "text": "Build ${{ job.status }} for ${{ github.repository }} on branch ${{ github.ref }}. Check the details here: ${{ github.run_url }}"
+          }
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+

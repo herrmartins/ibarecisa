@@ -1,19 +1,38 @@
-{% extends 'core/base.html' %} {% load static %}{% block content %}
-
+{% extends 'core/base.html' %}
+{% load static %}
+{% block content %}
 
 {% if 'edit-category' in request.resolver_match.view_name %}
-<p class="fs-3 fw-light">Altere a categoria</p>
+    <p class="fs-3 fw-light">Altere a categoria</p>
 {% else %}
-<p class="fs-3 fw-light">Cadastre uma categoria..</p>
+    <p class="fs-3 fw-light">Cadastre uma categoria..</p>
 {% endif %}
 <div class="container my-2">
   <div class="row justify-content-center">
     <div class="col-md-auto">
-      <form method="POST" action="{% url 'blog:create-category' %}">
+      {% if 'edit-category' in request.resolver_match.view_name %}
+          <form method="POST" action="{% url 'blog:update-category' category.pk %}">
+      {% else %}
+          <form method="POST" action="{% url 'blog:create-category' %}">
+      {% endif %}
         {% csrf_token %}
         {{form.as_p}}
         <input type="submit" value="Cadastrar" class="btn btn-primary">
       </form>
+      {% if 'edit-category' in request.resolver_match.view_name %}
+        <form action="{% url 'blog:delete-category' category.pk %}" method="POST" class="d-inline">
+          {% csrf_token %}
+          <input type="submit" class="btn btn-danger" value="Deletar">
+        </form>
+      {% endif %}
+    </div>
+  </div>
+  <div class="row justify-content-center">
+    <div class="col-7 text-center">
+      <p class="fw-bold">Categorias cadastradas</p>
+      {% for c in categories %}
+        <a href="{% url 'blog:edit-category' c.pk %}"><p>{{c}}</p></a>
+      {% endfor %}
     </div>
   </div>
 </div>

@@ -6,14 +6,11 @@ from blog.models import Category
 
 class CategoryFormView(PermissionRequiredMixin, FormView):
     permission_required = "blog.add_post"
-    template_name = 'blog/category_form.html'
+    template_name = "blog/category_form.html"
     form_class = CategoryForm
+    context_object_name = "category"
 
-    def get_initial(self):
-        category_id = self.kwargs.get('pk')
-        category = Category.objects.filter(id=category_id).first()
-        initial_data = super().get_initial()
-        if category:
-            initial_data['title'] = category.title
-
-        return initial_data
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["categories"] = Category.objects.all()
+        return context
