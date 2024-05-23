@@ -29,7 +29,11 @@
                 <p class="card-text">{{ post.content|safe }}</p>
             </div>
             <div class="card-footer d-flex justify-content-between" id="btn-container">
-                <small class="text-muted">Categoria: {{ post.category }}</small>
+                <small class="text-muted">Categorias: {% for category in post.categories.all %}
+                    {{ category.name }}{% if not forloop.last %}, {% endif %}
+                    {% empty %}
+                    Não categorizado...
+                    {% endfor %}</small>
                 <i class="bi bi-chat-left-dots" data-post-id="{{ post.id }}"></i>
             </div>
             <div class="comments hidden" id="comments-{{ post.id }}">

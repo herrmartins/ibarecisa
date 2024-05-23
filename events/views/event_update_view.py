@@ -11,8 +11,8 @@ class EventUpdateView(PermissionRequiredMixin, SuccessMessageMixin, UpdateView):
     permission_required = "events.add_event"
     model = Event
     form_class = EventForm
-    template_name = 'events/form.html'
-    success_url = reverse_lazy('events:home')
+    template_name = "events/form.html"
+    success_url = reverse_lazy("events:home")
     success_message = "Evento alterado com sucesso..."
 
     def form_invalid(self, form):

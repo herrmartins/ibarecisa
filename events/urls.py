@@ -1,7 +1,17 @@
 from django.urls import path
-from events.views import (EventsHomeView, EventsFormView,
-                          EventCreateView, EventUpdateView, VenueCreateView, VenueFormView,
-                          VenuesListView, VenueUpdateView)
+from events.views import (
+    EventsHomeView,
+    EventsFormView,
+    EventCreateView,
+    EventUpdateView,
+    VenueCreateView,
+    VenueFormView,
+    VenuesListView,
+    VenueUpdateView,
+    CategoryUpdateView,
+    CategoryFormView,
+    CategoryCreateView,
+)
 
 app_name = "events"
 
@@ -16,4 +26,24 @@ urlpatterns = [
     path("venues/edit/<int:pk>", VenueFormView.as_view(), name="edit-venue"),
     path("venues/create", VenueCreateView.as_view(), name="create-venue"),
     path("venues/update/<int:pk>", VenueUpdateView.as_view(), name="update-venue"),
+    path(
+        "category",
+        CategoryFormView.as_view(),
+        name="category-form",
+    ),
+    path(
+        "category/edit/<int:pk>",
+        CategoryUpdateView.as_view(),
+        name="edit-category",
+    ),
+    path(
+        "category/create",
+        CategoryCreateView.as_view(),
+        name="create-category",
+    ),
+    path(
+        "category/update/<int:pk>",
+        CategoryUpdateView.as_view(),
+        name="update-category",
+    ),
 ]
