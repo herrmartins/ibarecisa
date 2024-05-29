@@ -2,7 +2,7 @@ media/img/profile/
 media/treasury/receipts/
 static/
 media/
-
+.vscode/
 data.json
 # Byte-compiled / optimized / DLL files
 __pycache__/

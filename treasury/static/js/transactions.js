@@ -18,7 +18,7 @@ function loadTransactionData() {
 	const formTransactionElement = document.getElementById("transaction_form");
 	let currentBalance = 0;
 
-	fetch("http://127.0.0.1:8000/api/getbalance")
+	fetch("../api/getbalance")
 		.then((response) => {
 			if (response.ok) {
 				return response.json();
@@ -27,7 +27,7 @@ function loadTransactionData() {
 		})
 		.then((data) => {
 			currentBalanceElement.innerText = formatCurrency(data.current_balance);
-			currentBalance = parseFloat(data.last_month_balance);
+			currentBalance = Number.parseFloat(data.last_month_balance);
 			currentAnawareBalanceElement.innerText = formatCurrency(
 				data.unaware_month_balance,
 			);
@@ -38,7 +38,7 @@ function loadTransactionData() {
 				data.sum_negative_transactions,
 			);
 
-			fetch("http://127.0.0.1:8000/api/transactions")
+			fetch("../api/transactions")
 				.then((response) => {
 					if (response.ok) {
 						return response.json();
@@ -46,7 +46,7 @@ function loadTransactionData() {
 					throw new Error("Erro ao executar o fetch.");
 				})
 				.then((data) => {
-					let currentBalanceTrack = parseFloat(currentBalance);
+					let currentBalanceTrack = Number.parseFloat(currentBalance);
 					transactionsTableBody.innerHTML = "";
 					// biome-ignore lint/complexity/noForEach: <explanation>
 					data.forEach((item) => {
@@ -76,7 +76,7 @@ function loadTransactionData() {
 							valueCell.classList.add("text-danger");
 						}
 
-						currentBalanceTrack += parseFloat(item.amount);
+						currentBalanceTrack += Number.parseFloat(item.amount);
 						currentBalanceCell.textContent =
 							formatCurrency(currentBalanceTrack);
 						operationsCell.innerHTML = `
@@ -130,7 +130,7 @@ async function deleteTransaction(id) {
 	};
 	try {
 		const response = await fetch(
-			`http://127.0.0.1:8000/api/transaction/${id}/delete/`,
+			`../api/transaction/${id}/delete/`,
 			{
 				method: "DELETE",
 				headers: headers,
@@ -155,7 +155,7 @@ function formatCurrency(amount) {
 	}).format(amount);
 }
 
-const apiTransactionUrl = "http://127.0.0.1:8000/api/transactions/post";
+const apiTransactionUrl = "../api/transactions/post";
 
 const form = document.getElementById("transaction_form");
 
