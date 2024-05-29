@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "xhtml2pdf",
     "weasyprint",
+    "corsheaders",
     "blog.apps.BlogConfig",
     "events.apps.EventsConfig",
     "core.apps.CoreConfig",
@@ -42,6 +43,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -172,3 +174,13 @@ if not DEBUG:
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_PRELOAD = True
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+
+if DEBUG:
+    CORS_ALLOWED_ORIGINS = [
+        "http://127.0.0.1:8000",
+    ]
+else:
+    CORS_ALLOWED_ORIGINS = [
+        "https://ibarecisa.org.br",
+        "https://104.251.208.79",
+    ]
