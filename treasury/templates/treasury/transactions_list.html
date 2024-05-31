@@ -1,0 +1,10 @@
+{% for transaction in transactions %}
+<tr>
+    <td>{{ transaction.date }}</td>
+    <td>{{ transaction.description }}</td>
+    <td class="{% if transaction.amount >= 0 %}text-primary{% else %}text-danger{% endif %}">{{ transaction.amount }}</td>
+    <td>{{ transaction.current_balance }}</td>
+    <td><a href="{% url 'treasury:transaction-detail' transaction.id %}" class="btn btn-light btn-sm">&#x270D;</a></td>
+</tr>
+{% endfor %}
+

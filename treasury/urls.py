@@ -17,6 +17,8 @@ from treasury.views import (
     CategoryFormView,
     CategoryUpdateView,
     CategoriesListView,
+    AddTransactionView,
+    TransactionListView,
 )
 
 app_name = "treasury"
@@ -28,18 +30,7 @@ urlpatterns = [
         InitialBalanceCreateView.as_view(),
         name="create-initial-balance",
     ),
-    path("reports", FinanceReportsListView.as_view(), name="list-financial-reports"),
-    path(
-        "reports/<int:year>/<int:month>/",
-        TransactionMonthArchiveView.as_view(),
-        name="monthly-transactions",
-    ),
-    path(
-        "reports/pdf/<int:month>/<int:year>/",
-        GenerateMonthlyPDFTransactionListView,
-        name="export-pdf-monthly-report",
-    ),
-    path("reports/an_report/delete/<int:pk>", AnReportDeleteView.as_view(), name="delete-an_report"),
+    # Transactions
     path(
         "transaction/<int:pk>",
         TransactionDetailView.as_view(),
@@ -54,6 +45,24 @@ urlpatterns = [
         "transaction/delete/<int:pk>",
         TransactionDeleteView.as_view(),
         name="transaction-delete",
+    ),
+
+    # Reports
+    path("reports", FinanceReportsListView.as_view(), name="list-financial-reports"),
+    path(
+        "reports/<int:year>/<int:month>/",
+        TransactionMonthArchiveView.as_view(),
+        name="monthly-transactions",
+    ),
+    path(
+        "reports/pdf/<int:month>/<int:year>/",
+        GenerateMonthlyPDFTransactionListView,
+        name="export-pdf-monthly-report",
+    ),
+    path(
+        "reports/an_report/delete/<int:pk>",
+        AnReportDeleteView.as_view(),
+        name="delete-an_report",
     ),
     path(
         "report/save", MonthlyReportCreateView.as_view(), name="create-monthly-report"
@@ -73,6 +82,7 @@ urlpatterns = [
         GenerateMonthlyPDFAnReportView,
         name="export-anreport-pdf",
     ),
+    # Categories
     path(
         "category",
         CategoryFormView.as_view(),
@@ -98,4 +108,7 @@ urlpatterns = [
         CategoriesListView.as_view(),
         name="list-categories",
     ),
+
+    path('add-transaction/', AddTransactionView.as_view(), name='add-transaction'),
+    path('transactions/', TransactionListView.as_view(), name='transactions'),
 ]

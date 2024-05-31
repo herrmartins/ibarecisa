@@ -157,41 +157,41 @@ function formatCurrency(amount) {
 
 const apiTransactionUrl = "../api/transactions/post";
 
-const form = document.getElementById("transaction_form");
+// const form = document.getElementById("transaction_form");
 
-if (form) {
-	form.addEventListener("submit", async (e) => {
-		e.preventDefault();
+// if (form) {
+// 	form.addEventListener("submit", async (e) => {
+// 		e.preventDefault();
 
-		const formData = new FormData(form);
-		const csrfToken = getCookie("csrftoken");
+// 		const formData = new FormData(form);
+// 		const csrfToken = getCookie("csrftoken");
 
-		try {
-			const response = await fetch(apiTransactionUrl, {
-				method: "POST",
-				body: formData, // Use FormData directly
-				headers: {
-					"X-CSRFToken": csrfToken,
-				},
-			});
+// 		try {
+// 			const response = await fetch(apiTransactionUrl, {
+// 				method: "POST",
+// 				body: formData, // Use FormData directly
+// 				headers: {
+// 					"X-CSRFToken": csrfToken,
+// 				},
+// 			});
 
-			if (response.ok) {
-				const responseData = await response.json();
-				showDynamicMessage("Transação salva...", "alert-success");
-				loadTransactionData();
-			} else {
-				const errorData = await response.json();
-				showDynamicMessage(
-					`Falha ao salvar a transação: ${errorData.detail}`,
-					"alert-danger",
-				);
-				console.log(`ERRO: ${errorData.detail}`);
-			}
-		} catch (error) {
-			showDynamicMessage(`Error: ${error}`, "alert-danger");
-		}
-	});
-}
+// 			if (response.ok) {
+// 				const responseData = await response.json();
+// 				showDynamicMessage("Transação salva...", "alert-success");
+// 				loadTransactionData();
+// 			} else {
+// 				const errorData = await response.json();
+// 				showDynamicMessage(
+// 					`Falha ao salvar a transação: ${errorData.detail}`,
+// 					"alert-danger",
+// 				);
+// 				console.log(`ERRO: ${errorData.detail}`);
+// 			}
+// 		} catch (error) {
+// 			showDynamicMessage(`Error: ${error}`, "alert-danger");
+// 		}
+// 	});
+// }
 
 function showDynamicMessage(messageText, messageClass) {
 	const alertMessage = document.createElement("div");
