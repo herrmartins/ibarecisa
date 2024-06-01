@@ -1,6 +1,9 @@
 {% extends 'core/base.html' %}
 {% load static %}
 
+{% block head %}
+  <!-- Any additional head content can go here -->
+{% endblock %}
 
 {% block content %}
 <div class="container my-2">
@@ -11,8 +14,7 @@
 <div class="container">
   <div class="row d-flex justify-content-between">
     <div class="col-lg-2 col-md-4 col-6 mb-4">
-      <div
-        class="px-2 py-3 d-flex flex-column justify-content-between h-100 bg-success text-white rounded text-center fw-bold">
+      <div class="px-2 py-3 d-flex flex-column justify-content-between h-100 bg-success text-white rounded text-center fw-bold">
         <div>
           Saldo Anterior<br /><img src="{% static 'img/book-open.svg' %}" /><br />
           <p class="h4 mt-2 fw-light">{{previous_month_account_balance}}</p>
@@ -20,17 +22,15 @@
       </div>
     </div>
     <div class="col-lg-2 col-md-4 col-6 mb-4">
-      <div
-        class="px-2 py-3 d-flex flex-column justify-content-between h-100 bg-primary text-white rounded text-center fw-bold">
+      <div class="px-2 py-3 d-flex flex-column justify-content-between h-100 bg-primary text-white rounded text-center fw-bold">
         <div>
-          Saldo Corrente<br /><img src="{% static 'img/dollar-sign.svg' %}" /><br />
+          <span id="saldoLabel">Saldo Corrente</span><br /><img src="{% static 'img/dollar-sign.svg' %}" /><br />
           <p class="h4 mt-2 fw-light" id="currentBalance"></p>
         </div>
       </div>
     </div>
     <div class="col-lg-2 col-md-4 col-6 mb-4">
-      <div
-        class="px-2 py-3 d-flex flex-column justify-content-between h-100 bg-secondary text-white rounded text-center fw-bold">
+      <div class="px-2 py-3 d-flex flex-column justify-content-between h-100 bg-secondary text-white rounded text-center fw-bold">
         <div>
           Resultado Mensal<br /><img src="{% static 'img/calendar.svg' %}" /><br />
           <p class="h4 mt-2 fw-light" id="currentAnawareBalance"></p>
@@ -38,8 +38,7 @@
       </div>
     </div>
     <div class="col-lg-2 col-md-4 col-6 mb-4">
-      <div
-        class="px-2 py-3 d-flex flex-column justify-content-between h-100 bg-info text-white rounded text-center fw-bold">
+      <div class="px-2 py-3 d-flex flex-column justify-content-between h-100 bg-info text-white rounded text-center fw-bold">
         <div>
           Entradas<br /><img src="{% static 'img/arrow-left-circle.svg' %}" /><br />
           <p class="h4 mt-2 fw-light" id="positive_transactions"></p>
@@ -47,8 +46,7 @@
       </div>
     </div>
     <div class="col-lg-2 col-md-4 col-6 mb-4">
-      <div
-        class="px-2 py-3 d-flex flex-column justify-content-between h-100 bg-danger text-white rounded text-center fw-bold">
+      <div class="px-2 py-3 d-flex flex-column justify-content-between h-100 bg-danger text-white rounded text-center fw-bold">
         <div>
           Saídas<br /><img src="{% static 'img/arrow-right-circle.svg' %}" /><br />
           <p class="h4 mt-2 fw-light" id="negative_transactions"></p>
@@ -82,8 +80,7 @@
         <div class="container">
           <div class="d-flex justify-content-center py-2">
             {% if month and year %}
-            <a href="{% url 'treasury:export-pdf-monthly-report' month year %}"
-              class="flex-item btn btn-primary mx-2">Gerar PDF das Transações do Mês</a>
+            <a href="{% url 'treasury:export-pdf-monthly-report' month year %}" class="flex-item btn btn-primary mx-2">Gerar PDF das Transações do Mês</a>
             {% else %}
             <span class="text-muted">Não há dados para gerar o relatório</span>
             {% endif %}
@@ -97,3 +94,4 @@
 <script type="module" src="{% static 'js/add_transaction.js' %}"></script>
 <script type="module" src="{% static 'js/get_transactions.js' %}"></script>
 {% endblock %}
+

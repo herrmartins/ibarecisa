@@ -10,19 +10,19 @@ from treasury.utils import check_and_create_missing_balances
 
 
 class TreasuryHomeView(PermissionRequiredMixin, TemplateView):
-    permission_required = 'treasury.view_transactionmodel'
+    permission_required = "treasury.view_transactionmodel"
     template_name = "treasury/home.html"
 
     def get(self, request, *args, **kwargs):
         current_date = timezone.now()
         previous_month = current_date - relativedelta(months=1)
         first_month = MonthlyBalance.objects.filter(is_first_month=True)
-        if (first_month):
+        if first_month:
             if not MonthlyBalance.objects.filter(
-                    month__year=previous_month.year,
-                    month__month=previous_month.month).exists():
+                month__year=previous_month.year, month__month=previous_month.month
+            ).exists():
                 check_and_create_missing_balances(current_date)
-                return HttpResponseRedirect(reverse('treasury:home'))
+                return HttpResponseRedirect(reverse("treasury:home"))
 
         return super().get(request, *args, **kwargs)
 
@@ -35,7 +35,9 @@ class TreasuryHomeView(PermissionRequiredMixin, TemplateView):
                 month__year=previous_month.year,
                 month__month=previous_month.month,
             )
-            context["previous_month_account_balance"] = f"R$ {previous_month_balance.balance}"
+            context[
+                "previous_month_account_balance"
+            ] = f"R$ {previous_month_balance.balance}"
         except MonthlyBalance.DoesNotExist:
             print("Não há registro do mês passado...")
 

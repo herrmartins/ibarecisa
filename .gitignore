@@ -1,6 +1,6 @@
 media/img/profile/
 media/treasury/receipts/
-static/
+.static/
 media/
 .vscode/
 data.json

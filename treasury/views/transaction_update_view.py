@@ -6,9 +6,14 @@ from django.contrib.auth.mixins import PermissionRequiredMixin
 
 
 class TransactionUpdateView(PermissionRequiredMixin, UpdateView):
-    permission_required = 'treasury.change_transactionmodel'
+    permission_required = "treasury.change_transactionmodel"
     model = TransactionModel
     form_class = TransactionForm
     template_name = "treasury/transaction_updated.html"
     context_object_name = "transaction"
-    success_url = "/treasury/"
+
+    def get_success_url(self):
+        transaction = self.object
+        month = transaction.date.month
+        year = transaction.date.year
+        return f"{reverse('treasury:home')}?month={month}&year={year}"

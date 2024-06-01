@@ -19,6 +19,7 @@ from treasury.views import (
     CategoriesListView,
     AddTransactionView,
     TransactionListView,
+    FinancialDataHealthView,
 )
 
 app_name = "treasury"
@@ -46,7 +47,6 @@ urlpatterns = [
         TransactionDeleteView.as_view(),
         name="transaction-delete",
     ),
-
     # Reports
     path("reports", FinanceReportsListView.as_view(), name="list-financial-reports"),
     path(
@@ -108,7 +108,7 @@ urlpatterns = [
         CategoriesListView.as_view(),
         name="list-categories",
     ),
-
-    path('add-transaction/', AddTransactionView.as_view(), name='add-transaction'),
-    path('transactions/', TransactionListView.as_view(), name='transactions'),
+    path("add-transaction/", AddTransactionView.as_view(), name="add-transaction"),
+    path("transactions/", TransactionListView.as_view(), name="transactions"),
+    path("health", FinancialDataHealthView.as_view(), name="check-treasury-health"),
 ]

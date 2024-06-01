@@ -1,5 +1,4 @@
 def get_month_balance(month):
-    from treasury.models import MonthlyBalance
     previous_month = month
     from treasury.models import MonthlyBalance
     try:
