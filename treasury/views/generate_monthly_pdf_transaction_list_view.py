@@ -11,7 +11,6 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
 from core.core_context_processor import context_user_data
 
-
 @login_required
 def GenerateMonthlyPDFTransactionListView(
     request, year=datetime.now().year, month=datetime.now().month
@@ -70,8 +69,9 @@ def GenerateMonthlyPDFTransactionListView(
         html_index = render_to_string(
             "treasury/export_pdf_template.html", context)
 
+        base_url = request.build_absolute_uri('/')  # Dynamically determine the base URL
         weasyprint_html = weasyprint.HTML(
-            string=html_index, base_url="http://127.0.0.1:8000/media"
+            string=html_index, base_url=base_url
         )
         pdf = weasyprint_html.write_pdf(
             stylesheets=[
