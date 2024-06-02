@@ -8,50 +8,53 @@ from treasury.utils import (
 )
 from datetime import date
 
-
 class TransactionListView(View):
     def get(self, request, *args, **kwargs):
-        month = int(request.GET.get("month"))
-        year = int(request.GET.get("year"))
-        current_date = date(year, month, 1)
+        try:
+            year = int(request.GET.get("year"))
+            month = int(request.GET.get("month"))
+            print(f"Received year: {year}, month: {month}")  # Add this line for debugging
+            current_date = date(year, month, 1)
 
-        transactions = TransactionModel.objects.filter(
-            date__year=year, date__month=month
-        ).order_by("-date")
+            transactions = TransactionModel.objects.filter(
+                date__year=year, date__month=month
+            ).order_by("-date")
 
-        previous_month_balance = get_month_balance(get_previous_month(current_date))
+            previous_month_balance = get_month_balance(get_previous_month(current_date))
 
-        post_transaction_balance = previous_month_balance
-        transactions_data = []
-        for transaction in transactions:
-            post_transaction_balance += transaction.amount
-            transactions_data.append(
+            post_transaction_balance = previous_month_balance
+            transactions_data = []
+            for transaction in transactions:
+                post_transaction_balance += transaction.amount
+                transactions_data.append(
+                    {
+                        "date": transaction.date.strftime("%Y-%m-%d"),
+                        "description": transaction.description,
+                        "amount": transaction.amount,
+                        "current_balance": post_transaction_balance,
+                        "id": transaction.id,
+                        "category": transaction.category.name
+                        if transaction.category
+                        else "Sem Categoria",
+                    }
+                )
+
+            positive_transactions = get_aggregate_transactions(year, month, True)
+            negative_transactions = get_aggregate_transactions(year, month, False)
+
+            monthly_result = get_aggregate_transactions(year, month)
+
+            current_monthly_balance = previous_month_balance + monthly_result
+
+            return JsonResponse(
                 {
-                    "date": transaction.date.strftime("%Y-%m-%d"),
-                    "description": transaction.description,
-                    "amount": transaction.amount,
-                    "current_balance": post_transaction_balance,
-                    "id": transaction.id,
-                    "category": transaction.category.name
-                    if transaction.category
-                    else "Sem Categoria",
+                    "transactions": transactions_data,
+                    "current_balance": current_monthly_balance,
+                    "monthly_result": monthly_result,
+                    "positive_transactions": positive_transactions,
+                    "negative_transactions": negative_transactions,
+                    "previous_month_balance": previous_month_balance,
                 }
             )
-
-        positive_transactions = get_aggregate_transactions(year, month, True)
-        negative_transactions = get_aggregate_transactions(year, month, False)
-
-        monthly_result = get_aggregate_transactions(year, month)
-
-        current_monthly_balance = previous_month_balance + monthly_result
-
-        return JsonResponse(
-            {
-                "transactions": transactions_data,
-                "current_balance": current_monthly_balance,
-                "monthly_result": monthly_result,
-                "positive_transactions": positive_transactions,
-                "negative_transactions": negative_transactions,
-                "previous_month_balance": previous_month_balance,
-            }
-        )
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)

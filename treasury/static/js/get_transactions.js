@@ -1,10 +1,38 @@
 import { formatCurrency } from "./format_currency.js";
 import { formatDate } from "./format_date.js";
 
-export async function getTransactions(month, year) {
+document.addEventListener("DOMContentLoaded", () => {
+	const yearSelect = document.getElementById("yearSelect");
+	const monthSelect = document.getElementById("monthSelect");
+
+	yearSelect.addEventListener("change", () => {
+		getTransactions(yearSelect.value, monthSelect.value);
+	});
+
+	monthSelect.addEventListener("change", () => {
+		getTransactions(yearSelect.value, monthSelect.value);
+	});
+
+	function getQueryParam(param) {
+		const urlParams = new URLSearchParams(window.location.search);
+		return urlParams.get(param);
+	}
+
+	const month = getQueryParam("month");
+	const year = getQueryParam("year");
+
+	if (month && year) {
+		getTransactions(year, month);
+	} else {
+		const today = new Date();
+		getTransactions(today.getFullYear(), today.getMonth() + 1);
+	}
+});
+
+export async function getTransactions(year, month) {
 	try {
-		const fetchResponse = await fetch(
-			`/treasury/transactions/?month=${month}&year=${year}`,
+		const response = await fetch(
+			`/treasury/transactions/?year=${year}&month=${month}`,
 			{
 				headers: {
 					"X-Requested-With": "XMLHttpRequest",
@@ -12,11 +40,11 @@ export async function getTransactions(month, year) {
 			},
 		);
 
-		if (!fetchResponse.ok) {
-			throw new Error(`Erro... Resposta da rede: ${fetchResponse.statusText}`);
+		if (!response.ok) {
+			throw new Error(`Erro... Resposta da rede: ${response.statusText}`);
 		}
 
-		const fetchResult = await fetchResponse.json();
+		const data = await response.json();
 
 		const transactionsTableBody = document.querySelector(
 			"#transactionsTable tbody",
@@ -24,7 +52,7 @@ export async function getTransactions(month, year) {
 		transactionsTableBody.innerHTML = "";
 
 		// biome-ignore lint/complexity/noForEach: <explanation>
-		fetchResult.transactions.forEach((transaction) => {
+		data.transactions.forEach((transaction) => {
 			const row = transactionsTableBody.insertRow();
 
 			const dateCell = row.insertCell(0);
@@ -37,7 +65,7 @@ export async function getTransactions(month, year) {
 			descriptionCell.textContent = `${transaction.description} - ${transaction.category}`;
 			amountCell.textContent = formatCurrency(transaction.amount);
 			balanceCell.textContent = formatCurrency(transaction.current_balance);
-			operationsCell.innerHTML = `<a href="/treasury/transaction/${transaction.id}" class="btn btn-light btn-sm edit-button grid-item" data-id="${transaction.id}">&#x270D;</a>`;
+			operationsCell.innerHTML = `<a href="/treasury/transaction/${transaction.id}" class="btn btn-light btn-sm edit-button" data-id="${transaction.id}">&#x270D;</a>`;
 
 			if (transaction.amount >= 0) {
 				amountCell.classList.add("text-primary");
@@ -47,44 +75,26 @@ export async function getTransactions(month, year) {
 		});
 
 		document.getElementById("currentBalance").textContent = formatCurrency(
-			fetchResult.current_balance,
+			data.current_balance,
 		);
 		document.getElementById("currentAnawareBalance").textContent =
-			formatCurrency(fetchResult.monthly_result);
+			formatCurrency(data.monthly_result);
 		document.getElementById("positive_transactions").textContent =
-			formatCurrency(fetchResult.positive_transactions);
+			formatCurrency(data.positive_transactions);
 		document.getElementById("negative_transactions").textContent =
-			formatCurrency(fetchResult.negative_transactions);
-
-		// Update the previous month's balance
+			formatCurrency(data.negative_transactions);
 		document.querySelector(".bg-success .fw-light").textContent =
-			formatCurrency(fetchResult.previous_month_balance);
-
-		const currentMonthYearElement = document.getElementById("currentMonthYear");
-		if (currentMonthYearElement) {
-			currentMonthYearElement.textContent = `${month} ${year}`;
-		}
-
-		const prevMonthLink = document.getElementById("prevMonthLink");
-		if (prevMonthLink) {
-			prevMonthLink.href = `?month=${month - 1 || 12}&year=${
-				month - 1 ? year : year - 1
-			}`;
-		}
-
-		const nextMonthLink = document.getElementById("nextMonthLink");
-		if (nextMonthLink) {
-			nextMonthLink.href = `?month=${(month % 12) + 1}&year=${
-				month % 12 ? year : year + 1
-			}`;
-		}
+			formatCurrency(data.previous_month_balance);
 
 		const today = new Date();
 		const currentMonth = today.getMonth() + 1;
 		const currentYear = today.getFullYear();
 		const saldoLabel = document.getElementById("saldoLabel");
 
-		if (month === currentMonth && year === currentYear) {
+		if (
+			Number.parseInt(month) === currentMonth &&
+			Number.parseInt(year) === currentYear
+		) {
 			saldoLabel.textContent = "Saldo Corrente";
 		} else {
 			saldoLabel.textContent = "Saldo do Mês";

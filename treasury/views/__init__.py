@@ -20,3 +20,4 @@ from .categories_list_view import CategoriesListView
 from .add_transaction_view import AddTransactionView
 from .transactions_list_view import TransactionListView
 from .financial_data_health_view import FinancialDataHealthView
+from .get_monthly_balances_view import GetMonthlyBalancesView

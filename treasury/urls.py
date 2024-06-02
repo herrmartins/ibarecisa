@@ -20,6 +20,7 @@ from treasury.views import (
     AddTransactionView,
     TransactionListView,
     FinancialDataHealthView,
+    GetMonthlyBalancesView,
 )
 
 app_name = "treasury"
@@ -111,4 +112,6 @@ urlpatterns = [
     path("add-transaction/", AddTransactionView.as_view(), name="add-transaction"),
     path("transactions/", TransactionListView.as_view(), name="transactions"),
     path("health", FinancialDataHealthView.as_view(), name="check-treasury-health"),
+    path('get-balances/', GetMonthlyBalancesView.as_view(), name='monthly-balances-list'),
+
 ]

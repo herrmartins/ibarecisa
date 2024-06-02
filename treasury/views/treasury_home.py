@@ -6,7 +6,8 @@ from django.http import HttpResponseRedirect
 from treasury.forms import TransactionForm, InitialBalanceForm
 from treasury.models import MonthlyBalance
 from django.contrib.auth.mixins import PermissionRequiredMixin
-from treasury.utils import check_and_create_missing_balances
+from treasury.utils import check_and_create_missing_balances, get_monthly_balances_list
+from django.db.models.functions import TruncYear
 
 
 class TreasuryHomeView(PermissionRequiredMixin, TemplateView):
@@ -48,5 +49,14 @@ class TreasuryHomeView(PermissionRequiredMixin, TemplateView):
 
         if MonthlyBalance.objects.count() == 0:
             context["form_balance"] = InitialBalanceForm
+
+        # Retrieve distinct years
+        distinct_years = (
+            MonthlyBalance.objects.annotate(year=TruncYear("month"))
+            .values_list("year", flat=True)
+            .distinct()
+            .order_by("year")
+        )
+        context["year_list"] = [year.year for year in distinct_years]
 
         return context

@@ -8,7 +8,7 @@
 {% block content %}
 <div class="container my-2">
   <div class="container text-center">
-    <p class="fs-3 fw-light">Bem vindo à tesouraria, {{user.first_name}}...</p>
+    <p class="fs-3 fw-light">Bem vindo à tesouraria, {{ user.first_name }}...</p>
   </div>
 </div>
 <div class="container">
@@ -17,7 +17,7 @@
       <div class="px-2 py-3 d-flex flex-column justify-content-between h-100 bg-success text-white rounded text-center fw-bold">
         <div>
           Saldo Anterior<br /><img src="{% static 'img/book-open.svg' %}" /><br />
-          <p class="h4 mt-2 fw-light">{{previous_month_account_balance}}</p>
+          <p class="h4 mt-2 fw-light">{{ previous_month_account_balance }}</p>
         </div>
       </div>
     </div>
@@ -57,9 +57,34 @@
 </div>
 
 <div class="container">
+  <div class="row justify-content-center">
+    <div class="col-md-4 mb-4">
+      <select id="yearSelect" class="form-select">
+        {% for y in year_list %}
+          <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-4 mb-4">
+      <select id="monthSelect" class="form-select">
+        <option value="1">Janeiro</option>
+        <option value="2">Fevereiro</option>
+        <option value="3">Março</option>
+        <option value="4">Abril</option>
+        <option value="5">Maio</option>
+        <option value="6">Junho</option>
+        <option value="7">Julho</option>
+        <option value="8">Agosto</option>
+        <option value="9">Setembro</option>
+        <option value="10">Outubro</option>
+        <option value="11">Novembro</option>
+        <option value="12">Dezembro</option>
+      </select>
+    </div>
+  </div>
   <div class="row">
     {% if perms.treasury.add_transactionmodel %}
-    {% include 'treasury/transaction_form_chunck.html' %}
+      {% include 'treasury/transaction_form_chunck.html' %}
     {% endif %}
     <div class="{% if perms.treasury.add_transactionmodel %}col-md-8{% else %}col-12{% endif %}" id="transactions_list">
       <div class="table-responsive mx-auto">
@@ -77,15 +102,6 @@
             <!-- Transaction data will be inserted here -->
           </tbody>
         </table>
-<!--         <div class="container">
-          <div class="d-flex justify-content-center py-2">
-            {% if month and year %}
-            <a href="{% url 'treasury:export-pdf-monthly-report' month year %}" class="flex-item btn btn-primary mx-2">Gerar PDF das Transações do Mês</a>
-            {% else %}
-            <span class="text-muted">Não há dados para gerar o relatório</span>
-            {% endif %}
-          </div>
-        </div> -->
       </div>
     </div>
   </div>
@@ -93,5 +109,5 @@
 <script type="module" src="{% static 'js/load_transactions.js' %}"></script>
 <script type="module" src="{% static 'js/add_transaction.js' %}"></script>
 <script type="module" src="{% static 'js/get_transactions.js' %}"></script>
+<script type="module" src="{% static 'js/populate_years_months.js' %}"></script>
 {% endblock %}
-
