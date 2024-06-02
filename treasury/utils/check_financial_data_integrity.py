@@ -8,7 +8,7 @@ def check_financial_data_integrity():
     try:
         first_month_balance = MonthlyBalance.objects.get(is_first_month=True)
     except MonthlyBalance.DoesNotExist:
-        raise ValidationError("No initial balance (is_first_month=True) found.")
+        raise ValidationError("Não há balanço inicial...")
 
     initial_balance = first_month_balance.balance
 

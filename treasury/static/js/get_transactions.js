@@ -34,7 +34,7 @@ export async function getTransactions(month, year) {
 			const operationsCell = row.insertCell(4);
 
 			dateCell.textContent = formatDate(transaction.date);
-			descriptionCell.textContent = transaction.description;
+			descriptionCell.textContent = `${transaction.description} - ${transaction.category}`;
 			amountCell.textContent = formatCurrency(transaction.amount);
 			balanceCell.textContent = formatCurrency(transaction.current_balance);
 			operationsCell.innerHTML = `<a href="/treasury/transaction/${transaction.id}" class="btn btn-light btn-sm edit-button grid-item" data-id="${transaction.id}">&#x270D;</a>`;
