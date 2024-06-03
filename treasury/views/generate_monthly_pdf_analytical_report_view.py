@@ -13,7 +13,6 @@ from core.core_context_processor import context_user_data
 
 @login_required
 def GenerateMonthlyPDFAnReportView(request, pk):
-
     # locale.setlocale(locale.LC_ALL, "pt_BR")
     try:
         locale.setlocale(locale.LC_TIME, "pt_BR.UTF-8")
@@ -54,12 +53,10 @@ def GenerateMonthlyPDFAnReportView(request, pk):
             "m_result": m_result,
             "balance": Decimal(an_report.total_balance),
         }
-        print("CONTEXTO PARA PDF: ", context)
         html_index = render_to_string("treasury/export_analytical_report.html", context)
-
+        base_url = request.build_absolute_uri('/')
         weasyprint_html = weasyprint.HTML(
-            string=html_index, base_url="http://127.0.0.1:8000/media"
-        )
+            string=html_index, base_url=base_url)
         pdf = weasyprint_html.write_pdf(
             stylesheets=[
                 weasyprint.CSS(

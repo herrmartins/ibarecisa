@@ -88,9 +88,9 @@ class GenerateMonthlyReportView(PermissionRequiredMixin, TemplateView):
         positive_transactions_amount = Decimal(
             get_total_transactions_amount(positive_transactions_dict)
         )
-        negative_transactions_amount = Decimal(get_total_transactions_amount(
-            negative_transactions_dict
-        ))
+        negative_transactions_amount = Decimal(
+            get_total_transactions_amount(negative_transactions_dict)
+        )
         monthly_result = positive_transactions_amount + negative_transactions_amount
 
         context["p_transactions"] = positive_transactions_dict

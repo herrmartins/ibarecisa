@@ -1,8 +1,38 @@
-{% extends 'core/base.html' %} {% load static %}{% block content %}
-
-
-<div class="container text-center">
-<p class="fs-1">Saúde dos Dados Financeiros</p>
-<p class="fs-3">{{integrity}}</p>
-</div>
-{% endblock %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Financial Data Health</title>
+</head>
+<body>
+    <h1>Financial Data Health</h1>
+    <p>{{ integrity }}</p>
+    <table>
+        <thead>
+            <tr>
+                <th>Month</th>
+                <th>Balance</th>
+                <th>Expected Balance</th>
+                <th>Aggregate Transactions</th>
+                <th>Integrity</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in monthly_balances %}
+                <tr>
+                    <td>{{ item.month }}</td>
+                    <td>{{ item.balance }}</td>
+                    <td>{{ item.expected_balance }}</td>
+                    <td>{{ item.aggregate_transactions }}</td>
+                    <td>
+                        {% if item.integrity %}
+                            <span style="color: green;">Correct</span>
+                        {% else %}
+                            <span style="color: red;">Incorrect</span>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
