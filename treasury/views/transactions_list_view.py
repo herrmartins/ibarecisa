@@ -8,6 +8,7 @@ from treasury.utils import (
 )
 from datetime import date
 
+
 class TransactionListView(View):
     def get(self, request, *args, **kwargs):
         try:

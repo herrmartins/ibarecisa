@@ -4,7 +4,7 @@ from treasury import utils
 
 class FinancialDataHealthView(PermissionRequiredMixin, TemplateView):
     permission_required = "treasury.add_transactionmodel"
-    template_name = "treasury/financial_healthy.html"
+    template_name = "treasury/financial_health.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

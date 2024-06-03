@@ -25,9 +25,9 @@ async function addTransaction(event) {
         const result = await response.json();
 
         if (result.success) {
-            getTransactions(result.year, result.month);
             document.getElementById('yearSelect').value = result.year;
             document.getElementById('monthSelect').value = result.month;
+            getTransactions(result.year, result.month);
 
 
         } else {

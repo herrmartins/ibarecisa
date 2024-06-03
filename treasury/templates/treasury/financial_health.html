@@ -1,11 +1,13 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Financial Data Health</title>
-</head>
-<body>
+{% extends 'core/base.html' %}
+
+{% block content %}
+
     <h1>Financial Data Health</h1>
     <p>{{ integrity }}</p>
+    <form method="post" action="{% url 'treasury:fix-financial-data' %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-warning">Fix Financial Data</button>
+    </form>
     <table>
         <thead>
             <tr>
@@ -34,5 +36,4 @@
             {% endfor %}
         </tbody>
     </table>
-</body>
-</html>
+{% endblock %}

@@ -21,3 +21,4 @@ from .add_transaction_view import AddTransactionView
 from .transactions_list_view import TransactionListView
 from .financial_data_health_view import FinancialDataHealthView
 from .get_monthly_balances_view import GetMonthlyBalancesView
+from .fix_financial_data_health import FixFinancialDataView
