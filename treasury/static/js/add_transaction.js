@@ -25,8 +25,11 @@ async function addTransaction(event) {
         const result = await response.json();
 
         if (result.success) {
-            console.log("Transação adicionada. Carregando...");
-            getTransactions(result.month, result.year);
+            getTransactions(result.year, result.month);
+            document.getElementById('yearSelect').value = result.year;
+            document.getElementById('monthSelect').value = result.month;
+
+
         } else {
             console.error("Erro ao adicionar a transação:", result.errors);
             alert(`Error adding transaction: ${JSON.stringify(result.errors)}`);

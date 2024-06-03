@@ -13,7 +13,6 @@ class TransactionListView(View):
         try:
             year = int(request.GET.get("year"))
             month = int(request.GET.get("month"))
-            print(f"Received year: {year}, month: {month}")  # Add this line for debugging
             current_date = date(year, month, 1)
 
             transactions = TransactionModel.objects.filter(
