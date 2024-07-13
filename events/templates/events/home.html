@@ -36,8 +36,26 @@
   </div>
 {% endfor %}
 
+<div x-data="{ dataEvents: [] }" x-init="dataEvents = await fetchEvents().then((data) => data )">
+  <template x-for="eventData in dataEvents">
+    <div class="row mb-4">
+      <div class="col">
+        <h3 x-text="eventData[0]"></h3>
+        </div>
+      </div>
+      <div class="row">
+        {% comment %} TODO - detalhes do evento {% endcomment %}
+      </div>
+  </template>
+</div>
+
+
 
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block pre_alpine_scripts %}
+  <script src="{% static 'js/events.js' %}"></script>
 {% endblock %}
