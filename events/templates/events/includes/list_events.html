@@ -1,3 +1,5 @@
+{% load static %}
+
 <div
   x-data="{ dataEvents: [] }"
   x-init="dataEvents = await fetchEvents().then((data) => data )"
@@ -14,13 +16,13 @@
           <div class="col-sm-4 mb-4">
             <div class="card">
               <div class="card-body">
-                <h5 class="card-title" x-text="eventDetails.title">
-                  {% comment %} TODO - adaptar {% endcomment %}
-                  {% comment %} {% if user.is_secretary %}
-                    <a href="{% url 'events:edit-event' event.id %}">
-                      <img src="{% static 'img/edit-black.svg' %}" alt="Edit">
+                <h5 class="card-title">
+                  <span  x-text="eventDetails.title"></span>
+                  {% if user.is_secretary %}
+                    <a x-bind:href="eventDetails.url_events_edit_event">
+                      <i class="bi bi-pencil-square"></i>
                     </a>
-                  {% endif %} {% endcomment %}
+                  {% endif %}
                 </h5>
                 
                 <p class="card-text" x-text="eventDetails.descriptions"></p>
@@ -43,3 +45,7 @@
     </div>
   </template>
 </div>
+
+{% block pre_alpine_scripts %}
+  <script src="{% static 'js/includes/list_events.js' %}"></script>
+{% endblock %}
