@@ -1,0 +1,45 @@
+<div
+  x-data="{ dataEvents: [] }"
+  x-init="dataEvents = await fetchEvents().then((data) => data )"
+>
+  <template x-for="(eventData, index) in dataEvents" :key="index">
+    <div>
+      <div class="row mb-4">
+        <div class="col">
+          <h3 x-text="eventData[0]"></h3>
+        </div>
+      </div>
+      <div class="row">
+        <template x-for="eventDetails in eventData[1]" :key="eventDetails.id++">
+          <div class="col-sm-4 mb-4">
+            <div class="card">
+              <div class="card-body">
+                <h5 class="card-title" x-text="eventDetails.title">
+                  {% comment %} TODO - adaptar {% endcomment %}
+                  {% comment %} {% if user.is_secretary %}
+                    <a href="{% url 'events:edit-event' event.id %}">
+                      <img src="{% static 'img/edit-black.svg' %}" alt="Edit">
+                    </a>
+                  {% endif %} {% endcomment %}
+                </h5>
+                
+                <p class="card-text" x-text="eventDetails.descriptions"></p>
+                <ul class="list-group list-group-flush">
+                  <li class="list-group-item">Data: <span x-text="eventDetails.start_date"></span></li>
+                  <li class="list-group-item">Fim: <span x-text="eventDetails.end_date"></span></li>
+                  <li class="list-group-item">Investimento: <span x-text="eventDetails.price"></span></li>
+                  <li class="list-group-item">Categoria: <span x-text="eventDetails.category"></span></li>
+                </ul>
+              </div>
+              <div class="card-footer">
+                <small class="text-muted">
+                  Local: <span x-text="eventDetails.location.name"></span>
+                </small>
+              </div>
+            </div>
+          </div>
+        </template>
+      </div>
+    </div>
+  </template>
+</div>

@@ -8,6 +8,9 @@ let fetchEvents = async () => {
             end_date: "05/01/2028 18:00:00",
             price: "15000",
             category: "musica",
+            location: {
+                name: "Salão principal"
+            }
         };
 
         const data = [
