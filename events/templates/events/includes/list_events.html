@@ -1,10 +1,9 @@
 {% load static %}
 
 <div
-  x-data="{ dataEvents: [] }"
-  x-init="dataEvents = await fetchEvents().then((data) => data )"
+  x-data
 >
-  <template x-for="(eventData, index) in dataEvents" :key="index">
+  <template x-for="(eventData, index) in $store.allEvents.dataEvents" :key="index">
     <div>
       <div class="row mb-4">
         <div class="col">
@@ -44,6 +43,10 @@
       </div>
     </div>
   </template>
+</div>
+
+<div x-data>
+  <button @click="$store.allEvents.seeMore()">Ver Mais</button>
 </div>
 
 {% block pre_alpine_scripts %}
