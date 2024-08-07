@@ -45,8 +45,14 @@
   </template>
 </div>
 
-<div x-data>
-  <button @click="$store.allEvents.seeMore()">Ver Mais</button>
+<div x-data class="d-grid gap-2 col-6 mx-auto">
+  <button
+    type="button"
+    class="btn btn-outline-info"
+    @click="$store.allEvents.seeMore()"
+  >
+    Ver Mais
+  </button>
 </div>
 
 {% block pre_alpine_scripts %}
