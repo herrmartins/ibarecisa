@@ -80,6 +80,12 @@ document.addEventListener('alpine:init', () => {
                 let data = await fetchEvents(this.page);
 
                 this.eventItems = this.eventItems.concat(data);
+
+                setTimeout(() => {
+                    const element = document.getElementById("list-events");
+            
+                    element?.scrollIntoView({ behavior: "smooth", block: "end" });
+                }, 250);
             })();
         },
 
