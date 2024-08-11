@@ -19,8 +19,7 @@ class FinanceReportsListViewTest(TestCase):
             username="testuser", email="test@example.com", password="password123"
         )
         cls.treasury_group = Group.objects.create(name="treasury")
-        cls.permission = Permission.objects.get(
-            codename="view_transactionmodel")
+        cls.permission = Permission.objects.get(codename="view_transactionmodel")
         cls.treasury_group.permissions.add(cls.permission)
         cls.user.groups.add(cls.treasury_group)
 
@@ -35,9 +34,7 @@ class FinanceReportsListViewTest(TestCase):
         self.user.user_permissions.add(self.permission)
         self.client.login(username="testuser", password="password123")
         self.monthly_balance = mommy.make(
-            MonthlyBalance,
-            month=self.a_year_ago,
-            balance=1000.00, is_first_month=True
+            MonthlyBalance, month=self.a_year_ago, balance=1000.00, is_first_month=True
         )
 
     def test_user_has_required_permission(self):
@@ -68,8 +65,7 @@ class FinanceReportsListViewTest(TestCase):
         self.assertIsNotNone(reports_context, msg="Reports context is None")
 
         self.assertTrue(
-            all(isinstance(report, MonthlyBalance)
-                for report in reports_context),
+            all(isinstance(report, MonthlyBalance) for report in reports_context),
             msg="Reports context contains non-MonthlyBalance objects",
         )
 

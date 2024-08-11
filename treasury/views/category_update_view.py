@@ -5,7 +5,7 @@ from django.contrib.auth.mixins import PermissionRequiredMixin
 
 
 class CategoryUpdateView(PermissionRequiredMixin, UpdateView):
-    permission_required = 'treasury.change_transactionmodel'
+    permission_required = "treasury.change_transactionmodel"
     model = CategoryModel
     form_class = CategoryModelForm
     template_name = "treasury/category_form.html"

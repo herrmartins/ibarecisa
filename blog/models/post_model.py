@@ -14,10 +14,8 @@ class Post(BaseModel):
     author = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     summary = models.CharField(max_length=500, null=True, blank=True)
     keywords = models.CharField(max_length=200, null=True, blank=True)
-    likes = models.ManyToManyField(
-        CustomUser, related_name='liked_posts', blank=True)
-    categories = models.ManyToManyField(
-        Category, related_name='posts', blank=True)
+    likes = models.ManyToManyField(CustomUser, related_name="liked_posts", blank=True)
+    categories = models.ManyToManyField(Category, related_name="posts", blank=True)
 
     class Meta:
         verbose_name = "Post"

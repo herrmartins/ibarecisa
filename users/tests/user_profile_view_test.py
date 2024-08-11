@@ -25,14 +25,12 @@ class UserProfileViewTest(TestCase):
 
     def test_user_profile_view_without_permission(self):
         CustomUser.objects.create_user(username="otheruser", password="password")
-        mommy.make('CustomUser')
+        mommy.make("CustomUser")
         self.client.login(username="otheruser", password="password")
         response = self.client.get(
             reverse("users:user-profile", kwargs={"pk": self.custom_user.pk})
         )
-        self.assertEqual(
-            response.status_code, 403
-        )
+        self.assertEqual(response.status_code, 403)
 
     def test_get_object(self):
         view = UserProfileView()

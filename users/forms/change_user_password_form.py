@@ -4,15 +4,33 @@ from users.models import CustomUser
 
 
 class ChangeUserPasswordForm(PasswordChangeForm):
-    old_password = forms.CharField(widget=forms.PasswordInput(
-        attrs={'class': 'form-control', 'type': 'password',
-               'placeholder': 'Digite sua senha antiga...'}))
-    new_password1 = forms.CharField(widget=forms.PasswordInput(
-        attrs={'class': 'form-control', 'type': 'password',
-               'placeholder': "Digite sua nova senha..."}))
-    new_password2 = forms.CharField(widget=forms.PasswordInput(
-        attrs={'class': 'form-control', 'type': 'password',
-               'placeholder': 'Confirme sua nova senha...'}))
+    old_password = forms.CharField(
+        widget=forms.PasswordInput(
+            attrs={
+                "class": "form-control",
+                "type": "password",
+                "placeholder": "Digite sua senha antiga...",
+            }
+        )
+    )
+    new_password1 = forms.CharField(
+        widget=forms.PasswordInput(
+            attrs={
+                "class": "form-control",
+                "type": "password",
+                "placeholder": "Digite sua nova senha...",
+            }
+        )
+    )
+    new_password2 = forms.CharField(
+        widget=forms.PasswordInput(
+            attrs={
+                "class": "form-control",
+                "type": "password",
+                "placeholder": "Confirme sua nova senha...",
+            }
+        )
+    )
 
     class Meta:
         model = CustomUser
@@ -30,6 +48,6 @@ class ChangeUserPasswordForm(PasswordChangeForm):
 
     def __init__(self, *args, **kwargs):
         super(PasswordChangeForm, self).__init__(*args, **kwargs)
-        self.fields['old_password'].label = 'Senha antiga'
-        self.fields['new_password1'].label = 'Nova senha'
-        self.fields['new_password2'].label = 'Confirme a senha'
+        self.fields["old_password"].label = "Senha antiga"
+        self.fields["new_password1"].label = "Nova senha"
+        self.fields["new_password2"].label = "Confirme a senha"

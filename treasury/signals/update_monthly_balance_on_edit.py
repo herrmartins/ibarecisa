@@ -24,16 +24,16 @@ def update_monthly_balance_on_edit(sender, instance, **kwargs):
         difference = new_amount - old_amount
 
         if first_month.month <= instance.date.replace(day=1):
-
             if monthly_balance_exists(transaction_month):
                 with transaction.atomic():
                     monthly_balance = MonthlyBalance.objects.get(
-                        month=transaction_month)
+                        month=transaction_month
+                    )
                     monthly_balance.balance += difference
                     monthly_balance.save()
 
             else:
-                #TESTAR URGENTE
+                # TESTAR URGENTE
                 check_and_create_missing_balances(transaction_month)
                 update_subsequent_balances(instance.date, instance.amount)
                 instance.save()

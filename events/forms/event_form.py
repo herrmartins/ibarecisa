@@ -34,15 +34,16 @@ class EventForm(forms.ModelForm):
         widgets = {
             "user": forms.HiddenInput(),
             "start_date": forms.DateTimeInput(
-                attrs={"class": "form-control", 'type': 'datetime-local'}),
+                attrs={"class": "form-control", "type": "datetime-local"}
+            ),
             "end_date": forms.DateTimeInput(
-                attrs={"class": "form-control", 'type': 'datetime-local'}),
+                attrs={"class": "form-control", "type": "datetime-local"}
+            ),
             "price": forms.NumberInput(attrs={"class": "form-control"}),
             "contact_name": forms.TextInput(attrs={"class": "form-control"}),
             "contact_user": forms.Select(attrs={"class": "form-select"}),
             "title": forms.TextInput(attrs={"class": "form-control"}),
-            "description": forms.Textarea(
-                attrs={"class": "form-control", "rows": 3}),
+            "description": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
             "location": forms.Select(attrs={"class": "form-select"}),
             "category": forms.Select(attrs={"class": "form-select"}),
         }
@@ -61,17 +62,17 @@ class EventForm(forms.ModelForm):
         initial_start_date = self.initial.get("start_date")
         if initial_start_date:
             self.initial["start_date"] = initial_start_date.strftime(
-                "%Y-%m-%d %H:%M:%S")
+                "%Y-%m-%d %H:%M:%S"
+            )
 
         initial_end_date = self.initial.get("end_date")
         if initial_end_date:
-            self.initial["end_date"] = initial_end_date.strftime(
-                "%Y-%m-%d %H:%M:%S")
+            self.initial["end_date"] = initial_end_date.strftime("%Y-%m-%d %H:%M:%S")
 
         def clean_start_date(self):
             start_date = self.cleaned_data.get("start_date")
             if start_date and start_date < timezone.now():
-                raise ValidationError('A data não pode ser passada')
+                raise ValidationError("A data não pode ser passada")
 
             if start_date:
                 if isinstance(start_date, datetime):
@@ -81,7 +82,8 @@ class EventForm(forms.ModelForm):
                     datetime.strptime(start_date, "%Y-%m-%d %H:%M:%S")
                 except ValueError:
                     raise ValidationError(
-                        "Invalid date format. Please use YYYY-MM-DD HH:MM:SS.")
+                        "Invalid date format. Please use YYYY-MM-DD HH:MM:SS."
+                    )
             return start_date
 
         def clean_end_date(self):
@@ -94,7 +96,8 @@ class EventForm(forms.ModelForm):
                     datetime.strptime(end_date, "%Y-%m-%d %H:%M:%S")
                 except ValueError:
                     raise ValidationError(
-                        "Invalid date format. Please use YYYY-MM-DD HH:MM:SS.")
+                        "Invalid date format. Please use YYYY-MM-DD HH:MM:SS."
+                    )
             return end_date
 
     def clean(self):
@@ -103,8 +106,7 @@ class EventForm(forms.ModelForm):
         custom_user = cleaned_data.get("contact_user")
 
         if not contact_name and not custom_user:
-            self.add_error(
-                "contact_name", "Please provide contact information.")
+            self.add_error("contact_name", "Please provide contact information.")
             raise forms.ValidationError("Please provide contact information.")
 
         if contact_name and custom_user:

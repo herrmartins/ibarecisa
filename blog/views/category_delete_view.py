@@ -9,4 +9,4 @@ class CategoryDeleteView(PermissionRequiredMixin, DeleteView):
     template_name = "blog/category_form.html"
     model = Category
     context_object_name = "category"
-    success_url = reverse_lazy('blog:create-post')
+    success_url = reverse_lazy("blog:create-post")

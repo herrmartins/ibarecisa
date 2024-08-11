@@ -5,7 +5,7 @@ from django.contrib.auth.mixins import PermissionRequiredMixin
 
 
 class AnReportDeleteView(PermissionRequiredMixin, DeleteView):
-    permission_required = 'treasury.delete_transactionmodel'
+    permission_required = "treasury.delete_transactionmodel"
     template_name = "treasury/anreport_delete.html"
     model = MonthlyReportModel
     context_object_name = "an_report"

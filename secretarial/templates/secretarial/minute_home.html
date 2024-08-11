@@ -1,92 +1,92 @@
 {% extends 'core/base.html' %} {% block content %}
-{% load static %}
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  {% load static %}
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-<div class="container">
-  <div class="container text-center">
-    <p class="fs-3 fw-light">Registro de Reuniões</p>
-  </div>
-  <div class="col-12 d-flex justify-content-center">
-    <div class="col-2 p-3 mx-2 my-3 bg-success text-white rounded text-center fw-bold">Atas Registradas<br><a
+  <div class="container">
+    <div class="container text-center">
+      <p class="fs-3 fw-light">Registro de Reuniões</p>
+    </div>
+    <div class="col-12 d-flex justify-content-center">
+      <div class="col-2 p-3 mx-2 my-3 bg-success text-white rounded text-center fw-bold">Atas Registradas<br><a
         href="{% url 'secretarial:list-minutes' %}"><img src="{% static 'img/archive.svg' %}"></a><br>
-      <p class="h2 mt-2 fw-light">{{number_of_minutes}}</p>
-    </div>
-    <div class="col-2 p-3 mx-2 my-3 bg-primary text-white rounded text-center fw-bold">Modelos de Atas<br><a
-        href="{% url 'secretarial:list-templates' %}"><img src="{% static 'img/file-text.svg' %}"></a><br>
-      <p class="h2 mt-2 fw-light">{{number_of_templates}}</p>
-    </div>
-    <div class="col-2 p-3 mx-2 my-3 bg-info text-white rounded text-center fw-bold">Trechos de Atas<br><a
-        href="{% url 'secretarial:list-excerpts' %}"><img src="{% static 'img/file-minus.svg' %}"></a><br>
-      <p class="h2 mt-2 fw-light">{{number_of_excerpts}}</p>
-    </div>
-
-    <div class="col-2 p-3 mx-2 my-3 bg-warning text-white rounded text-center fw-bold">Projetos de Ata<br><a
-        href="{% url 'secretarial:list-minutes-projects' %}"><img src="{% static 'img/edit.svg' %}"></a><br>
-      <p class="h2 mt-2 fw-light">{{number_of_projects}}</p>
-    </div>
-
-  </div>
-  <div class="container-md">
-    <form id="search-form">
-      <div class="input-group input-group-lg">
-        <div class="form-floating">
-          <input type="text" id="searched" class="form-control" placeholder="Digite o critério de busca..." />
-          <label for="f_search" class="form-label">Escreva o(s) critério(s) da busca</label>
-        </div>
-        <select class="form-select">
-          <option>em atas</option>
-          <option>em modelos de atas</option>
-          <option>em pautas das atas</option>
-        </select>
-        <button type="submit" class="btn btn-primary">Buscar</button>
+        <p class="h2 mt-2 fw-light">{{number_of_minutes}}</p>
       </div>
-    </form>
-    <div class="d-flex" id="search-results">
+      <div class="col-2 p-3 mx-2 my-3 bg-primary text-white rounded text-center fw-bold">Modelos de Atas<br><a
+        href="{% url 'secretarial:list-templates' %}"><img src="{% static 'img/file-text.svg' %}"></a><br>
+        <p class="h2 mt-2 fw-light">{{number_of_templates}}</p>
+      </div>
+      <div class="col-2 p-3 mx-2 my-3 bg-info text-white rounded text-center fw-bold">Trechos de Atas<br><a
+        href="{% url 'secretarial:list-excerpts' %}"><img src="{% static 'img/file-minus.svg' %}"></a><br>
+        <p class="h2 mt-2 fw-light">{{number_of_excerpts}}</p>
+      </div>
+
+      <div class="col-2 p-3 mx-2 my-3 bg-warning text-white rounded text-center fw-bold">Projetos de Ata<br><a
+        href="{% url 'secretarial:list-minutes-projects' %}"><img src="{% static 'img/edit.svg' %}"></a><br>
+        <p class="h2 mt-2 fw-light">{{number_of_projects}}</p>
+      </div>
 
     </div>
-    {% if user.is_secretary %}
-    <div class="container my-3">
-      <div class="container-xl">
-        <div class="col-12">
-          <div class="row">
-            <div class="col-5">
-              <form action="{% url 'secretarial:create-minute-project' %}" method="POST">
-                {% csrf_token %}
-                {{form.media}}
-                {{form}}
-                <input type="submit" class="btn btn-primary my-2" value="Enviar">
-                <a href="{% url 'secretarial:agenda-form' %}"><span class="btn btn-primary">Adicionar Assuntos</span></a>
-              </form>
-            </div>
-            <div class="col-7">
-              <p class="fs-3 fw-light text-center">Lista de atas</p>
-              <div class="col-5">
-                {% if meeting_minutes %}
-                {% for mm in meeting_minutes %}
-                <p><a href="{% url 'secretarial:minute-detail-view' mm.pk %}">{{ mm }}</a></p>
-                {% endfor %}
-                {% endif %}
+    <div class="container-md">
+      <form id="search-form">
+        <div class="input-group input-group-lg">
+          <div class="form-floating">
+            <input type="text" id="searched" class="form-control" placeholder="Digite o critério de busca..." />
+            <label for="f_search" class="form-label">Escreva o(s) critério(s) da busca</label>
+          </div>
+          <select class="form-select">
+            <option>em atas</option>
+            <option>em modelos de atas</option>
+            <option>em pautas das atas</option>
+          </select>
+          <button type="submit" class="btn btn-primary">Buscar</button>
+        </div>
+      </form>
+      <div class="d-flex" id="search-results">
+
+      </div>
+      {% if user.is_secretary %}
+        <div class="container my-3">
+          <div class="container-xl">
+            <div class="col-12">
+              <div class="row">
+                <div class="col-5">
+                  <form action="{% url 'secretarial:create-minute-project' %}" method="POST">
+                    {% csrf_token %}
+                    {{form.media}}
+                    {{form}}
+                    <input type="submit" class="btn btn-primary my-2" value="Enviar">
+                    <a href="{% url 'secretarial:agenda-form' %}"><span class="btn btn-primary">Adicionar Assuntos</span></a>
+                  </form>
+                </div>
+                <div class="col-7">
+                  <p class="fs-3 fw-light text-center">Lista de atas</p>
+                  <div class="col-5">
+                    {% if meeting_minutes %}
+                      {% for mm in meeting_minutes %}
+                        <p><a href="{% url 'secretarial:minute-detail-view' mm.pk %}">{{ mm }}</a></p>
+                      {% endfor %}
+                    {% endif %}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    </div>
-    {%else %}
-    <div class="container">
-      <div class="row justify-content-center py-2">
-        <div class="col-8">
-          <p class="fw-light text-center">Lista de Atas</p>
-          {% for m in minutes %}
-          <p><a href="{% url 'secretarial:minute-detail-view' m.pk %}">{{ m }}</a></p>
-          </p>
-          {% endfor %}
+      {%else %}
+        <div class="container">
+          <div class="row justify-content-center py-2">
+            <div class="col-8">
+              <p class="fw-light text-center">Lista de Atas</p>
+              {% for m in minutes %}
+                <p><a href="{% url 'secretarial:minute-detail-view' m.pk %}">{{ m }}</a></p>
+                </p>
+              {% endfor %}
+            </div>
+          </div>
         </div>
-      </div>
+      {% endif %}
     </div>
-    {% endif %}
-  </div>
 
-</div>
-<script type="module" src="{% static 'js/secretarial_search.js' %}"></script>
+  </div>
+  <script type="module" src="{% static 'js/secretarial_search.js' %}"></script>
 {% endblock %}

@@ -6,5 +6,5 @@ from django.contrib.auth.mixins import PermissionRequiredMixin
 class ExcerptDetailView(PermissionRequiredMixin, DetailView):
     permission_required = "secretarial.add_meetingminutemodel"
     model = MinuteExcerptsModel
-    template_name = 'secretarial/excerpt_detail.html'
-    context_object_name = 'excerpt'
+    template_name = "secretarial/excerpt_detail.html"
+    context_object_name = "excerpt"

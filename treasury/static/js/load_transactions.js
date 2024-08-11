@@ -14,16 +14,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (month && year) {
         getTransactions(year, month);
-        yearSelect.value = year;
-        monthSelect.value = month;
     } else {
         const today = new Date();
         const currentYear = today.getFullYear();
         const currentMonth = today.getMonth() + 1;
-        getTransactions(currentYear, currentMonth);
-
-        // Set the default values in the dropdowns
+        
         yearSelect.value = currentYear;
         monthSelect.value = currentMonth;
+        getTransactions(currentYear, currentMonth);
     }
 });

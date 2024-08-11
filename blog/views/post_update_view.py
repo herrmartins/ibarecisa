@@ -11,15 +11,18 @@ class PostUpdateView(PermissionRequiredMixin, SuccessMessageMixin, UpdateView):
     permission_required = "blog.add_post"
     model = Post
     form_class = PostForm
-    template_name = 'blog/form.html'
-    success_url = reverse_lazy('blog:home')
+    template_name = "blog/form.html"
+    success_url = reverse_lazy("blog:home")
     success_message = "Post alterado com sucesso..."
 
     def form_invalid(self, form):
-        messages.error(self.request, "Erro no formulário...",)
+        messages.error(
+            self.request,
+            "Erro no formulário...",
+        )
         return super().form_invalid(form)
 
     def get_form_kwargs(self):
         kwargs = super(PostUpdateView, self).get_form_kwargs()
-        kwargs['author'] = self.request.user
+        kwargs["author"] = self.request.user
         return kwargs

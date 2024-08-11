@@ -6,21 +6,22 @@ from django.utils import timezone
 
 def check_and_create_missing_balances(date):
     from treasury.models import MonthlyBalance
+
     current_datetime = datetime.datetime.now()
     current_datetime = timezone.make_aware(current_datetime)
     current_date = current_datetime.date()
 
     current_month = current_date.replace(day=1)
     from treasury.models import MonthlyBalance
-    first_monthly_balance = MonthlyBalance.objects.filter(
-        is_first_month=True).first()
+
+    first_monthly_balance = MonthlyBalance.objects.filter(is_first_month=True).first()
 
     if not first_monthly_balance:
         raise NoInitialMonthlyBalance("Você precisa criar um balanço inicial...")
 
     from treasury.utils import months_between_dates
-    months_diff = months_between_dates(
-        first_monthly_balance.month, current_month)
+
+    months_diff = months_between_dates(first_monthly_balance.month, current_month)
 
     monthly_balances = MonthlyBalance.objects.filter(
         month__range=(first_monthly_balance.month, current_month)
@@ -31,6 +32,7 @@ def check_and_create_missing_balances(date):
 
     else:
         from treasury.utils import add_months
+
         existing_months = set(mb.month for mb in monthly_balances)
         expected_months = [
             add_months(first_monthly_balance.month, i) for i in range(months_diff + 1)
@@ -44,11 +46,15 @@ def check_and_create_missing_balances(date):
             if not MonthlyBalance.objects.filter(month=month).exists():
                 previous_month = month - relativedelta(months=1)
 
-                from treasury.utils import get_month_balance, get_total_amount_transactions_by_month
+                from treasury.utils import (
+                    get_month_balance,
+                    get_total_amount_transactions_by_month,
+                )
+
                 previous_month_balance = get_month_balance(previous_month)
 
-                transactions_amount_current_month = get_total_amount_transactions_by_month(
-                    month
+                transactions_amount_current_month = (
+                    get_total_amount_transactions_by_month(month)
                 )
                 total_previous_monthly_balance = (
                     previous_month_balance + transactions_amount_current_month

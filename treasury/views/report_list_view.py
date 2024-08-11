@@ -4,7 +4,7 @@ from django.contrib.auth.mixins import PermissionRequiredMixin
 
 
 class FinanceReportsListView(PermissionRequiredMixin, ListView):
-    permission_required = 'treasury.view_transactionmodel'
+    permission_required = "treasury.view_transactionmodel"
     template_name = "treasury/reports_list.html"
     model = MonthlyBalance
     context_object_name = "reports"

@@ -11,6 +11,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
 from core.core_context_processor import context_user_data
 
+
 @login_required
 def GenerateMonthlyPDFTransactionListView(
     request, year=datetime.now().year, month=datetime.now().month
@@ -66,13 +67,10 @@ def GenerateMonthlyPDFTransactionListView(
             "last_month_date": monthly_balance_date.replace(day=last_day_last_month[1]),
         }
 
-        html_index = render_to_string(
-            "treasury/export_pdf_template.html", context)
+        html_index = render_to_string("treasury/export_pdf_template.html", context)
 
-        base_url = request.build_absolute_uri('/')  # Dynamically determine the base URL
-        weasyprint_html = weasyprint.HTML(
-            string=html_index, base_url=base_url
-        )
+        base_url = request.build_absolute_uri("/")  # Dynamically determine the base URL
+        weasyprint_html = weasyprint.HTML(string=html_index, base_url=base_url)
         pdf = weasyprint_html.write_pdf(
             stylesheets=[
                 weasyprint.CSS(

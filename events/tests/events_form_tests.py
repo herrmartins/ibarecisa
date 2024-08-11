@@ -47,4 +47,6 @@ class EventFormTestCase(TestCase):
         form = EventForm(data=invalid_data, user=self.user)
         self.assertFalse(form.is_valid())
         self.assertIn("contact_name", form.errors)
-        self.assertEqual(form.errors["contact_name"], ["Please provide contact information."])
+        self.assertEqual(
+            form.errors["contact_name"], ["Please provide contact information."]
+        )

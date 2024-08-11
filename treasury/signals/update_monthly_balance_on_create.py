@@ -20,7 +20,8 @@ def update_monthly_balance_on_create(sender, instance, **kwargs):
             if monthly_balance_exists(transaction_month):
                 with transaction.atomic():
                     monthly_balance = MonthlyBalance.objects.get(
-                        month=transaction_month)
+                        month=transaction_month
+                    )
                     monthly_balance.balance += instance.amount
                     monthly_balance.save()
 
@@ -28,6 +29,7 @@ def update_monthly_balance_on_create(sender, instance, **kwargs):
                 check_and_create_missing_balances(transaction_month)
                 with transaction.atomic():
                     monthly_balance = MonthlyBalance.objects.get(
-                        month=transaction_month)
+                        month=transaction_month
+                    )
                     monthly_balance.balance += instance.amount
                     monthly_balance.save()

@@ -39,16 +39,12 @@ def getCurrentBalance(request):
         date__month=current_month, date__year=current_year
     ).order_by("-date")
 
-    positive_transactions_queryset = transactions_queryset.filter(
-        is_positive=True)
-    negative_transactions_queryset = transactions_queryset.filter(
-        is_positive=False)
+    positive_transactions_queryset = transactions_queryset.filter(is_positive=True)
+    negative_transactions_queryset = transactions_queryset.filter(is_positive=False)
 
     unaware_month_balance = sum(t.amount for t in transactions_queryset)
-    positive_transactions = sum(
-        pt.amount for pt in positive_transactions_queryset)
-    negative_transactions = sum(
-        nt.amount for nt in negative_transactions_queryset)
+    positive_transactions = sum(pt.amount for pt in positive_transactions_queryset)
+    negative_transactions = sum(nt.amount for nt in negative_transactions_queryset)
 
     aware_month_balance = last_month_balance.balance + unaware_month_balance
 
@@ -133,8 +129,7 @@ def unifiedSearch(request):
         return Response(serialized_data.data)
 
     elif search_category == "minutes":
-        queryset = MeetingMinuteModel.objects.filter(
-            body__icontains=search_criterion)
+        queryset = MeetingMinuteModel.objects.filter(body__icontains=search_criterion)
         serialized_data = MeetingMinuteModelSerializer(queryset, many=True)
 
         for data in serialized_data.data:
@@ -145,8 +140,7 @@ def unifiedSearch(request):
 
     elif search_category == "templates":
         queryset = MinuteTemplateModel.objects.filter(
-            Q(title__icontains=search_criterion) | Q(
-                body__icontains=search_criterion)
+            Q(title__icontains=search_criterion) | Q(body__icontains=search_criterion)
         )
         serialized_data = MinuteTemplateModelSerializer(queryset, many=True)
 

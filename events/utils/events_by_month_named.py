@@ -4,7 +4,7 @@ from events.models import Event
 
 
 def events_by_month_named():
-    locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
+    locale.setlocale(locale.LC_ALL, "pt_BR.UTF-8")
 
     events_by_month = Event.objects.events_by_month_current_year()
 

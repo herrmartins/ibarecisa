@@ -16,14 +16,12 @@ class InitialBalanceForm(forms.ModelForm):
 
     month = forms.DateField(
         label="Selecione o mês e ano",
-        widget=forms.DateInput(
-            attrs={"type": "month", "class": "form-control"}),
+        widget=forms.DateInput(attrs={"type": "month", "class": "form-control"}),
         input_formats=["%Y-%m"],
     )
 
     is_first_month = forms.BooleanField(
-        widget=forms.HiddenInput(attrs={"value": "True"}),
-        required=False
+        widget=forms.HiddenInput(attrs={"value": "True"}), required=False
     )
 
     def clean(self):

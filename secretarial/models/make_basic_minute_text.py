@@ -36,10 +36,18 @@ def make_minute(name_dict):
         ", primeiro secretário,",
         "lavrei a presente ata que vai assinada por mim e pelo pastor.</p>",
         "meeting_date",
-        "<p>", " Primeiro secretário:", "</p>",
-        "<p>", "secretary", "</p>",
-        "<p>", " Pastor:", "</p>",
-        "<p>", "presidente", "</p>",
+        "<p>",
+        " Primeiro secretário:",
+        "</p>",
+        "<p>",
+        "secretary",
+        "</p>",
+        "<p>",
+        " Pastor:",
+        "</p>",
+        "<p>",
+        "presidente",
+        "</p>",
     ]
     result_text = []
     for word in text:

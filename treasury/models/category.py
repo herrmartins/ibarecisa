@@ -9,5 +9,5 @@ class CategoryModel(BaseModel):
         return self.name
 
     class Meta:
-        verbose_name = 'Categoria'
-        verbose_name_plural = 'Categorias'
+        verbose_name = "Categoria"
+        verbose_name_plural = "Categorias"

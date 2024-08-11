@@ -11,8 +11,8 @@ class VenueUpdateView(PermissionRequiredMixin, SuccessMessageMixin, UpdateView):
     permission_required = "events.add_event"
     model = Venue
     form_class = VenueForm
-    template_name = 'events/venue_form.html'
-    success_url = reverse_lazy('events:venues-list')
+    template_name = "events/venue_form.html"
+    success_url = reverse_lazy("events:venues-list")
     success_message = "Local de eventos criado com sucesso..."
 
     def form_invalid(self, form):

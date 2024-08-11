@@ -11,7 +11,7 @@ from rest_framework import status
 from treasury.tests.test_utils import get_test_image_file
 
 
-@override_settings(DEFAULT_FILE_STORAGE='treasury.tests.fake_storage.InMemoryStorage')
+@override_settings(DEFAULT_FILE_STORAGE="treasury.tests.fake_storage.InMemoryStorage")
 class TestViews(APITestCase):
     def setUp(self):
         self.balance_date = date(2022, 12, 1)
@@ -20,10 +20,10 @@ class TestViews(APITestCase):
             username="testuser", email="test@example.com", password="password123"
         )
         self.category = baker.make("treasury.CategoryModel")
-        baker.make("treasury.MonthlyBalance",
-                   month=self.balance_date, is_first_month=True)
-        baker.make("CustomUser", first_name="Mary",
-                   type=CustomUser.Types.REGULAR)
+        baker.make(
+            "treasury.MonthlyBalance", month=self.balance_date, is_first_month=True
+        )
+        baker.make("CustomUser", first_name="Mary", type=CustomUser.Types.REGULAR)
         baker.make("secretarial.MinuteTemplateModel", body="Lorem ipsum...")
         baker.make("secretarial.MeetingMinuteModel", body="Lorem ipsum...")
         self.transaction = baker.make("TransactionModel")
@@ -42,7 +42,7 @@ class TestViews(APITestCase):
             "date": self.date,
             "acquittance_doc": test_image,
         }
-        response = self.client.post(url, data, format='multipart')
+        response = self.client.post(url, data, format="multipart")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_get_current_balance(self):
@@ -65,7 +65,6 @@ class TestViews(APITestCase):
         url = reverse("get-transactions")
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-
 
     def test_create_transaction(self):
         url = reverse("post-transaction")
@@ -94,8 +93,9 @@ class TestViews(APITestCase):
         url = reverse("delete-transaction", kwargs={"pk": self.transaction.pk})
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        self.assertFalse(TransactionModel.objects.filter(
-            pk=self.transaction.pk).exists())
+        self.assertFalse(
+            TransactionModel.objects.filter(pk=self.transaction.pk).exists()
+        )
 
     def test_get_data(self):
         MinuteExcerptsModel.objects.create()
@@ -108,7 +108,7 @@ class TestViews(APITestCase):
 
     def test_get_detailed_data(self):
         minute_excerpt = baker.make(MinuteExcerptsModel)
-        pk = 1 
+        pk = 1
         url = reverse("get-detailed-data", kwargs={"pk": pk})
         self.client.force_login(self.user)
         response = self.client.get(url)

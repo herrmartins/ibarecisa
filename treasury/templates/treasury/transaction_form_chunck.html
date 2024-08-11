@@ -4,10 +4,10 @@
   {% if perms.treasury.add_transactionmodel %}
     {% if not form_balance %}
       <p class="text-center">Adicionar Transação</p>
-      <form 
-        x-data 
+      <form
+        x-data
         @submit.prevent="addTransaction($event)"
-        id="transaction_form" 
+        id="transaction_form"
         enctype="multipart/form-data"
       >
         {% csrf_token %}

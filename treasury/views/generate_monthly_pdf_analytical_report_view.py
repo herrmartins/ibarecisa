@@ -54,9 +54,8 @@ def GenerateMonthlyPDFAnReportView(request, pk):
             "balance": Decimal(an_report.total_balance),
         }
         html_index = render_to_string("treasury/export_analytical_report.html", context)
-        base_url = request.build_absolute_uri('/')
-        weasyprint_html = weasyprint.HTML(
-            string=html_index, base_url=base_url)
+        base_url = request.build_absolute_uri("/")
+        weasyprint_html = weasyprint.HTML(string=html_index, base_url=base_url)
         pdf = weasyprint_html.write_pdf(
             stylesheets=[
                 weasyprint.CSS(

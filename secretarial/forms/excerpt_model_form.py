@@ -6,7 +6,7 @@ from ckeditor.widgets import CKEditorWidget
 class MinuteExcerptsModelForm(forms.ModelForm):
     class Meta:
         model = MinuteExcerptsModel
-        fields = ['title', 'excerpt']
+        fields = ["title", "excerpt"]
 
         labels = {
             "title": "Título",

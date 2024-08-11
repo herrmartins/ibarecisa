@@ -2,19 +2,19 @@
 {% load static %}
 {% block content %}
 
-{% if 'edit-category' in request.resolver_match.view_name %}
+  {% if 'edit-category' in request.resolver_match.view_name %}
     <p class="fs-3 fw-light">Altere a categoria</p>
-{% else %}
+  {% else %}
     <p class="fs-3 fw-light">Cadastre uma categoria..</p>
-{% endif %}
-<div class="container my-2">
-  <div class="row justify-content-center">
-    <div class="col-md-auto">
-      {% if 'edit-category' in request.resolver_match.view_name %}
+  {% endif %}
+  <div class="container my-2">
+    <div class="row justify-content-center">
+      <div class="col-md-auto">
+        {% if 'edit-category' in request.resolver_match.view_name %}
           <form method="POST" action="{% url 'blog:update-category' category.pk %}">
-      {% else %}
+        {% else %}
           <form method="POST" action="{% url 'blog:create-category' %}">
-      {% endif %}
+        {% endif %}
         {% csrf_token %}
         {{form.as_p}}
         <input type="submit" value="Cadastrar" class="btn btn-primary">
@@ -35,5 +35,5 @@
       {% endfor %}
     </div>
   </div>
-</div>
+  </div>
 {% endblock %}

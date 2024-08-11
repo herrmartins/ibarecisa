@@ -9,7 +9,7 @@ class CategoryFormView(PermissionRequiredMixin, FormView):
     template_name = "events/category_form.html"
     form_class = EventCategoryForm
     context_object_name = "category"
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["categories"] = EventCategory.objects.all()

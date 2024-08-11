@@ -10,10 +10,8 @@ class MinuteModelForm(ModelForm):
     def __init__(self, *args, **kwargs):
         super(MinuteModelForm, self).__init__(*args, **kwargs)
 
-        self.fields["president"].queryset = CustomUser.objects.filter(
-            is_pastor=True)
-        self.fields["secretary"].queryset = CustomUser.objects.filter(
-            is_secretary=True)
+        self.fields["president"].queryset = CustomUser.objects.filter(is_pastor=True)
+        self.fields["secretary"].queryset = CustomUser.objects.filter(is_secretary=True)
 
     class Meta:
         model = MeetingMinuteModel

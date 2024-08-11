@@ -1,80 +1,80 @@
 {% extends 'core/base.html' %} {% load static %}{% block content %}
 
 
-{% if 'edit-event' in request.resolver_match.view_name %}
-<p class="fs-3 fw-light">Altere o evento {{current_event.title}}</p>
-{% else %}
-<p class="fs-3 fw-light">Cadastre um evento..</p>
-{% endif %}
-<div class="container my-2">
-  <div class="row justify-content-center">
+  {% if 'edit-event' in request.resolver_match.view_name %}
+    <p class="fs-3 fw-light">Altere o evento {{current_event.title}}</p>
+  {% else %}
+    <p class="fs-3 fw-light">Cadastre um evento..</p>
+  {% endif %}
+  <div class="container my-2">
     <div class="row justify-content-center">
-      <div class="col-auto">
-        <a href="{% url 'events:register-venue' %}" class="btn btn-secondary">Cadastrar Salão de Eventos</a>
-      </div>
-      <div class="col-auto">
-        <a href="{% url 'events:venues-list' %}" class="btn btn-secondary">Listar Salões</a>
-      </div>
-    </div>
-    <div class="col-8">
-      {% if 'edit-event' in request.resolver_match.view_name %}
-      <form method="POST" , action="{% url 'events:update-event' current_event.id %}" id="event-form">
-        {% else %}
-        <form method="POST" , action="{% url 'events:create-event' %}" id="event-form">
-          {% endif %}
-          {% csrf_token %}
-          {{form.as_p}}
-          {% if 'edit-event' in request.resolver_match.view_name %}
-          <input type="submit" value="Alterar" class="btn btn-primary">
-          {% else %}
-          <input type="submit" value="Cadastrar" class="btn btn-primary">
-          {% endif %}
-          <a href="{% url 'events:category-form' %}"><span class="btn btn-primary">Gerenciar Categorias</span></a>
-        </form>
-    </div>
-
-{% if not 'edit-event' in request.resolver_match.view_name %}
-
-  <div class="row">
-      <div class="col">
-        <p class="fw-light">Eventos cadastrados...</p>
-
-        {% for month, events_in_month in events.items %}
-        <div class="row mb-4">
-          <div class="col">
-            <h3>{{ month|title }}</h3>
-          </div>
+      <div class="row justify-content-center">
+        <div class="col-auto">
+          <a href="{% url 'events:register-venue' %}" class="btn btn-secondary">Cadastrar Salão de Eventos</a>
         </div>
-        <div class="row">
-          {% for event in events_in_month %}
-          <div class="col-sm-4 mb-4">
-            <div class="card">
-              <div class="card-body">
+        <div class="col-auto">
+          <a href="{% url 'events:venues-list' %}" class="btn btn-secondary">Listar Salões</a>
+        </div>
+      </div>
+      <div class="col-8">
+        {% if 'edit-event' in request.resolver_match.view_name %}
+          <form method="POST" , action="{% url 'events:update-event' current_event.id %}" id="event-form">
+        {% else %}
+          <form method="POST" , action="{% url 'events:create-event' %}" id="event-form">
+        {% endif %}
+        {% csrf_token %}
+        {{form.as_p}}
+        {% if 'edit-event' in request.resolver_match.view_name %}
+          <input type="submit" value="Alterar" class="btn btn-primary">
+        {% else %}
+          <input type="submit" value="Cadastrar" class="btn btn-primary">
+        {% endif %}
+        <a href="{% url 'events:category-form' %}"><span class="btn btn-primary">Gerenciar Categorias</span></a>
+      </form>
+    </div>
 
-                <h5 class="card-title">{{ event.title }} {% if user.is_secretary %}<a
-                    href="{% url 'events:edit-event' event.id %}"><img src="{% static 'img/edit-black.svg' %}"
-                      alt="Edit"></a>{% endif %}</h5>
+    {% if not 'edit-event' in request.resolver_match.view_name %}
 
-                <p class="card-text">{{ event.description }}</p>
-                <ul class="list-group list-group-flush">
-                  <li class="list-group-item">Start Date: {{ event.start_date }}</li>
-                  <li class="list-group-item">End Date: {{ event.end_date }}</li>
-                  <li class="list-group-item">Price: {{ event.price }}</li>
-                  <!-- Add more details as needed -->
-                  <li class="list-group-item">Category: {{ event.category }}</li>
-                  <!-- Assuming 'category' has a 'name' field, adjust as per your model -->
-                </ul>
-              </div>
-              <div class="card-footer">
-                <small class="text-muted">Location: {{ event.location.name }}</small>
+      <div class="row">
+        <div class="col">
+          <p class="fw-light">Eventos cadastrados...</p>
+
+          {% for month, events_in_month in events.items %}
+            <div class="row mb-4">
+              <div class="col">
+                <h3>{{ month|title }}</h3>
               </div>
             </div>
-          </div>
+            <div class="row">
+              {% for event in events_in_month %}
+                <div class="col-sm-4 mb-4">
+                  <div class="card">
+                    <div class="card-body">
+
+                      <h5 class="card-title">{{ event.title }} {% if user.is_secretary %}<a
+                        href="{% url 'events:edit-event' event.id %}"><img src="{% static 'img/edit-black.svg' %}"
+                                                                           alt="Edit"></a>{% endif %}</h5>
+
+                      <p class="card-text">{{ event.description }}</p>
+                      <ul class="list-group list-group-flush">
+                        <li class="list-group-item">Start Date: {{ event.start_date }}</li>
+                        <li class="list-group-item">End Date: {{ event.end_date }}</li>
+                        <li class="list-group-item">Price: {{ event.price }}</li>
+                  <!-- Add more details as needed -->
+                        <li class="list-group-item">Category: {{ event.category }}</li>
+                  <!-- Assuming 'category' has a 'name' field, adjust as per your model -->
+                      </ul>
+                    </div>
+                    <div class="card-footer">
+                      <small class="text-muted">Location: {{ event.location.name }}</small>
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
           {% endfor %}
         </div>
-        {% endfor %}
       </div>
-    </div>
     {% endif %}
     <script type="module" src="{% static 'js/validate_date.js' %}"></script>
-    {% endblock %}
+{% endblock %}

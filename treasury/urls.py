@@ -113,7 +113,8 @@ urlpatterns = [
     path("add-transaction/", AddTransactionView.as_view(), name="add-transaction"),
     path("transactions/", TransactionListView.as_view(), name="transactions"),
     path("health", FinancialDataHealthView.as_view(), name="check-treasury-health"),
-    path('get-balances/', GetMonthlyBalancesView.as_view(), name='monthly-balances-list'),
-    path('fix', FixFinancialDataView.as_view(), name='fix-financial-data'),
-
+    path(
+        "get-balances/", GetMonthlyBalancesView.as_view(), name="monthly-balances-list"
+    ),
+    path("fix", FixFinancialDataView.as_view(), name="fix-financial-data"),
 ]

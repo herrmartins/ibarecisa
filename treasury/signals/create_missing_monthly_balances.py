@@ -15,8 +15,7 @@ def create_missing_monthly_balances(sender, instance, created, **kwargs):
                 receiver=create_missing_monthly_balances,
                 sender=MonthlyBalance,
             )
-            check_and_create_missing_balances(
-                instance.month)
+            check_and_create_missing_balances(instance.month)
             post_save.connect(
                 receiver=create_missing_monthly_balances,
                 sender=MonthlyBalance,
@@ -31,8 +30,7 @@ def create_missing_monthly_balances(sender, instance, created, **kwargs):
                 receiver=create_missing_monthly_balances,
                 sender=MonthlyBalance,
             )
-            check_and_create_missing_balances(
-                instance.month)
+            check_and_create_missing_balances(instance.month)
             post_save.connect(
                 receiver=create_missing_monthly_balances,
                 sender=MonthlyBalance,

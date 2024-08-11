@@ -1,105 +1,105 @@
 {% extends 'core/base.html' %} {% block content %}
-{% load static %}
+  {% load static %}
 
-<link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}" />
+  <link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}" />
 
-<div class="container text-center">
-  <p class="fs-3 fw-light">Bem vindo à secretaria, {{user}}...</p>
-</div>
-<div class="col-12">
-  <div class="d-flex justify-content-center">
-    <div class="col-2 p-3 mx-2 my-3 bg-success text-white rounded text-center fw-bold">Membros<br><img
+  <div class="container text-center">
+    <p class="fs-3 fw-light">Bem vindo à secretaria, {{user}}...</p>
+  </div>
+  <div class="col-12">
+    <div class="d-flex justify-content-center">
+      <div class="col-2 p-3 mx-2 my-3 bg-success text-white rounded text-center fw-bold">Membros<br><img
         src="{% static 'img/smile.svg' %}"><br>
-      <p class="h2 mt-2 fw-light">{{number_of_members}}</p>
-    </div>
-    <div class="col-2 p-3 mx-2 my-3 bg-primary text-white rounded text-center fw-bold">Congregados<br><img
+        <p class="h2 mt-2 fw-light">{{number_of_members}}</p>
+      </div>
+      <div class="col-2 p-3 mx-2 my-3 bg-primary text-white rounded text-center fw-bold">Congregados<br><img
         src="{% static 'img/user-plus.svg' %}"><br>
-      <p class="h2 mt-2 fw-light">{{number_of_visitors}}</p>
+        <p class="h2 mt-2 fw-light">{{number_of_visitors}}</p>
+      </div>
     </div>
   </div>
-</div>
-<div class="container">
-  <form id="search-form">
-    {% csrf_token %}
-    <div class="input-group input-group-lg">
-      <div class="form-floating">
-        <input type="search" id="searched" class="form-control" placeholder="Digite o critério de busca..." />
-        <label for="searched" class="form-label">Escreva o(s) critério(s) da busca</label>
-      </div>
-      <select class="form-select">
-        <option value="minutes">em atas</option>
-        {% if perms.secretarial.add_meetingminutemodel or perms.users.add_customuser %}
-        <option value="templates">em modelos de atas</option>
-        <option value="users">em usuários</option>
-        <option value="members">em membros</option>
-        {% endif %}
-      </select>
-      <button type="submit" class="btn btn-primary">Buscar</button>
-    </div>
-  </form>
-
-  <div class="d-flex" id="search_result"></div>
-
-
-<div class="container my-2">
-  <div class="row justify-content-center">
-    <div class="col-auto mb-2">
-      <div class="card mx-2" style="width: 18rem;">
-        <img src="{% static 'img/minute.jpg' %}" class="card-img-top" alt="Meeting Image">
-        <div class="card-body">
-          <h5 class="card-title">Registro de Assembéias</h5>
-          <p class="card-text">Seção de Registros de Assembéias. Neste espaço, você pode redigir registros de reuniões,
-            consultar registros anteriores, criar modelos para esses registros e executar outras tarefas relacionadas a
-            registros de reuniões.</p>
-          <a href="{% url 'secretarial:minute-home' %}" class="btn btn-primary">Acessar</a>
+  <div class="container">
+    <form id="search-form">
+      {% csrf_token %}
+      <div class="input-group input-group-lg">
+        <div class="form-floating">
+          <input type="search" id="searched" class="form-control" placeholder="Digite o critério de busca..." />
+          <label for="searched" class="form-label">Escreva o(s) critério(s) da busca</label>
         </div>
+        <select class="form-select">
+          <option value="minutes">em atas</option>
+          {% if perms.secretarial.add_meetingminutemodel or perms.users.add_customuser %}
+            <option value="templates">em modelos de atas</option>
+            <option value="users">em usuários</option>
+            <option value="members">em membros</option>
+          {% endif %}
+        </select>
+        <button type="submit" class="btn btn-primary">Buscar</button>
       </div>
-    </div>
-      {% if perms.secretarial.add_meetingminutemodel or perms.users.add_customuser %}
-    <div class="col-auto mb-2">
-      <div class="card mx-2" style="width: 18rem;">
-        <img src="{% static 'img/users.jpg' %}" class="card-img-top" alt="Meeting Image">
-        <div class="card-body">
-          <h5 class="card-title">Usuários</h5>
-          <p class="card-text">Gerenciamento de Usuários. Nesta seção, você pode classificar os usuários, atribuir
-            funções
-            e até mesmo removê-los conforme necessário.</p>
-          <a href="{% url 'secretarial:users-qualifying' %}" class="btn btn-primary">Acessar</a>
-        </div>
-      </div>
-    </div>
-    {% endif %}
+    </form>
 
-    {% if perms.events.add_event %}
-    <div class="col-auto mb-2">
-      <div class="card mx-2" style="width: 18rem;">
-        <img src="{% static 'img/events.jpg' %}" class="card-img-top" alt="Meeting Image">
-        <div class="card-body">
-          <h5 class="card-title">Eventos</h5>
-          <p class="card-text">Gerenciamento de Eventos. Nesta seção, você pode cadastrar e editar eventos.</p>
-          <a href="{% url 'events:register' %}" class="btn btn-primary">Acessar</a>
-        </div>
-      </div>
-    </div>
-    {% endif %}
+    <div class="d-flex" id="search_result"></div>
 
-    {% if perms.blog.add_post %}
-      <div class="col-auto mb-2">
-        <div class="card mx-2" style="width: 18rem;">
-          <img src="{% static 'img/blog.jpg' %}" class="card-img-top" alt="Meeting Image">
-          <div class="card-body">
-            <h5 class="card-title">Blog</h5>
-            <p class="card-text">Nesta seção você pode escrever seus posts de blog para edificação da igreja e de outros usuários.</p>
-            <a href="{% url 'blog:create-post' %}" class="btn btn-primary">Acessar</a>
+
+    <div class="container my-2">
+      <div class="row justify-content-center">
+        <div class="col-auto mb-2">
+          <div class="card mx-2" style="width: 18rem;">
+            <img src="{% static 'img/minute.jpg' %}" class="card-img-top" alt="Meeting Image">
+            <div class="card-body">
+              <h5 class="card-title">Registro de Assembéias</h5>
+              <p class="card-text">Seção de Registros de Assembéias. Neste espaço, você pode redigir registros de reuniões,
+                consultar registros anteriores, criar modelos para esses registros e executar outras tarefas relacionadas a
+                registros de reuniões.</p>
+              <a href="{% url 'secretarial:minute-home' %}" class="btn btn-primary">Acessar</a>
+            </div>
           </div>
         </div>
+        {% if perms.secretarial.add_meetingminutemodel or perms.users.add_customuser %}
+          <div class="col-auto mb-2">
+            <div class="card mx-2" style="width: 18rem;">
+              <img src="{% static 'img/users.jpg' %}" class="card-img-top" alt="Meeting Image">
+              <div class="card-body">
+                <h5 class="card-title">Usuários</h5>
+                <p class="card-text">Gerenciamento de Usuários. Nesta seção, você pode classificar os usuários, atribuir
+                  funções
+                  e até mesmo removê-los conforme necessário.</p>
+                <a href="{% url 'secretarial:users-qualifying' %}" class="btn btn-primary">Acessar</a>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+
+        {% if perms.events.add_event %}
+          <div class="col-auto mb-2">
+            <div class="card mx-2" style="width: 18rem;">
+              <img src="{% static 'img/events.jpg' %}" class="card-img-top" alt="Meeting Image">
+              <div class="card-body">
+                <h5 class="card-title">Eventos</h5>
+                <p class="card-text">Gerenciamento de Eventos. Nesta seção, você pode cadastrar e editar eventos.</p>
+                <a href="{% url 'events:register' %}" class="btn btn-primary">Acessar</a>
+              </div>
+            </div>
+          </div>
+        {% endif %}
+
+        {% if perms.blog.add_post %}
+          <div class="col-auto mb-2">
+            <div class="card mx-2" style="width: 18rem;">
+              <img src="{% static 'img/blog.jpg' %}" class="card-img-top" alt="Meeting Image">
+              <div class="card-body">
+                <h5 class="card-title">Blog</h5>
+                <p class="card-text">Nesta seção você pode escrever seus posts de blog para edificação da igreja e de outros usuários.</p>
+                <a href="{% url 'blog:create-post' %}" class="btn btn-primary">Acessar</a>
+              </div>
+            </div>
+          </div>
+        {% endif %}
       </div>
-    {% endif %}
-  </div>
-</div>
+    </div>
 
 
 
-<script type="module" src="{% static 'js/secretarial_search.js' %}"></script>
+    <script type="module" src="{% static 'js/secretarial_search.js' %}"></script>
 
 {% endblock %}

@@ -6,4 +6,4 @@ class ConfigView(PermissionRequiredMixin, TemplateView):
     permission_required = [
         "users.add_customuser",
     ]
-    template_name = 'core/config.html'
+    template_name = "core/config.html"

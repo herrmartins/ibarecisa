@@ -16,6 +16,7 @@ class TemplateCreateView(PermissionRequiredMixin, CreateView):
         context = super().get_context_data(**kwargs)
 
         context["excerpts_list"] = MinuteExcerptsModel.objects.all().order_by(
-            "-times_used")
+            "-times_used"
+        )
 
         return context

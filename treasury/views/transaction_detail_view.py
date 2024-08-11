@@ -5,7 +5,7 @@ from django.contrib.auth.mixins import PermissionRequiredMixin
 
 
 class TransactionDetailView(PermissionRequiredMixin, DetailView):
-    permission_required = 'treasury.change_transactionmodel'
+    permission_required = "treasury.change_transactionmodel"
     model = TransactionModel
     template_name = "treasury/transaction_detail.html"
     context_object_name = "transaction"

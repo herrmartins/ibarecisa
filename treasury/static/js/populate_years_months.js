@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const option = document.createElement('option');
                 option.value = year;
                 option.textContent = year;
-                if (year == currentYear) {
+                if (year === currentYear) {
                     option.selected = true;
                 }
                 yearSelect.appendChild(option);

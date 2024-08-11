@@ -18,7 +18,9 @@ class UpdateUserProfileModelForm(ModelForm):
     def clean_date_of_birth(self):
         date_of_birth = self.cleaned_data.get("date_of_birth")
         if date_of_birth:
-            if isinstance(date_of_birth, date):  # Using the imported 'date' from datetime module
+            if isinstance(
+                date_of_birth, date
+            ):  # Using the imported 'date' from datetime module
                 date_of_birth = date_of_birth.strftime("%Y-%m-%d")
 
             try:
@@ -26,12 +28,16 @@ class UpdateUserProfileModelForm(ModelForm):
             except ValueError:
                 raise ValidationError("Invalid date format. Please use YYYY-MM-DD.")
         return date_of_birth
-    
+
     def clean_profile_image(self):
-        profile_image = self.cleaned_data.get('profile_image')
+        profile_image = self.cleaned_data.get("profile_image")
         if profile_image:
-            if not profile_image.name.endswith(('.png', '.jpg', '.jpeg', '.JPEG', '.JPG', '.PNG')):
-                raise ValidationError('Invalid file type. Only PNG, JPG, and JPEG files are allowed.')
+            if not profile_image.name.endswith(
+                (".png", ".jpg", ".jpeg", ".JPEG", ".JPG", ".PNG")
+            ):
+                raise ValidationError(
+                    "Invalid file type. Only PNG, JPG, and JPEG files are allowed."
+                )
         return profile_image
 
     class Meta:

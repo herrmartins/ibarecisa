@@ -1,11 +1,15 @@
 from .monthly_balance_exists import monthly_balance_exists
 from .update_subsequent_balances import update_subsequent_balances
 from .check_and_create_missing_balances import check_and_create_missing_balances
-from .get_total_amount_transactions_by_month import get_total_amount_transactions_by_month
+from .get_total_amount_transactions_by_month import (
+    get_total_amount_transactions_by_month,
+)
 from .get_last_day_of_month import get_last_day_of_month
 from .all_balances_present import all_balances_present
 from .months_between_dates import months_between_dates
-from .get_aggregate_transactions_by_category import get_aggregate_transactions_by_category
+from .get_aggregate_transactions_by_category import (
+    get_aggregate_transactions_by_category,
+)
 from .get_total_transactions_amount import get_total_transactions_amount
 from .add_months import add_months
 from .get_month_balance import get_month_balance

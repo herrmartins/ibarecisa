@@ -14,21 +14,23 @@ class EventCreateViewTest(TestCase):
     def setUp(self):
         self.client = Client()
         self.user = CustomUser.objects.create_user(
-            username='testuser', password='testpassword')
+            username="testuser", password="testpassword"
+        )
         self.permission = Permission.objects.get(
-            name='Can add event')  # Assuming the permission name
+            name="Can add event"
+        )  # Assuming the permission name
         self.user.user_permissions.add(self.permission)
-        self.client.login(username='testuser', password='testpassword')
-        self.create_url = reverse('events:create-event')
+        self.client.login(username="testuser", password="testpassword")
+        self.create_url = reverse("events:create-event")
         self.category = mommy.make(EventCategory)
         self.venue = mommy.make(Venue, _quantity=5)
 
     def test_event_create_view(self):
         response = self.client.get(self.create_url)
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'events/form.html')
-        self.assertIsInstance(response.context['view'], EventCreateView)
-        self.assertIsInstance(response.context['form'], EventForm)
+        self.assertTemplateUsed(response, "events/form.html")
+        self.assertIsInstance(response.context["view"], EventCreateView)
+        self.assertIsInstance(response.context["form"], EventForm)
 
     def test_event_create_success(self):
         contact_user = mommy.make(CustomUser, _quantity=5)
@@ -61,7 +63,8 @@ class EventCreateViewTest(TestCase):
         self.assertEqual(response.status_code, 302)
 
         non_permitted_user = CustomUser.objects.create_user(
-            username='non_permitted', password='testpassword')
-        self.client.login(username='non_permitted', password='testpassword')
+            username="non_permitted", password="testpassword"
+        )
+        self.client.login(username="non_permitted", password="testpassword")
         response = self.client.get(self.create_url)
         self.assertEqual(response.status_code, 403)

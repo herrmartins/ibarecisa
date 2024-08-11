@@ -4,7 +4,8 @@ from secretarial.models import (
     MeetingMinuteModel,
     MinuteTemplateModel,
     MinuteExcerptsModel,
-    MinuteProjectModel)
+    MinuteProjectModel,
+)
 
 admin.site.register(MeetingAgendaModel)
 admin.site.register(MeetingMinuteModel)

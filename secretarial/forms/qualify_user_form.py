@@ -7,9 +7,15 @@ class UserQualifyingForm(forms.ModelForm):
         model = CustomUser
         fields = ["is_pastor", "is_secretary", "is_treasurer"]
         widgets = {
-            "is_pastor": forms.CheckboxInput(attrs={"class": "form-check-input d-block"}),
-            "is_secretary": forms.CheckboxInput(attrs={"class": "form-check-input d-block"}),
-            "is_treasurer": forms.CheckboxInput(attrs={"class": "form-check-input d-block"}),
+            "is_pastor": forms.CheckboxInput(
+                attrs={"class": "form-check-input d-block"}
+            ),
+            "is_secretary": forms.CheckboxInput(
+                attrs={"class": "form-check-input d-block"}
+            ),
+            "is_treasurer": forms.CheckboxInput(
+                attrs={"class": "form-check-input d-block"}
+            ),
         }
         labels = {
             "is_pastor": "Pastor",

@@ -7,6 +7,8 @@ from django.urls import reverse_lazy
 class AgendaCreateView(PermissionRequiredMixin, CreateView):
     permission_required = "secretarial.add_meetingminutemodel"
     model = MeetingAgendaModel
-    template_name = 'secretarial/agenda_form.html'
-    fields = ['agenda_title',]
+    template_name = "secretarial/agenda_form.html"
+    fields = [
+        "agenda_title",
+    ]
     success_url = reverse_lazy("secretarial:agenda-form")
