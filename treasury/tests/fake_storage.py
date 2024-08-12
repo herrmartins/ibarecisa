@@ -6,7 +6,7 @@ class InMemoryStorage(Storage):
     def __init__(self):
         self.files = {}
 
-    def _open(self, name, mode="rb"):
+    def _open(self, name, mode='rb'):
         if name in self.files:
             return BytesIO(self.files[name])
         else:

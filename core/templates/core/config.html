@@ -1,20 +1,20 @@
 {% extends 'core/base.html' %} {% block content %}
 
-  <div class="container">
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-8 text-center">
+      <p class="fs-3 fw-bold">Configurações Básicas</p>
+    </div>
     <div class="row justify-content-center">
-      <div class="col-8 text-center">
-        <p class="fs-3 fw-bold">Configurações Básicas</p>
-      </div>
-      <div class="row justify-content-center">
-        <div class="col-8">
-          <p>Igreja: {{church_info.name}}</p>
-          <p>CNPJ: {{church_info.CNPJ}}</p>
-          <p>Endereço: {{church_info.address}}</p>
-          <p>E-mail: {{church_info.contact_email}}</p>
-          <p>Telefone: {{church_info.phone}}</p>
-        </div>
+      <div class="col-8">
+        <p>Igreja: {{church_info.name}}</p>
+        <p>CNPJ: {{church_info.CNPJ}}</p>
+        <p>Endereço: {{church_info.address}}</p>
+        <p>E-mail: {{church_info.contact_email}}</p>
+        <p>Telefone: {{church_info.phone}}</p>
       </div>
     </div>
   </div>
+</div>
 
 {% endblock %}

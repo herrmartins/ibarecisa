@@ -3,7 +3,7 @@ from . import views
 
 urlpatterns = [
     path("", views.getData, name="get-data"),
-    path("<int:pk>", views.getDetailedData, name="get-detailed-data"),
+    path("<int:pk>", views.getDetailedData, name="get-detailed-data"), 
     path(
         "transactions",
         views.TransactionCatListAPIView.as_view(),

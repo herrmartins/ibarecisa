@@ -1,12 +1,12 @@
 {% extends 'core/base.html' %} {% block content %}
-    <div class="container">
-        <div class="d-grid">
-            <p class="fs-1 fw-light grid-item d-block">Detalhes da Ata</p>
-            <div class="grid-item">
-                <p class="fs-6">{{minute.body|safe}}</p>
-            </div>
-        </div>
-        <p>{{minute.id}}</p>
-        <a href="{% url 'secretarial:minute-generate-pdf' minute.id %}" class="btn btn-primary">Generate PDF</a>
-    </div>
+<div class="container">
+<div class="d-grid">
+<p class="fs-1 fw-light grid-item d-block">Detalhes da Ata</p>
+<div class="grid-item">
+    <p class="fs-6">{{minute.body|safe}}</p>
+</div>
+</div>
+<p>{{minute.id}}</p>
+<a href="{% url 'secretarial:minute-generate-pdf' minute.id %}" class="btn btn-primary">Generate PDF</a>
+</div>
 {% endblock %}

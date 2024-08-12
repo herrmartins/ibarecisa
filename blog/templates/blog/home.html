@@ -2,102 +2,102 @@
 {% load static %}
 
 {% block content %}
-    <div class="container">
-        <div id="user-info" comment-author-id="{{ user.id }}"></div>
-        <link rel="stylesheet" href="{% static 'css/styles.css' %}">
-        <div class="container mt-4" id="posts-container">
+<div class="container">
+<div id="user-info" comment-author-id="{{ user.id }}"></div>
+<link rel="stylesheet" href="{% static 'css/styles.css' %}">
+<div class="container mt-4" id="posts-container">
     <!-- Post loop -->
-            {% for post in posts %}
-                <div class="col-md-8 offset-md-2 mb-4">
-                    <div class="card">
-                        <div class="card-header">
-                            <h5 class="card-title">{{ post.title }}</h5>
-                            <p class="card-text">
-                                <small class="text-muted">
-                                    Postado por {{ post.author.first_name }} {{ post.author.last_name }} em {{ post.created }}
-                                    {% if post.created != post.modified %}, atualizado em {{ post.modified }}.{% endif %}
-                                </small>
-                                {% if post.author == request.user %}
+    {% for post in posts %}
+    <div class="col-md-8 offset-md-2 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">{{ post.title }}</h5>
+                <p class="card-text">
+                    <small class="text-muted">
+                        Postado por {{ post.author.first_name }} {{ post.author.last_name }} em {{ post.created }}
+                        {% if post.created != post.modified %}, atualizado em {{ post.modified }}.{% endif %}
+                    </small>
+                    {% if post.author == request.user %}
                     <!-- Edit link for the author -->
-                                    <a href="{% url 'blog:edit' post.id %}">
-                                        <i class="bi bi-pencil-square"></i>
-                                    </a>
-                                {% endif %}
-                            </p>
-                        </div>
-                        <div class="card-body">
-                            <p class="card-text">{{ post.content|safe }}</p>
-                        </div>
-                        <div class="card-footer d-flex justify-content-between" id="btn-container">
-                            <small class="text-muted">Categorias: {% for category in post.categories.all %}
-                                {{ category.name }}{% if not forloop.last %}, {% endif %}
-                            {% empty %}
-                                Não categorizado...
-                            {% endfor %}</small>
-                            <i class="bi bi-chat-left-dots" data-post-id="{{ post.id }}"></i>
-                        </div>
-                        <div class="comments hidden" id="comments-{{ post.id }}">
-
-                        </div>
-
-                        <div class="card-footer py-3 border-0 hidden" id="form-{{ post.id }}" style="background-color: #f8f9fa;">
-                            <div class="d-flex flex-start w-100">
-                                <img class="rounded-circle shadow-1-strong me-3" src="{% if user.profile_image %}
-                                                                                          {{ user.profile_image.url }}
-                                                                                      {% else %}
-                                                                                          {% static 'img/user.png' %}
-                                                                                      {% endif %}" alt="avatar" width="40" height="40" />
-                                <p>Faça login para adicionar seu comentário...</p>
-                                {% if user.is_authenticated %}
-                                    <div class="form-outline w-100">
-                                        <textarea class="form-control" id="comment-{{ post.id }}" rows="4" style="background: #fff;"
-                                                  required></textarea>
-                                        <label class="fw-light" for="commentContent">Seu comentário...</label>
-                                    </div>
-                                {% endif %}
-                            </div>
-                            {% if user.is_authenticated %}
-                                <button type="button" class="btn btn-primary btn-sm" id="sendComment-{{ post.id }}"
-                                        data-post-id="{{ post.id }}">Postar</button>
-                            {% endif %}
-                        </div>
-
-                    </div>
-                </div>
-            {% endfor %}
-    <!-- End of Post loop -->
-        </div>
-<!-- Pagination controls -->
-        <div class="col-md-10">
-        <!-- Pagination -->
-            <nav aria-label="Blog page navigation">
-                <ul class="pagination justify-content-end">
-                    {% if is_paginated %}
-                        {% if page_obj.has_previous %}
-                            <li class="page-item">
-                                <a class="page-link" href="?page=1">&laquo; Primeira</a>
-                            </li>
-                            <li class="page-item">
-                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a>
-                            </li>
-                        {% endif %}
-                        <li class="page-item disabled">
-                            <a class="page-link" href="#">Página {{ page_obj.number }} de {{ paginator.num_pages }}</a>
-                        </li>
-                        {% if page_obj.has_next %}
-                            <li class="page-item">
-                                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Próxima</a>
-                            </li>
-                            <li class="page-item">
-                                <a class="page-link" href="?page={{ paginator.num_pages }}">Última &raquo;</a>
-                            </li>
-                        {% endif %}
+                    <a href="{% url 'blog:edit' post.id %}">
+                        <i class="bi bi-pencil-square"></i>
+                    </a>
                     {% endif %}
-                </ul>
-            </nav>
+                </p>
+            </div>
+            <div class="card-body">
+                <p class="card-text">{{ post.content|safe }}</p>
+            </div>
+            <div class="card-footer d-flex justify-content-between" id="btn-container">
+                <small class="text-muted">Categorias: {% for category in post.categories.all %}
+                    {{ category.name }}{% if not forloop.last %}, {% endif %}
+                    {% empty %}
+                    Não categorizado...
+                    {% endfor %}</small>
+                <i class="bi bi-chat-left-dots" data-post-id="{{ post.id }}"></i>
+            </div>
+            <div class="comments hidden" id="comments-{{ post.id }}">
+
+            </div>
+
+            <div class="card-footer py-3 border-0 hidden" id="form-{{ post.id }}" style="background-color: #f8f9fa;">
+                <div class="d-flex flex-start w-100">
+                    <img class="rounded-circle shadow-1-strong me-3" src="{% if user.profile_image %}
+                  {{ user.profile_image.url }}
+                {% else %}
+                  {% static 'img/user.png' %}
+                {% endif %}" alt="avatar" width="40" height="40" />
+                <p>Faça login para adicionar seu comentário...</p>
+                    {% if user.is_authenticated %}
+                    <div class="form-outline w-100">
+                        <textarea class="form-control" id="comment-{{ post.id }}" rows="4" style="background: #fff;"
+                            required></textarea>
+                        <label class="fw-light" for="commentContent">Seu comentário...</label>
+                    </div>
+                    {% endif %}
+                </div>
+                {% if user.is_authenticated %}
+                <button type="button" class="btn btn-primary btn-sm" id="sendComment-{{ post.id }}"
+                    data-post-id="{{ post.id }}">Postar</button>
+                {% endif %}
+            </div>
+
         </div>
     </div>
-    <script type="module" src="{% static 'js/comment_fetch.js' %}"></script>
-    <script type="module" src="{% static 'js/post_comment.js' %}"></script>
+    {% endfor %}
+    <!-- End of Post loop -->
+</div>
+<!-- Pagination controls -->
+    <div class="col-md-10">
+        <!-- Pagination -->
+        <nav aria-label="Blog page navigation">
+            <ul class="pagination justify-content-end">
+                {% if is_paginated %}
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1">&laquo; Primeira</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a>
+                </li>
+                {% endif %}
+                <li class="page-item disabled">
+                    <a class="page-link" href="#">Página {{ page_obj.number }} de {{ paginator.num_pages }}</a>
+                </li>
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Próxima</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ paginator.num_pages }}">Última &raquo;</a>
+                </li>
+                {% endif %}
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+</div>
+<script type="module" src="{% static 'js/comment_fetch.js' %}"></script>
+<script type="module" src="{% static 'js/post_comment.js' %}"></script>
 
 {% endblock %}

@@ -7,6 +7,7 @@ from treasury.models import (
 
 
 class GenerateFinanceReportModelForm(forms.ModelForm):
+
     class Meta:
         model = MonthlyReportModel
         fields = "__all__"
@@ -53,6 +54,6 @@ class GenerateFinanceReportModelForm(forms.ModelForm):
             attrs={"class": "form-control bg-light", "readonly": True}
         )
 
-        initial_date = self.initial.get("month")
+        initial_date = self.initial.get('month')
         if initial_date:
-            self.initial["month"] = initial_date.strftime("%Y-%m-%d")
+            self.initial['month'] = initial_date.strftime('%Y-%m-%d')

@@ -1,49 +1,49 @@
 {% extends 'core/base.html' %} {% block content %}
 
 
-  {% if not user.is_authenticated %}
+{% if not user.is_authenticated %}
 
-    <p>Bem vindo, Anônimo!</p>
-    <div class="container-sm my-4">
-      <div class="row justify-content-center">
-        <div class="col-sm-auto">
+<p>Bem vindo, Anônimo!</p>
+<div class="container-sm my-4">
+  <div class="row justify-content-center">
+    <div class="col-sm-auto">
 
-          <p>Digite seus dados para entrar...</p>
-          <form action="{% url 'login' %}" method="post">
-            {%csrf_token%}{{login_form.as_p}}
-            <input type="submit" class="btn btn-primary" value="Entrar" />
-          </form><a href="{% url 'users:reset-password' %}">
-            <p class="text-sm-end">Esqueci a senha</p>
-          </a>
-        </div>
+      <p>Digite seus dados para entrar...</p>
+      <form action="{% url 'login' %}" method="post">
+        {%csrf_token%}{{login_form.as_p}}
+        <input type="submit" class="btn btn-primary" value="Entrar" />
+      </form><a href="{% url 'users:reset-password' %}">
+        <p class="text-sm-end">Esqueci a senha</p>
+      </a>
+    </div>
+  </div>
+</div>
+
+{% else %}
+<div class="container">
+  <p></p>
+  <div class="col-md-8 offset-md-2 mb-4">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="card-title">{{ post.title }}</h5>
+        <p class="card-text">
+          <small class="text-muted">Postado por {{ post.author.first_name }} {{ post.author.last_name }} em {{ post.created }}{% if post.created != post.modified %}, atualizado em {{post.modified}}. {% endif %}</small>
+        </p>
+      </div>
+      <div class="card-body">
+        <p class="card-text">{{ post.content|safe }}</p>
+      </div>
+      <div class="card-footer">
+        <small class="text-muted">Categorias: {% for category in post.categories.all %}
+          {{ category.name }}{% if not forloop.last %}, {% endif %}
+          {% empty %}
+          Não categorizado...
+          {% endfor %}</small>
       </div>
     </div>
+  </div>
+</div>
 
-  {% else %}
-    <div class="container">
-      <p></p>
-      <div class="col-md-8 offset-md-2 mb-4">
-        <div class="card">
-          <div class="card-header">
-            <h5 class="card-title">{{ post.title }}</h5>
-            <p class="card-text">
-              <small class="text-muted">Postado por {{ post.author.first_name }} {{ post.author.last_name }} em {{ post.created }}{% if post.created != post.modified %}, atualizado em {{post.modified}}. {% endif %}</small>
-            </p>
-          </div>
-          <div class="card-body">
-            <p class="card-text">{{ post.content|safe }}</p>
-          </div>
-          <div class="card-footer">
-            <small class="text-muted">Categorias: {% for category in post.categories.all %}
-              {{ category.name }}{% if not forloop.last %}, {% endif %}
-            {% empty %}
-              Não categorizado...
-            {% endfor %}</small>
-          </div>
-        </div>
-      </div>
-    </div>
-
-  {% endif %}
+{% endif %}
 
 {% endblock %}

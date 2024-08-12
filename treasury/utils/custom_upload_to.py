@@ -10,6 +10,6 @@ def custom_upload_to(instance, filename):
 
     new_filename = f"{uuid.uuid4()}{ext.lower()}"
 
-    new_file_path = os.path.join("treasury/receipts", new_filename)
+    new_file_path = os.path.join('treasury/receipts', new_filename)
 
     return new_file_path

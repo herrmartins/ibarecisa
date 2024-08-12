@@ -8,15 +8,16 @@ from django.urls import reverse
 
 class MeetingMinuteModel(BaseModel):
     president = models.ForeignKey(
-        CustomUser, on_delete=models.SET_NULL, null=True, related_name="president"
-    )
+        CustomUser, on_delete=models.SET_NULL, null=True,
+        related_name="president")
     secretary = models.ForeignKey(
-        CustomUser, on_delete=models.SET_NULL, null=True, related_name="secretary"
-    )
+        CustomUser, on_delete=models.SET_NULL, null=True,
+        related_name="secretary")
     meeting_date = models.DateField()
     number_of_attendees = models.IntegerField()
     body = RichTextField(blank=True, null=True)
-    agenda = models.ManyToManyField(MeetingAgendaModel, blank=True)
+    agenda = models.ManyToManyField(
+        MeetingAgendaModel, blank=True)
 
     class Meta:
         verbose_name = "Ata"

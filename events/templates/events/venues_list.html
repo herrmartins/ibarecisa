@@ -2,27 +2,27 @@
 {% load static %}
 {% block content %}
 
-  <p class="fs-3 fw-light text-center">Lista de salões de eventos...</p>
+<p class="fs-3 fw-light text-center">Lista de salões de eventos...</p>
 
-  <div class="container my-4">
-    <div class="row row-cols-1 row-cols-md-2 g-4">
-      {% for venue in venues %}
-        <div class="col">
-          <div class="card h-100">
-            <div class="card-body">
-              <h5 class="card-title">{{ venue.name }} <a href="{% url 'events:edit-venue' venue.id %}"> <i
+<div class="container my-4">
+  <div class="row row-cols-1 row-cols-md-2 g-4">
+    {% for venue in venues %}
+    <div class="col">
+      <div class="card h-100">
+        <div class="card-body">
+          <h5 class="card-title">{{ venue.name }} <a href="{% url 'events:edit-venue' venue.id %}"> <i
                 class="bi bi-pencil-square"></i></a></h5>
-              <p class="card-text">{{ venue.address }}</p>
-              <p class="card-text"><small class="text-muted">Capacidade: {{ venue.capacity }}</small></p>
-            </div>
-          </div>
+          <p class="card-text">{{ venue.address }}</p>
+          <p class="card-text"><small class="text-muted">Capacidade: {{ venue.capacity }}</small></p>
         </div>
-      {% empty %}
-        <div class="col">
-          <p>No venues available.</p>
-        </div>
-      {% endfor %}
+      </div>
     </div>
+    {% empty %}
+    <div class="col">
+      <p>No venues available.</p>
+    </div>
+    {% endfor %}
   </div>
+</div>
 
 {% endblock %}

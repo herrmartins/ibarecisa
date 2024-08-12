@@ -11,7 +11,7 @@ class TransactionDeleteView(PermissionRequiredMixin, DeleteView):
     context_object_name = "transaction"
 
     def get_success_url(self):
-        transaction = self.object
-        month = transaction.date.month
-        year = transaction.date.year
-        return f"{reverse('treasury:home')}?month={month}&year={year}"
+        return reverse(
+            "treasury:monthly-transactions",
+            kwargs={"month": self.object.date.month, "year": self.object.date.year},
+        )

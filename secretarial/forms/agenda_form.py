@@ -5,7 +5,7 @@ from secretarial.models import MeetingAgendaModel
 class MinuteAgendaModelForm(forms.ModelForm):
     class Meta:
         model = MeetingAgendaModel
-        fields = ["agenda_title"]
+        fields = ['agenda_title']
 
         labels = {
             "agenda_title": "Título",

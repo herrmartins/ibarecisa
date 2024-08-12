@@ -6,19 +6,19 @@ class UpdateUserProfileFormTest(TestCase):
     def test_update_user_profile_blank_data(self):
         # Test with blank form data
         # Provide a valid email address
-        form = UpdateUserProfileModelForm(data={"email": "test@example.com"})
+        form = UpdateUserProfileModelForm(data={'email': 'test@example.com'})
         self.assertTrue(form.is_valid(), form.errors)
 
     def test_update_user_profile_wrong_date_format(self):
         # Test with wrong date format
         form = UpdateUserProfileModelForm(data={"date_of_birth": "07-06-1986"})
         self.assertFalse(form.is_valid())
-        self.assertEqual(form.errors["date_of_birth"], ["Informe uma data válida."])
+        self.assertEqual(form.errors["date_of_birth"], [
+                         "Informe uma data válida."])
 
     def test_valid_date_format(self):
         form = UpdateUserProfileModelForm(
-            data={"date_of_birth": "1986-07-06", "email": "test@example.com"}
-        )
+            data={"date_of_birth": "1986-07-06", 'email': 'test@example.com'})
         self.assertTrue(form.is_valid(), form.errors)
 
     def test_missing_required_fields(self):

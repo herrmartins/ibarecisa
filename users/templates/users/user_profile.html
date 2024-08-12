@@ -2,47 +2,47 @@
 
 {% extends 'core/base.html' %} {% load static %}
 {% block content %}
-  <div class="container">
-    <div class="row">
-      <div class="col-md-6 mx-auto">
-        <div class="card m-3">
-          <div class="card-header">
-            Perfil do Usuário
-          </div>
-          <div class="container">
-            <div class="row">
-              <div class="col-4 py-2">
-                {% if user_object.profile_image %}
+<div class="container">
+  <div class="row">
+    <div class="col-md-6 mx-auto">
+      <div class="card m-3">
+        <div class="card-header">
+          Perfil do Usuário
+        </div>
+        <div class="container">
+          <div class="row">
+            <div class="col-4 py-2">
+        {% if user_object.profile_image %}
 
-                  <img src="{{ user_object.profile_image.url }}" alt="Profile Image">
+          <img src="{{ user_object.profile_image.url }}" alt="Profile Image">
 
-                {% else %}
-                  <img src="{% static 'img/user.png' %}" alt="Default Image">
-                {% endif %}
-              </div>
-            </div>
-          </div>
-          <div class="card-body">
-            <h5 class="card-title">Nome: {{user_object.first_name}} {{user_object.last_name}}</h5>
-            <p class="card-text">Email: {{user_object.email}}</p>
-            <p class="card-text">Endereço: {{user_object.address}}</p>
-            <p class="card-text">Telefone: {{user_object.phone_number}}
-              {% if user_object.is_whatsapp %}
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-whatsapp"
-                     viewBox="0 0 16 16">
-                  <i class="bi bi-whatsapp"></i>
-              {% endif %}
-            </p>
-            <p class="card-text">Data de Nascimento: {{user_object.date_of_birth}}</p>
-            <p class="card-text">Sobre: {{user_object.about}}</p>
-            <p class="card-text ">Função: {% if user_object.is_pastor %}<p class="fw-light">Pastor</p>{% endif %}{% if user_object.is_secretary %}<p class="fw-light">Secretário</p>{% endif %}{% if user_object.is_treasurer %}<p class="fw-light">Tesoureiro</p>{% endif %}</p>
-            <div class="text-center">
-              <a href="{% url 'users:user-profile-update' user_object.id %}" class="btn btn-warning">Atualizar cadastro</a>
-              <a href="{% url 'users:change-user-password' %}" class="btn btn-warning">Alterar senha</a>
-            </div>
-          </div>
+        {% else %}
+            <img src="{% static 'img/user.png' %}" alt="Default Image">
+        {% endif %}
+      </div>
+      </div>
+      </div>
+        <div class="card-body">
+      <h5 class="card-title">Nome: {{user_object.first_name}} {{user_object.last_name}}</h5>
+      <p class="card-text">Email: {{user_object.email}}</p>
+      <p class="card-text">Endereço: {{user_object.address}}</p>
+      <p class="card-text">Telefone: {{user_object.phone_number}}
+        {% if user_object.is_whatsapp %}
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-whatsapp"
+      viewBox="0 0 16 16">
+      <i class="bi bi-whatsapp"></i>
+        {% endif %}
+      </p>
+      <p class="card-text">Data de Nascimento: {{user_object.date_of_birth}}</p>
+      <p class="card-text">Sobre: {{user_object.about}}</p>
+      <p class="card-text ">Função: {% if user_object.is_pastor %}<p class="fw-light">Pastor</p>{% endif %}{% if user_object.is_secretary %}<p class="fw-light">Secretário</p>{% endif %}{% if user_object.is_treasurer %}<p class="fw-light">Tesoureiro</p>{% endif %}</p>
+      <div class="text-center">
+        <a href="{% url 'users:user-profile-update' user_object.id %}" class="btn btn-warning">Atualizar cadastro</a>
+        <a href="{% url 'users:change-user-password' %}" class="btn btn-warning">Alterar senha</a>
+      </div>
         </div>
       </div>
     </div>
   </div>
+</div>
 {% endblock %}

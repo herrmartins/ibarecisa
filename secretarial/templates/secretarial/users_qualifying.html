@@ -1,80 +1,80 @@
 {% extends 'core/base.html' %}
 {% block content %}
-  {% load static %}
-  <link rel="stylesheet" type="text/css" href="{% static 'css/styles.css'%}">
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'css/styles.css'%}">
 
+<div class="container">
+  <div class="container text-center">
+    <p class="fs-3 fw-light">Sessão de usuários</p>
+  </div>
   <div class="container">
-    <div class="container text-center">
-      <p class="fs-3 fw-light">Sessão de usuários</p>
-    </div>
-    <div class="container">
-      <h6 class="fw-light"> Lista de Membros</h6>
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Nome</th>
-            <th>Funções</th>
-            <th>Telefone</th>
-            <th>Ação</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for m in members %}
-            <tr>
-              <td><a href="{% url 'users:user-profile' m.pk %}">{{ m.first_name }} {{ m.last_name }}</a></td>
-              <td>
-                {% if m.is_pastor %}
-                  <p>Pastor</p>
-                {% endif %}
-                {% if m.is_secretary %}
-                  <p>Secretário</p>
-                {% endif %}
-                {% if m.is_treasurer %}
-                  <p>Tesoureiro</p>
-                {% endif %}
-                {% if not m.is_pastor and not m.is_secretary and not m.is_treasurer %}
-                  <p>{{m.type}}</p>
-                {% endif %}
-              </td>
-              <td>
-                {{m.phone_number}}
-              </td>
-              <td>
-                <a href="{% url 'secretarial:user-qualify' m.id %}">
-                  <img src="{% static 'img/edit-black.svg' %}" class="">
-                </a>
-              </td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-    <div class="container">
-      <div class="row">
-        <div class="col-8 mx-auto">
-          <h6 class="fw-light"> Lista de usuários simples, contratos e congregados...</h6>
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Nome</th>
-                <th>Ação</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for u in users %}
-                <tr>
-                  <td><a href="{% url 'users:user-profile' u.pk %}">{{ u.first_name }} {{ u.last_name }}</a></td>
-                  <td>
-                    <a href="{% url 'secretarial:user-qualify' u.id %}">
-                      <img src="{% static 'img/edit-black.svg' %}" class="">
-                    </a>
-                  </td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
+    <h6 class="fw-light"> Lista de Membros</h6>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Funções</th>
+          <th>Telefone</th>
+          <th>Ação</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for m in members %}
+        <tr>
+          <td><a href="{% url 'users:user-profile' m.pk %}">{{ m.first_name }} {{ m.last_name }}</a></td>
+          <td>
+            {% if m.is_pastor %}
+            <p>Pastor</p>
+            {% endif %}
+            {% if m.is_secretary %}
+            <p>Secretário</p>
+            {% endif %}
+            {% if m.is_treasurer %}
+            <p>Tesoureiro</p>
+            {% endif %}
+            {% if not m.is_pastor and not m.is_secretary and not m.is_treasurer %}
+              <p>{{m.type}}</p>
+            {% endif %}
+          </td>
+          <td>
+            {{m.phone_number}}
+          </td>
+          <td>
+            <a href="{% url 'secretarial:user-qualify' m.id %}">
+              <img src="{% static 'img/edit-black.svg' %}" class="">
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="container">
+    <div class="row">
+    <div class="col-8 mx-auto">
+    <h6 class="fw-light"> Lista de usuários simples, contratos e congregados...</h6>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Ação</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td><a href="{% url 'users:user-profile' u.pk %}">{{ u.first_name }} {{ u.last_name }}</a></td>
+          <td>
+            <a href="{% url 'secretarial:user-qualify' u.id %}">
+              <img src="{% static 'img/edit-black.svg' %}" class="">
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
     </div>
   </div>
+  </div>
+</div>
 {% endblock %}

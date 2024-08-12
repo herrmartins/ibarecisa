@@ -11,7 +11,6 @@ from events.views import (
     CategoryUpdateView,
     CategoryFormView,
     CategoryCreateView,
-    EventsByPeriodView
 )
 
 app_name = "events"
@@ -47,5 +46,4 @@ urlpatterns = [
         CategoryUpdateView.as_view(),
         name="update-category",
     ),
-    path('ajax/events/', EventsByPeriodView.as_view(), name='ajax-events-by-period')
 ]

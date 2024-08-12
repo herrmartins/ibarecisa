@@ -1,5 +1,4 @@
 from django import forms
-
 # from django.core.exceptions import ValidationError
 from users.models import CustomUser
 
@@ -7,12 +6,14 @@ from users.models import CustomUser
 class UpdateUserRoleModelForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(UpdateUserRoleModelForm, self).__init__(*args, **kwargs)
-        self.fields["type"].widget.attrs["id"] = "id_type"
+        self.fields['type'].widget.attrs['id'] = 'id_type'
 
     class Meta:
         model = CustomUser
         fields = ("type",)
-        labels = {"type": "Status"}
+        labels = {
+            "type": "Status"
+        }
         widgets = {
             "type": forms.Select(
                 attrs={

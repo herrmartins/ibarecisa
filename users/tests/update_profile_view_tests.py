@@ -31,25 +31,21 @@ class UserProfileUpdateViewTestAsSecretary(TestCase):
         self.assertTemplateUsed(response, "users/user_profile_update_form.html")
 
     def test_user_profile_update_view_form(self):
-        url = reverse(
-            "users:user-profile-update", kwargs={"pk": self.user_to_update.pk}
-        )
+        url = reverse('users:user-profile-update', kwargs={'pk': self.user_to_update.pk})
         response = self.client.get(url)
-        form = response.context["form"]
+        form = response.context['form']
         self.assertIsInstance(form, UpdateUserProfileModelForm)
 
     def test_user_profile_update_permission(self):
         # WARNING: logout
         self.client.logout()
-        url = reverse(
-            "users:user-profile-update", kwargs={"pk": self.user_to_update.pk}
-        )
+        url = reverse('users:user-profile-update', kwargs={'pk': self.user_to_update.pk})
         response = self.client.get(url)
         # It's not 403, it redirects to the login
         self.assertEqual(response.status_code, 302)
 
     def test_user_profile_update_permission_own_user(self):
-        url = reverse("users:user-profile-update", kwargs={"pk": self.user.pk})
+        url = reverse('users:user-profile-update', kwargs={'pk': self.user.pk})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
 
@@ -79,13 +75,11 @@ class UserProfileUpdateViewTestAsTreasurer(TestCase):
 
     def test_user_profile_update_permission(self):
         self.client.logout()
-        url = reverse(
-            "users:user-profile-update", kwargs={"pk": self.user_to_update.pk}
-        )
+        url = reverse('users:user-profile-update', kwargs={'pk': self.user_to_update.pk})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 302)
 
     def test_user_profile_update_permission_own_user(self):
-        url = reverse("users:user-profile-update", kwargs={"pk": self.user.pk})
+        url = reverse('users:user-profile-update', kwargs={'pk': self.user.pk})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)

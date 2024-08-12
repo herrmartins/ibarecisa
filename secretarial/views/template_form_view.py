@@ -6,13 +6,14 @@ from django.contrib.auth.mixins import PermissionRequiredMixin
 
 class TemplateFormView(PermissionRequiredMixin, FormView):
     permission_required = "secretarial.add_meetingminutemodel"
-    template_name = "secretarial/template_form.html"
+    template_name = 'secretarial/template_form.html'
     form_class = MinuteTemplateModelForm
 
     def get_initial(self):
         initial = super().get_initial()
-        if "pk" in self.kwargs:
-            template_data = MinuteTemplateModel.objects.get(pk=self.kwargs.get("pk"))
+        if 'pk' in self.kwargs:
+            template_data = MinuteTemplateModel.objects.get(
+                pk=self.kwargs.get("pk"))
             initial["title"] = template_data.title
             initial["body"] = template_data.body
             initial["agenda"] = template_data.agenda
@@ -22,7 +23,6 @@ class TemplateFormView(PermissionRequiredMixin, FormView):
         context = super().get_context_data(**kwargs)
 
         context["excerpts_list"] = MinuteExcerptsModel.objects.all().order_by(
-            "-times_used"
-        )
+            "-times_used")
 
         return context

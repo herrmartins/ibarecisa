@@ -1,66 +1,66 @@
 {% extends 'core/base.html' %} {% block content %} {% load static %}
 
-  <script src="{% static 'js/user_function_type_validation.js' %}"></script>
-  <div class="container text-center">
-    <p class="fs-3 fw-light">Dados do usuário</p>
-  </div>
-  <div class="container border border-dark">
-    <div class="container py-2">
-      <div class="row">
-        <div class="col-5">
-          <p>Informações do Usuário:</p>
-          <p>{{user_object.first_name}} {{user_object.last_name}}</p>
-        </div>
-        <div class="col-3">
-          {% if user_object.type == "CONGREGADO" or user_object.type == "USUARIO" %}
+<script src="{% static 'js/user_function_type_validation.js' %}"></script>
+<div class="container text-center">
+  <p class="fs-3 fw-light">Dados do usuário</p>
+</div>
+<div class="container border border-dark">
+  <div class="container py-2">
+    <div class="row">
+      <div class="col-5">
+        <p>Informações do Usuário:</p>
+        <p>{{user_object.first_name}} {{user_object.last_name}}</p>
+      </div>
+      <div class="col-3">
+      {% if user_object.type == "CONGREGADO" or user_object.type == "USUARIO" %}
+      
+        <p>Função do usuário:</p>
 
-            <p>Função do usuário:</p>
+        <p>Esse usuário não pode ter função, pois não é membro</p>
+        {% else %}
+        <p>Função do usuário:</p>
+        <form
+          method="POST"
+          action="{% url 'users:update-user-functions' user_object.id %}"
+        >
+          {% csrf_token %} {{form_q}}
+          <input
+            type="submit"
+            value="Enviar"
+            name="submit"
+            class="btn btn-primary my-2"
+          />
+        </form>
 
-            <p>Esse usuário não pode ter função, pois não é membro</p>
-          {% else %}
-            <p>Função do usuário:</p>
-            <form
-              method="POST"
-              action="{% url 'users:update-user-functions' user_object.id %}"
-            >
-              {% csrf_token %} {{form_q}}
-              <input
-                type="submit"
-                value="Enviar"
-                name="submit"
-                class="btn btn-primary my-2"
-              />
-            </form>
-
-          {% endif %}
-        </div>
-        <div class="col-3">
-          <form
-            method="POST"
-            action="{% url 'users:update-user-type' user_object.id %}"
-          >
-            {% csrf_token %}
-            <p>{{form}}</p>
-            <input
-              type="submit"
-              name="Enviar"
-              class="btn btn-primary"
-              value="Salvar"
-            />
-          </form>
-        </div>
+      {% endif %}
+    </div>
+      <div class="col-3">
+        <form
+          method="POST"
+          action="{% url 'users:update-user-type' user_object.id %}"
+        >
+          {% csrf_token %}
+          <p>{{form}}</p>
+          <input
+            type="submit"
+            name="Enviar"
+            class="btn btn-primary"
+            value="Salvar"
+          />
+        </form>
       </div>
     </div>
   </div>
+</div>
 
-  <script>
+<script>
   // Fetch the user type from Django context
-    var userType = "{{ user_object.type }}"; // Replace with the variable holding user type
-
+  var userType = "{{ user_object.type }}"; // Replace with the variable holding user type
+  
   // Call the validation function on page load
-    window.onload = function() {
-      handleUserTypeChange();
-    };
+  window.onload = function() {
+    handleUserTypeChange();
+};
 
-  </script>
+</script>
 {% endblock %}

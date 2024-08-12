@@ -8,9 +8,7 @@ class Comment(BaseModel):
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
     author = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     content = models.TextField()
-    likes = models.ManyToManyField(
-        CustomUser, related_name="liked_comments", blank=True
-    )
+    likes = models.ManyToManyField(CustomUser, related_name='liked_comments', blank=True)
 
     class Meta:
         verbose_name = "Comentário"

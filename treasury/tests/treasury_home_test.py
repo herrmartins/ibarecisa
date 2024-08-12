@@ -19,7 +19,8 @@ class TreasuryHomeViewTest(TestCase):
             username="testuser", email="test@example.com", password="password123"
         )
         cls.treasury_group = Group.objects.create(name="treasury")
-        cls.permission = Permission.objects.get(codename="view_transactionmodel")
+        cls.permission = Permission.objects.get(
+            codename="view_transactionmodel")
         cls.treasury_group.permissions.add(cls.permission)
         cls.user.groups.add(cls.treasury_group)
         cls.user.user_permissions.add(cls.permission)
@@ -53,9 +54,8 @@ class TreasuryHomeViewTest(TestCase):
         self.assertIn("form_balance", response.context)
 
     def test_context_data_with_balance(self):
-        mommy.make(
-            MonthlyBalance, month=self.date_before, is_first_month=True, balance=1000
-        )
+        mommy.make(MonthlyBalance, month=self.date_before,
+                   is_first_month=True, balance=1000)
 
         self.client.force_login(self.user)
         response = self.client.get(self.treasury_home_url)
@@ -69,10 +69,13 @@ class TreasuryHomeViewTest(TestCase):
         test_date = now + relativedelta(months=1)
         a_year_ago = now - relativedelta(months=12)
 
-        MonthlyBalance.objects.create(month=a_year_ago, is_first_month=True, balance=10)
+        MonthlyBalance.objects.create(
+            month=a_year_ago,
+            is_first_month=True,
+            balance=10)
 
         # Patch timezone.now() to return the first day of the next month
-        with patch("django.utils.timezone.now", return_value=test_date):
+        with patch('django.utils.timezone.now', return_value=test_date):
             self.client.force_login(self.user)
             response = self.client.get(self.treasury_home_url)
             self.assertEqual(response.status_code, 200)
@@ -82,19 +85,22 @@ class TreasuryHomeViewTest(TestCase):
         test_date = now + relativedelta(months=2)
         a_year_ago = now - relativedelta(months=12)
 
-        MonthlyBalance.objects.create(month=a_year_ago, is_first_month=True, balance=10)
+        MonthlyBalance.objects.create(
+            month=a_year_ago,
+            is_first_month=True,
+            balance=10)
 
-        with patch("django.utils.timezone.now", return_value=test_date):
+        with patch('django.utils.timezone.now', return_value=test_date):
             self.client.force_login(self.user)
             response = self.client.get(self.treasury_home_url)
             self.assertEqual(response.status_code, 302)
             balances = MonthlyBalance.objects.all().count()
-            self.assertEqual(response["Location"], self.treasury_home_url)
+            self.assertEqual(response['Location'], self.treasury_home_url)
 
         test_date = now + relativedelta(months=7)
 
-        with patch("django.utils.timezone.now", return_value=test_date):
+        with patch('django.utils.timezone.now', return_value=test_date):
             self.client.force_login(self.user)
             response = self.client.get(self.treasury_home_url)
             self.assertEqual(response.status_code, 302)
-            self.assertEqual(response["Location"], self.treasury_home_url)
+            self.assertEqual(response['Location'], self.treasury_home_url)

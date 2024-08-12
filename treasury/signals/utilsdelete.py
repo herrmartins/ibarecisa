@@ -32,7 +32,8 @@ def get_total_amount_transactions_by_month(month):
     )
 
     month_transactions = (
-        month_transactions.aggregate(total_amount=Sum("amount"))["total_amount"] or 0
+        month_transactions.aggregate(total_amount=Sum("amount"))[
+            "total_amount"] or 0
     )
     return month_transactions
 
@@ -50,11 +51,13 @@ def add_months(start_date, months):
 
 def confirming_all_balances_present():
     current_month = timezone.now().date().replace(day=1)
-    first_monthly_balance = MonthlyBalance.objects.filter(is_first_month=True).first()
+    first_monthly_balance = MonthlyBalance.objects.filter(
+        is_first_month=True).first()
     if not first_monthly_balance:
         raise NoInitialMonthlyBalance("You must create the initial balance...")
 
-    months_diff = months_between_dates(first_monthly_balance.month, current_month)
+    months_diff = months_between_dates(
+        first_monthly_balance.month, current_month)
 
     monthly_balances = MonthlyBalance.objects.filter(
         month__range=(first_monthly_balance.month, current_month)
@@ -72,11 +75,13 @@ def check_monthly_balances_integrity(check_date, amount=None):
         receiver=create_missing_monthly_balances, sender=MonthlyBalance
     )
 
-    first_monthly_balance = MonthlyBalance.objects.filter(is_first_month=True).first()
+    first_monthly_balance = MonthlyBalance.objects.filter(
+        is_first_month=True).first()
     if not first_monthly_balance:
         raise NoInitialMonthlyBalance("You must create the initial balance...")
 
-    months_diff = months_between_dates(first_monthly_balance.month, current_month)
+    months_diff = months_between_dates(
+        first_monthly_balance.month, current_month)
 
     monthly_balances = MonthlyBalance.objects.filter(
         month__range=(first_monthly_balance.month, current_month)

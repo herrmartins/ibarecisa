@@ -3,7 +3,7 @@ from users.forms import RegisterUserForm
 
 
 class SignupFormView(TemplateView):
-    template_name = "users/register.html"
+    template_name = 'users/register.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

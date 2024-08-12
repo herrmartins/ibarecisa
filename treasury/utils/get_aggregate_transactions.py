@@ -3,7 +3,6 @@ from django.db.models import Sum
 
 def get_aggregate_transactions(year, month, positive=None):
     from treasury.models import TransactionModel
-
     transactions = TransactionModel.objects.filter(
         date__year=year, date__month=month
     ).order_by("date")

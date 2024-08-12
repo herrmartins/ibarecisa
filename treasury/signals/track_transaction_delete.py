@@ -11,6 +11,7 @@ def track_transaction_delete(sender, instance, **kwargs):
     from treasury.models import TransactionEditHistory
 
     if instance.pk:
+
         try:
             original_transaction = TransactionModel.objects.get(pk=instance.pk)
             TransactionEditHistory.objects.create(

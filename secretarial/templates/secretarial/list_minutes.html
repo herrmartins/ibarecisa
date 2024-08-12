@@ -1,27 +1,27 @@
 {% extends 'core/base.html' %} {% block content %}
-  {% load static %}
+{% load static %}
 
+<div class="container">
+  <div class="container text-center">
+    <p class="fs-3 fw-light">Reuniões Registradas</p>
+  </div>
   <div class="container">
-    <div class="container text-center">
-      <p class="fs-3 fw-light">Reuniões Registradas</p>
-    </div>
-    <div class="container">
-      <div class="col-12 mx-auto">
-        {% if minutes %}
-          {% for m in minutes %}
-            <div class="row">
-              <div class="col-3">
-                {{m.meeting_date}}<br>
-                <a href="{% url 'secretarial:minute-generate-pdf' m.id %}" class="btn btn-primary">Generate PDF</a>
-              </div>
-              <div class="col-9">
-                {{m.body|safe}}
-              </div>
-            </div>
-          {% endfor %}
-        {% endif %}
+    <div class="col-12 mx-auto">
+      {% if minutes %}
+      {% for m in minutes %}
+      <div class="row">
+        <div class="col-3">
+          {{m.meeting_date}}<br>
+          <a href="{% url 'secretarial:minute-generate-pdf' m.id %}" class="btn btn-primary">Generate PDF</a>
+        </div>
+        <div class="col-9">
+          {{m.body|safe}}
+        </div>
       </div>
+      {% endfor %}
+      {% endif %}
     </div>
   </div>
+</div>
 
 {% endblock %}

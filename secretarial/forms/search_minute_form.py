@@ -33,6 +33,4 @@ class SearchMinuteForm(forms.Form):
                 "class": "form-control",
                 "type": "date",
                 "value": date.today(),
-            }
-        ),
-    )
+            }),)

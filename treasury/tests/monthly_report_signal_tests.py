@@ -36,27 +36,9 @@ class TestMonthlyReportSignal(TestCase):
         category_1 = mommy.make(CategoryModel, name="Tithe")
         category_2 = mommy.make(CategoryModel, name="Offering")
         category_3 = mommy.make(CategoryModel, name="Expense")
-        mommy.make(
-            TransactionModel,
-            _quantity=5,
-            amount=10,
-            category=category_1,
-            date=self.three_months_ago,
-        )
-        mommy.make(
-            TransactionModel,
-            _quantity=5,
-            amount=10,
-            category=category_2,
-            date=self.three_months_ago,
-        )
-        mommy.make(
-            TransactionModel,
-            _quantity=3,
-            amount=-5,
-            category=category_3,
-            date=self.three_months_ago,
-        )
+        mommy.make(TransactionModel, _quantity=5, amount=10, category=category_1, date=self.three_months_ago)
+        mommy.make(TransactionModel, _quantity=5, amount=10, category=category_2, date=self.three_months_ago)
+        mommy.make(TransactionModel, _quantity=3, amount=-5, category=category_3, date=self.three_months_ago)
 
         positive_transactions = get_aggregate_transactions_by_category(
             year=report_date.year, month=report_date.month

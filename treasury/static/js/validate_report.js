@@ -16,6 +16,7 @@ function calculateSum() {
 			"A soma dos campos não bate com o valor do saldo final ou é diferente de 0...";
 		submitBtn.disabled = true;
 	} else {
+		console.log("Enabling:", total, totalBalance);
 		responseField.innerText = "";
 		submitBtn.disabled = false;
 	}

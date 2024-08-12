@@ -10,7 +10,7 @@ class RegisterUserFormTest(TestCase):
             "username": "testuser",
             "first_name": "John",
             "last_name": "Doe",
-            "email": "john@doeinc.com",
+            "email":"john@doeinc.com",
             "password1": "testpassword123",
             "password2": "testpassword123",
         }
@@ -24,7 +24,7 @@ class RegisterUserFormTest(TestCase):
             "username": "testuser",
             "first_name": "John",
             "last_name": "Doe",
-            "email": "john@doeinc.com",
+            "email":"john@doeinc.com",
             "password1": "testpassword123",
             "password2": "differentpassword",
         }
@@ -36,7 +36,7 @@ class RegisterUserFormTest(TestCase):
         # Test with blank form data
         form = RegisterUserForm(data={})
         self.assertFalse(form.is_valid())
-        self.assertEqual(form.errors["username"], ["Este campo é obrigatório."])
-        self.assertEqual(form.errors["email"], ["Este campo é obrigatório."])
-        self.assertEqual(form.errors["password1"], ["Este campo é obrigatório."])
-        self.assertEqual(form.errors["password2"], ["Este campo é obrigatório."])
+        self.assertEqual(form.errors['username'], ['Este campo é obrigatório.'])
+        self.assertEqual(form.errors['email'], ['Este campo é obrigatório.'])
+        self.assertEqual(form.errors['password1'], ['Este campo é obrigatório.'])
+        self.assertEqual(form.errors['password2'], ['Este campo é obrigatório.'])

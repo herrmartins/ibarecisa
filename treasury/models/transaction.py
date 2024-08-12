@@ -19,15 +19,12 @@ class TransactionModel(BaseModel):
     date = models.DateField()
 
     acquittance_doc = ResizedImageField(
-        size=[1200, 850],
-        upload_to=custom_upload_to,
-        quality=75,
-        blank=True,
-        null=True,
-        force_format="JPEG",
+        size=[1200, 850], upload_to=custom_upload_to,
+        quality=75, blank=True, null=True, force_format='JPEG'
     )
 
-    edit_history = models.ManyToManyField("treasury.TransactionEditHistory", blank=True)
+    edit_history = models.ManyToManyField(
+        "treasury.TransactionEditHistory", blank=True)
 
     class Meta:
         verbose_name = "Transação"
@@ -42,20 +39,15 @@ class TransactionModel(BaseModel):
             raise ValidationError("Não se pode adicionar transação com data futura...")
 
         from treasury.models import MonthlyBalance
-
         try:
             MonthlyBalance.objects.get(is_first_month=True)
         except MonthlyBalance.DoesNotExist:
             raise ValidationError(
-                "Não se pode adicionar transações sem um balanço mensal..."
-            )
+                "Não se pode adicionar transações sem um balanço mensal...")
 
         if self.pk:
-            old_doc = (
-                TransactionModel.objects.filter(pk=self.pk)
-                .values_list("acquittance_doc", flat=True)
-                .first()
-            )
+            old_doc = TransactionModel.objects.filter(
+                pk=self.pk).values_list('acquittance_doc', flat=True).first()
             if old_doc and old_doc != self.acquittance_doc.name:
                 try:
                     default_storage.delete(old_doc)

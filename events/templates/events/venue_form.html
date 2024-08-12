@@ -1,27 +1,27 @@
 {% extends 'core/base.html' %} {% load static %}{% block content %}
 
-  {% if 'edit-venue' in request.resolver_match.view_name %}
-    <p class="fs-3 fw-light">Altere o evento {{venue.name}}</p>
-  {% else %}
-    <p class="fs-3 fw-light">Cadastre um salão de eventos..</p>
-  {% endif %}
-  <div class="container my-2">
-    <div class="row justify-content-center">
-      <div class="col-8">
-        {% if 'edit-venue' in request.resolver_match.view_name %}
-          <form method="POST" , action="{% url 'events:update-venue' venue_id %}" id="venue-form">
+{% if 'edit-venue' in request.resolver_match.view_name %}
+<p class="fs-3 fw-light">Altere o evento {{venue.name}}</p>
+{% else %}
+<p class="fs-3 fw-light">Cadastre um salão de eventos..</p>
+{% endif %}
+<div class="container my-2">
+  <div class="row justify-content-center">
+    <div class="col-8">
+      {% if 'edit-venue' in request.resolver_match.view_name %}
+      <form method="POST" , action="{% url 'events:update-venue' venue_id %}" id="venue-form">
         {% else %}
-          <form method="POST" , action="{% url 'events:create-venue' %}" id="venue-form">
-        {% endif %}
-        {% csrf_token %}
-        {{form.as_p}}
-        {% if 'edit-venue' in request.resolver_match.view_name %}
-          <input type="submit" value="Alterar" class="btn btn-primary">
-        {% else %}
-          <input type="submit" value="Cadastrar" class="btn btn-primary">
-        {% endif %}
+        <form method="POST" , action="{% url 'events:create-venue' %}" id="venue-form">
+          {% endif %}
+            {% csrf_token %}
+            {{form.as_p}}
+            {% if 'edit-venue' in request.resolver_match.view_name %}
+            <input type="submit" value="Alterar" class="btn btn-primary">
+            {% else %}
+            <input type="submit" value="Cadastrar" class="btn btn-primary">
+            {% endif %}
 
-      </form>
+          </form>
     </div>
 
-{% endblock %}
+    {% endblock %}

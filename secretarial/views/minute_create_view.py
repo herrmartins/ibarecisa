@@ -1,10 +1,7 @@
 from django.views.generic import CreateView
 from secretarial.forms import MinuteModelForm
 from secretarial.models import (
-    MinuteProjectModel,
-    MeetingMinuteModel,
-    MinuteExcerptsModel,
-)
+    MinuteProjectModel, MeetingMinuteModel, MinuteExcerptsModel)
 from django.contrib.auth.mixins import PermissionRequiredMixin
 
 
@@ -35,7 +32,6 @@ class MinuteCreateView(PermissionRequiredMixin, CreateView):
         context = super().get_context_data(**kwargs)
 
         context["excerpts_list"] = MinuteExcerptsModel.objects.all().order_by(
-            "-times_used"
-        )
+            "-times_used")
 
         return context

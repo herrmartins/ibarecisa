@@ -6,5 +6,5 @@ from django.contrib.auth.mixins import PermissionRequiredMixin
 class ExcerptCreateView(PermissionRequiredMixin, CreateView):
     permission_required = "secretarial.add_meetingminutemodel"
     model = MinuteExcerptsModel
-    template_name = "secretarial/excerpt_created.html"
-    fields = ["title", "excerpt"]
+    template_name = 'secretarial/excerpt_created.html'
+    fields = ['title', 'excerpt']

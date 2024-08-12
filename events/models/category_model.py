@@ -7,7 +7,7 @@ class EventCategory(BaseModel):
     description = models.TextField(null=True, blank=True)
 
     class Meta:
-        verbose_name = "Categoria"
+        verbose_name = 'Categoria'
         verbose_name_plural = "Categorias"
 
     def __str__(self):

@@ -5,7 +5,7 @@ from django.contrib.auth.mixins import PermissionRequiredMixin
 
 
 class InitialBalanceCreateView(PermissionRequiredMixin, CreateView):
-    permission_required = "treasury.add_transactionmodel"
+    permission_required = 'treasury.add_transactionmodel'
     model = MonthlyBalance
     form_class = InitialBalanceForm
     template_name = "treasury/monthly_balance_created.html"

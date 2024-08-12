@@ -8,8 +8,7 @@ class EventCategoryModelTest(TestCase):
     def setUpTestData(cls):
         # Create test data that will be used in the tests
         EventCategory.objects.create(
-            name="Test Category", description="This is a test category"
-        )
+            name='Test Category', description='This is a test category')
 
     # def test_event_category_creation(self):
     #     category = EventCategory.objects.get(id=1)

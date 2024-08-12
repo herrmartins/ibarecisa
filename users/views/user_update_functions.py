@@ -11,8 +11,8 @@ class UpdateUserFunctionView(PermissionRequiredMixin, UpdateView):
         "users.add_customuser",
     ]
 
-    template_name = "users/update_user_type.html"
+    template_name = 'users/update_user_type.html'
     model = CustomUser
-    context_object_name = "user"
+    context_object_name = 'user'
     form_class = UserQualifyingForm
-    success_url = "/secretarial/users"
+    success_url = '/secretarial/users'

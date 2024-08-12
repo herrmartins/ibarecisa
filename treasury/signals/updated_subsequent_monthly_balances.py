@@ -15,12 +15,10 @@ def updated_subsequent_monthly_balances(sender, instance, **kwargs):
 
         pre_save.disconnect(
             receiver=updated_subsequent_monthly_balances,
-            sender=MonthlyBalance,
-        )
+            sender=MonthlyBalance,)
         with transaction.atomic():
             update_subsequent_balances(instance.month, difference)
             instance.save()
         pre_save.connect(
             receiver=updated_subsequent_monthly_balances,
-            sender=MonthlyBalance,
-        )
+            sender=MonthlyBalance,)

@@ -52,7 +52,7 @@ class MinuteHomeViewTest(TestCase):
         self.assertTrue("number_of_projects" in response.context)
 
         self.assertEqual(len(response.context["meeting_minutes"]), 5)
-        # self.assertEqual(response.context["number_of_projects"], 5)
+        #self.assertEqual(response.context["number_of_projects"], 5)
         self.assertEqual(response.context["number_of_templates"], 5)
         self.assertEqual(response.context["number_of_excerpts"], 5)
         self.assertEqual(len(response.context["minutes"]), 5)

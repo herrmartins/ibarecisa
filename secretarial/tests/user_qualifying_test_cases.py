@@ -7,26 +7,29 @@ class UsersQualifyingListViewTests(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.regular_user = CustomUser.objects.create(
-            username="regular_user", type=CustomUser.Types.REGULAR
+            username='regular_user',
+            type=CustomUser.Types.REGULAR
         )
         cls.staff_user = CustomUser.objects.create(
-            username="staff_user", type=CustomUser.Types.STAFF
+            username='staff_user',
+            type=CustomUser.Types.STAFF
         )
         cls.admin_user = CustomUser.objects.create(
-            username="admin_user", is_superuser=True
+            username='admin_user',
+            is_superuser=True
         )
 
     def test_redirect_if_not_logged_in(self):
-        response = self.client.get(reverse("secretarial:users-qualifying"))
+        response = self.client.get(reverse('secretarial:users-qualifying'))
         self.assertEqual(response.status_code, 302)
 
     def test_view_url_accessible_by_permission(self):
         self.client.force_login(self.admin_user)
-        response = self.client.get(reverse("secretarial:users-qualifying"))
+        response = self.client.get(reverse('secretarial:users-qualifying'))
         self.assertEqual(response.status_code, 200)
 
     def test_context_data(self):
         self.client.force_login(self.admin_user)
-        response = self.client.get(reverse("secretarial:users-qualifying"))
-        self.assertIn("members", response.context)
-        self.assertIn("users", response.context)
+        response = self.client.get(reverse('secretarial:users-qualifying'))
+        self.assertIn('members', response.context)
+        self.assertIn('users', response.context)
