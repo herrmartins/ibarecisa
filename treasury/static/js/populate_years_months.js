@@ -19,12 +19,11 @@ document.addEventListener('DOMContentLoaded', () => {
             yearSelect.innerHTML = '';
             monthSelect.innerHTML = '';
 
-            // Get the current year
             const currentYear = new Date().getFullYear();
+            const currentMonth = new Date().getMonth() + 1;
 
             // Populate year options
-            // biome-ignore lint/complexity/noForEach: <explanation>
-                        data.year_list.forEach(year => {
+            data.year_list.forEach(year => {
                 const option = document.createElement('option');
                 option.value = year;
                 option.textContent = year;
@@ -34,25 +33,41 @@ document.addEventListener('DOMContentLoaded', () => {
                 yearSelect.appendChild(option);
             });
 
-            // Populate month options
-            const months = [
-                'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-                'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
-            ];
-            months.forEach((month, index) => {
-                const option = document.createElement('option');
-                option.value = index + 1;
-                option.textContent = month;
-                monthSelect.appendChild(option);
-            });
+            // Populate months for the selected year
+            function populateMonthsForYear(selectedYear) {
+                monthSelect.innerHTML = '';  // Clear existing options
+                const months = [
+                    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+                ];
 
-            // Set the current month as the default selection
-            const currentMonth = new Date().getMonth() + 1;
-            monthSelect.value = currentMonth;
+                // Check if the selected year has associated months
+                if (data.year_month_map[selectedYear]) {
+                    const availableMonths = data.year_month_map[selectedYear];
+
+                    availableMonths.forEach(monthIndex => {
+                        const option = document.createElement('option');
+                        option.value = monthIndex;
+                        option.textContent = months[monthIndex - 1];  // Adjust for 0-based index
+                        if (monthIndex == currentMonth && selectedYear == currentYear) {
+                            option.selected = true;
+                        }
+                        monthSelect.appendChild(option);
+                    });
+                }
+            }
+
+            // Populate months for the initially selected year
+            populateMonthsForYear(yearSelect.value);
+
+            // Handle year change
+            yearSelect.addEventListener('change', (event) => {
+                populateMonthsForYear(event.target.value);
+            });
 
         } catch (error) {
             console.error('Ocorreu um erro ao receber os anos e meses:', error);
-            alert('Ocorreu um erro ao receber os anos e meses. Tente novamente...');
+            alert(`Ocorreu um erro ao receber os anos e meses: ${error.message}`);
         }
     }
 
