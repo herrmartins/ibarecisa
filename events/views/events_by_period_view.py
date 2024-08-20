@@ -26,11 +26,14 @@ class EventsByPeriodView(View):
 
         events_data = [
             {
+                "id": event.id,
                 "title": event.title,
                 "description": event.description,
                 "start_date": event.start_date,
                 "end_date": event.end_date,
                 "location": event.location.name,
+                "price": event.price,
+                "category": event.category,
             }
             for event in events
         ]

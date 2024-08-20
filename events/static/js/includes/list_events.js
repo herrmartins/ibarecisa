@@ -51,19 +51,20 @@ let fetchEvents = async (page = 1) => {
             ];
         }
 
-        // TODO
-        // fetch("/endpoint", {
-        //     method: "GET",
-        // })
-        //     .then((response) => response.json())
-        //     .then((result) => {
-        //         resolve(result);
-        //     })
-        //     .catch((error) => {
-        //         console.error(error);
-        //     });
+        // TODO - pegar os valores dinâmico de período 
+        fetch("/events/byperiod?start_date=2020-02-02&end_date=2020-10-10", {
+            method: "GET",
+        })
+            .then((response) => response.json())
+            .then((result) => {                
+                resolve(result.events);
+            })
+            .catch((error) => {
+                console.error(error);
+            });
         
-        resolve(dataFake);
+        // TODO remover. Condicional apenas para teste
+        // resolve(dataFake);
     });
 }
 
@@ -72,6 +73,8 @@ document.addEventListener('alpine:init', () => {
         page: 1,
 
         eventItems: [],
+
+        canYouMakeTheFirstCall: true,
 
         seeMore() {
             this.page = ++this.page;
@@ -91,11 +94,14 @@ document.addEventListener('alpine:init', () => {
 
         get dataEvents() {
             let data = this.eventItems;
-            if (!this.eventItems.length) {
+            
+            if (this.canYouMakeTheFirstCall) {
                 data = async () => {
-                    let data = await fetchEvents(this.page)
-    
-                    this.eventItems = this.eventItems.concat(data)
+                    let data = await fetchEvents(this.page);
+
+                    this.eventItems = this.eventItems.concat(data);
+
+                    this.canYouMakeTheFirstCall = false;
 
                     return this.eventItems;
                 }
