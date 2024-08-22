@@ -1,0 +1,6 @@
+.button-disabled {
+    background-color: #d3d3d3; /* Light grey color */
+    color: #666661; /* Dark grey text color */
+    cursor: not-allowed;
+    pointer-events: none; /* Prevent any interaction */
+}

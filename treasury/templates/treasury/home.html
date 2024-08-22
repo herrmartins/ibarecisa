@@ -3,6 +3,7 @@
 
 {% block head %}
 <!-- Any additional head content can go here -->
+<link rel="stylesheet" href="{% static 'css/finance.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -64,7 +65,7 @@
 <div class="container">
   <div class="row justify-content-center">
     <div class="col-md-2 mb-4 text-center">
-      <button id="prevButton" class="btn btn-secondary">Anterior</button>
+      <button id="prevButton" class="btn btn-light">Anterior</button>
     </div>
     <div class="col-md-4 mb-4">
 
@@ -91,7 +92,7 @@
       </select>
     </div>
     <div class="col-md-2 mb-4 text-center">
-      <button id="nextButton" class="btn btn-secondary">Próximo</button>
+      <button id="nextButton" class="btn btn-light">Próximo</button>
     </div>
   </div>
   <div class="row">
