@@ -1,5 +1,42 @@
 {% load static %}
 
+<div x-data>
+  <div class="d-flex justify-content-end">
+    <div class="p-2">
+      <label for="start_date">Início:</label>
+      <input
+        type="date"
+        id="start_date"
+        name="start_date"
+        x-model="start_date"
+        x-ref="input_start_date"
+      />
+    </div>
+
+    <div class="p-2">
+      <label for="end_date">Fim:</label>
+      <input
+        type="date"
+        id="end_date"
+        name="end_date"
+        x-model="end_date"
+        x-ref="input_end_date"
+      />
+    </div>
+
+  </div>
+
+  <div x-data class="d-grid gap-2 col-6 mx-auto p-3">
+    <button
+      type="button"
+      class="btn btn-outline-info"
+      x-on:click="$store.allEvents.dataEvents = `${$refs.input_start_date._x_model.get()} ${$refs.input_end_date._x_model.get()}`"
+    >
+      Ver Mais
+    </button>
+  </div>
+</div>
+
 <div
   x-data
   id="list-events"
@@ -37,16 +74,6 @@
           </div>
         </template>
       </div>
-</div>
-
-<div x-data class="d-grid gap-2 col-6 mx-auto">
-  <button
-    type="button"
-    class="btn btn-outline-info"
-    @click="$store.allEvents.seeMore()"
-  >
-    Ver Mais
-  </button>
 </div>
 
 {% block pre_alpine_scripts %}

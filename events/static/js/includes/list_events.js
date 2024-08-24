@@ -34,6 +34,11 @@ document.addEventListener('alpine:init', () => {
             })();
         },
 
+        set dataEvents (eventDate) {
+            // TODO
+            console.log(eventDate);
+        },
+
         get dataEvents() {
             if (this.canYouMakeTheFirstCall) {
                 (async () => {
