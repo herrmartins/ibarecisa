@@ -1,58 +1,7 @@
-let fetchEvents = async (page = 1) => {
+let fetchEvents = async () => {
     return await new Promise((resolve, reject) => {
-        
-        // TODO remover. dados apenas para teste
-        const eventObject = {
-            title: "Evento Hoje",
-            id: "1",
-            description: "Evento ocorre hoje",
-            start_date: "01/01/2028 10:00:00",
-            end_date: "05/01/2028 18:00:00",
-            price: "150,00",
-            category: "musica",
-            location: {
-                name: "Salão principal"
-            },
-            url_events_edit_event: "/events/edit/1",
-        };
-
-        // TODO remover. dados apenas para teste
-        let dataFake = [
-            [
-                'Janeiro',
-                [
-                    eventObject,
-                    eventObject,
-                    eventObject,
-                ]
-            ],
-
-            [
-                'Fevereiro',
-                [
-                    eventObject,
-                    eventObject,
-                    eventObject,
-                ]
-            ]
-        ];
-
-        // TODO remover. Condicional apenas para teste
-        if (page === 2) {
-            dataFake = [
-                [
-                    'Março',
-                    [
-                        eventObject,
-                        eventObject,
-                        eventObject,
-                    ]
-                ] 
-            ];
-        }
-
         // TODO - pegar os valores dinâmico de período 
-        fetch("/events/byperiod?start_date=2020-02-02&end_date=2020-10-10", {
+        fetch("/events/byperiod?start_date=2024-07-23&end_date=2024-07-25", {
             method: "GET",
         })
             .then((response) => response.json())
@@ -62,25 +11,18 @@ let fetchEvents = async (page = 1) => {
             .catch((error) => {
                 console.error(error);
             });
-        
-        // TODO remover. Condicional apenas para teste
-        // resolve(dataFake);
     });
 }
 
 document.addEventListener('alpine:init', () => {   
     Alpine.store('allEvents', {
-        page: 1,
-
         eventItems: [],
 
         canYouMakeTheFirstCall: true,
 
         seeMore() {
-            this.page = ++this.page;
-
             (async () => {
-                let data = await fetchEvents(this.page);
+                let data = await fetchEvents();
 
                 this.eventItems = this.eventItems.concat(data);
 
@@ -93,21 +35,17 @@ document.addEventListener('alpine:init', () => {
         },
 
         get dataEvents() {
-            let data = this.eventItems;
-            
             if (this.canYouMakeTheFirstCall) {
-                data = async () => {
-                    let data = await fetchEvents(this.page);
+                (async () => {
+                    let data = await fetchEvents();
 
-                    this.eventItems = this.eventItems.concat(data);
-
+                    this.eventItems = this.eventItems.concat(data);                    
+                    
                     this.canYouMakeTheFirstCall = false;
-
-                    return this.eventItems;
-                }
+                })();
             }
 
-            return data;
+            return this.eventItems;
         }
     })
 });

@@ -2,6 +2,7 @@ from django.http import JsonResponse
 from django.views import View
 from django.utils.dateparse import parse_date
 from events.models import Event
+from django.shortcuts import reverse
 
 
 class EventsByPeriodView(View):
@@ -33,7 +34,8 @@ class EventsByPeriodView(View):
                 "end_date": event.end_date,
                 "location": event.location.name,
                 "price": event.price,
-                "category": event.category,
+                "category": event.category.name,
+                "url_events_edit_event": reverse('events:edit-event', kwargs={'pk': event.id})
             }
             for event in events
         ]

@@ -3,47 +3,40 @@
 <div
   x-data
   id="list-events"
+  class="justify-content-center p-3"
 >
-  <template x-for="(eventData, index) in $store.allEvents.dataEvents" :key="index">
-    <div>
-      <div class="row mb-4">
-        <div class="col">
-          <h3 x-text="eventData[0]"></h3>
-        </div>
-      </div>
+      <h3>Eventos</h3>
       <div class="row">
-        <template x-for="eventDetails in eventData[1]" :key="eventDetails.id++">
-          <div class="col-sm-4 mb-4">
+        <template x-for="(eventData, index) in $store.allEvents.dataEvents" :key="index">
+          <div class="col-sm-6 mb-6">
             <div class="card">
               <div class="card-body">
                 <h5 class="card-title">
-                  <span  x-text="eventDetails.title"></span>
-                  {% if user.is_secretary %}
-                    <a x-bind:href="eventDetails.url_events_edit_event">
+                  <span  x-text="eventData.title"></span>
+                  {% if user.is_secretary or user.is_superuser%}
+                    <a x-bind:href="eventData.url_events_edit_event">
                       <i class="bi bi-pencil-square"></i>
                     </a>
                   {% endif %}
                 </h5>
                 
-                <p class="card-text" x-text="eventDetails.descriptions"></p>
+                <p class="card-text" x-text="eventData.descriptions"></p>
                 <ul class="list-group list-group-flush">
-                  <li class="list-group-item">Data: <span x-text="eventDetails.start_date"></span></li>
-                  <li class="list-group-item">Fim: <span x-text="eventDetails.end_date"></span></li>
-                  <li class="list-group-item">Investimento: <span x-text="eventDetails.price"></span></li>
-                  <li class="list-group-item">Categoria: <span x-text="eventDetails.category"></span></li>
+                  <li class="list-group-item">Data: <span x-text="eventData.start_date"></span></li>
+                  <li class="list-group-item">Fim: <span x-text="eventData.end_date"></span></li>
+                  <li class="list-group-item">Investimento: <span x-text="eventData.price"></span></li>
+                  <li class="list-group-item">Categoria: <span x-text="eventData.category"></span></li>
                 </ul>
               </div>
               <div class="card-footer">
                 <small class="text-muted">
-                  Local: <span x-text="eventDetails.location.name"></span>
+                  Local: <span x-text="eventData.location"></span>
                 </small>
               </div>
             </div>
           </div>
         </template>
       </div>
-    </div>
-  </template>
 </div>
 
 <div x-data class="d-grid gap-2 col-6 mx-auto">
