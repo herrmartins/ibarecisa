@@ -1,7 +1,30 @@
-let fetchEvents = async () => {
+let fetchEvents = async (startDate, endDate) => {
+
+    if (!(startDate && endDate)) {
+        let currentDate = new Date();
+        startDate = currentDate.toISOString().split('T')[0];
+
+        currentDate.setMonth(currentDate.getMonth() + 1)
+        
+        endDate = currentDate.toISOString().split('T')[0];
+    }
+    
     return await new Promise((resolve, reject) => {
-        // TODO - pegar os valores dinâmico de período 
-        fetch("/events/byperiod?start_date=2024-07-23&end_date=2024-07-25", {
+        
+        const params = {
+            'start_date': startDate,
+            'end_date': endDate,
+        };
+
+        const url = new URL(`${window.location.origin}/events/byperiod`);
+
+        Object
+            .keys(params)
+            .forEach((key) =>
+                url.searchParams.append(key, params[key])
+            );
+
+        fetch(url.toString(), {
             method: "GET",
         })
             .then((response) => response.json())
@@ -34,9 +57,30 @@ document.addEventListener('alpine:init', () => {
             })();
         },
 
-        set dataEvents (eventDate) {
-            // TODO
-            console.log(eventDate);
+        findByDate(startDate, endDate) {
+            if (!(typeof startDate === 'string' && typeof endDate === 'string' )) {
+                const message = "Valores necessários, datas de início e fim!";
+                alert(message);
+                throw new Error(message);
+            }
+
+            if ((new Date(endDate)) <= (new Date(startDate))) {
+                const message = "A data do fim não pode ser anterior a de início...";
+                alert(message);
+                throw new Error(message);
+            }
+
+            (async () => {
+                let data = await fetchEvents(startDate, endDate);
+
+                this.eventItems = data;
+
+                setTimeout(() => {
+                    const element = document.getElementById("list-events");
+            
+                    element?.scrollIntoView({ behavior: "smooth", block: "end" });
+                }, 250);
+            })();
         },
 
         get dataEvents() {

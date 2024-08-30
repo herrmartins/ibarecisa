@@ -30,7 +30,7 @@
     <button
       type="button"
       class="btn btn-outline-info"
-      x-on:click="$store.allEvents.dataEvents = `${$refs.input_start_date._x_model.get()} ${$refs.input_end_date._x_model.get()}`"
+      x-on:click="$store.allEvents.findByDate($refs.input_start_date._x_model.get(), $refs.input_end_date._x_model.get())"
     >
       Ver Mais
     </button>
