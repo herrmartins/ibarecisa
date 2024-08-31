@@ -45,7 +45,7 @@
       <h3>Eventos</h3>
       <div class="row">
         <template x-for="(eventData, index) in $store.allEvents.dataEvents" :key="index">
-          <div class="col-sm-6 mb-6">
+          <div class="col-sm-6 col-lg-4 mb-4">
             <div class="card">
               <div class="card-body">
                 <h5 class="card-title">
@@ -59,8 +59,8 @@
                 
                 <p class="card-text" x-text="eventData.descriptions"></p>
                 <ul class="list-group list-group-flush">
-                  <li class="list-group-item">Data: <span x-text="eventData.start_date"></span></li>
-                  <li class="list-group-item">Fim: <span x-text="eventData.end_date"></span></li>
+                  <li class="list-group-item">Data: <span x-text="new Date(eventData.start_date ).toLocaleString('pt-BR')"></span></li>
+                  <li class="list-group-item">Fim: <span x-text="new Date(eventData.end_date ).toLocaleString('pt-BR')"></span></li>
                   <li class="list-group-item">Investimento: <span x-text="eventData.price"></span></li>
                   <li class="list-group-item">Categoria: <span x-text="eventData.category"></span></li>
                 </ul>
