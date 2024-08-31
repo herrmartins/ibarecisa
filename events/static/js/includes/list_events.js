@@ -1,12 +1,24 @@
+const defaultDates = () => {
+    let currentDate = new Date();
+    const defaultStartDate = currentDate.toISOString().split('T')[0];
+    document.querySelector("#start_date").valueAsDate = currentDate;
+
+    currentDate.setMonth(currentDate.getMonth() + 1)
+    document.querySelector("#end_date").valueAsDate = currentDate;
+    const defaultEndDate = currentDate.toISOString().split('T')[0];
+
+    return {
+        defaultStartDate,
+        defaultEndDate,
+    };
+};
+
 let fetchEvents = async (startDate, endDate) => {
 
     if (!(startDate && endDate)) {
-        let currentDate = new Date();
-        startDate = currentDate.toISOString().split('T')[0];
-
-        currentDate.setMonth(currentDate.getMonth() + 1)
-        
-        endDate = currentDate.toISOString().split('T')[0];
+        const {defaultStartDate, defaultEndDate} = defaultDates();
+        startDate = defaultStartDate;
+        endDate = defaultEndDate;
     }
     
     return await new Promise((resolve, reject) => {
@@ -58,6 +70,11 @@ document.addEventListener('alpine:init', () => {
         },
 
         findByDate(startDate, endDate) {
+            if (!(typeof startDate === 'string' && typeof endDate === 'string' )) {
+                startDate = document.querySelector("#start_date").value;
+                endDate = document.querySelector("#end_date").value;
+            }
+
             if (!(typeof startDate === 'string' && typeof endDate === 'string' )) {
                 const message = "Valores necessários, datas de início e fim!";
                 alert(message);
