@@ -3,11 +3,7 @@
 <p class="fs-3">Bem vindo, {{user}}!</p>
 <p class="fw-light">Veja nossos eventos...</p>
 <div class="container-sm my-4">
-  <div class="row justify-content-center">
-    <div class="col-sm-auto">
-      {% include "events/includes/list_events.html" %}
-    </div>
-  </div>
+  {% include "events/includes/list_events.html" %}
 </div>
 {% endblock %}
 
