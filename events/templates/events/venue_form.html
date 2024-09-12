@@ -1,9 +1,9 @@
 {% extends 'core/base.html' %} {% load static %}{% block content %}
 
 {% if 'edit-venue' in request.resolver_match.view_name %}
-<p class="fs-3 fw-light">Altere o evento {{venue.name}}</p>
+<p class="fs-3 fw-light">Altere o local de eventos {{venue.name}}</p>
 {% else %}
-<p class="fs-3 fw-light">Cadastre um salão de eventos..</p>
+<p class="fs-3 fw-light">Cadastre um local de eventos..</p>
 {% endif %}
 <div class="container my-2">
   <div class="row justify-content-center">
