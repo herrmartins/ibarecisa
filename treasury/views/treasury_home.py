@@ -29,6 +29,27 @@ class TreasuryHomeView(PermissionRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
+        monthly_balances = MonthlyBalance.objects.all().order_by("month")
+
+        year_month_map = {}
+        first_month_balance = monthly_balances.filter(is_first_month=True).first()
+
+        for balance in monthly_balances:
+            year = balance.month.year
+            month = balance.month.month
+
+            if first_month_balance and balance == first_month_balance:
+                continue  # Skip the first month as it's a reference month
+
+            if year not in year_month_map:
+                year_month_map[year] = []
+
+            year_month_map[year].append(month)
+
+        context["year_month_map"] = year_month_map
+        context["year_list"] = sorted(year_month_map.keys())
+
         current_date = timezone.now()
         previous_month = current_date - relativedelta(months=1)
         try:
@@ -49,14 +70,5 @@ class TreasuryHomeView(PermissionRequiredMixin, TemplateView):
 
         if MonthlyBalance.objects.count() == 0:
             context["form_balance"] = InitialBalanceForm
-
-        # Retrieve distinct years
-        distinct_years = (
-            MonthlyBalance.objects.annotate(year=TruncYear("month"))
-            .values_list("year", flat=True)
-            .distinct()
-            .order_by("year")
-        )
-        context["year_list"] = [year.year for year in distinct_years]
 
         return context

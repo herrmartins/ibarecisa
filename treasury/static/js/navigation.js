@@ -1,113 +1,173 @@
+// navigation.js
+
 import { getTransactions } from "./get_transactions.js";
 
-document.addEventListener("DOMContentLoaded", () => {
-	const prevButton = document.getElementById("prevButton");
-	const nextButton = document.getElementById("nextButton");
-	const yearSelect = document.getElementById("yearSelect");
-	const monthSelect = document.getElementById("monthSelect");
+let yearMonthMap = {}; // Populated from backend data
 
-	let yearMonthMap = {}; // This should be populated with the data from the backend
+// Function to update the state of navigation buttons
+function updateButtonStates(year, month) {
+    const availableMonths = yearMonthMap[year] || [];
+    const minMonth = Math.min(...availableMonths);
+    const maxMonth = Math.max(...availableMonths);
 
-	function updateMonthYear(direction) {
-		let year = Number.parseInt(yearSelect.value);
-		let month = Number.parseInt(monthSelect.value);
+    const firstYear = Math.min(...Object.keys(yearMonthMap).map(Number));
+    const lastYear = Math.max(...Object.keys(yearMonthMap).map(Number));
 
-		const availableMonths = yearMonthMap[year] || [];
+    const prevButton = document.getElementById("prevButton");
+    const nextButton = document.getElementById("nextButton");
 
-		if (direction === "prev") {
-			if (month === 1) {
-				year -= 1;
-				if (yearMonthMap[year]) {
-					month = 12;
-				} else {
-					year += 1;
-				}
-			} else {
-				month -= 1;
-			}
-		} else if (direction === "next") {
-			if (month === 12) {
-				year += 1;
-				if (yearMonthMap[year]) {
-					month = 1;
-				} else {
-					year -= 1;
-				}
-			} else {
-				month += 1;
-			}
-		}
+    // Disable/enable previous button
+    if (year === firstYear && month === minMonth) {
+        prevButton.classList.remove("btn-light");
+        prevButton.classList.add("btn-secondary");
+        prevButton.disabled = true;
+    } else {
+        prevButton.classList.remove("btn-secondary");
+        prevButton.classList.add("btn-light");
+        prevButton.disabled = false;
+    }
 
-		yearSelect.value = year;
-		monthSelect.value = month;
-		getTransactions(year, month);
+    // Disable/enable next button
+    if (year === lastYear && month === maxMonth) {
+        nextButton.classList.remove("btn-light");
+        nextButton.classList.add("btn-secondary");
+        nextButton.disabled = true;
+    } else {
+        nextButton.classList.remove("btn-secondary");
+        nextButton.classList.add("btn-light");
+        nextButton.disabled = false;
+    }
+}
 
-		updateButtonStates(year, month);
-	}
+// Function to update the selected month and year
+function updateMonthYear(direction) {
+    const yearSelect = document.getElementById("yearSelect");
+    const monthSelect = document.getElementById("monthSelect");
 
-	function updateButtonStates(year, month) {
-		const availableMonths = yearMonthMap[year] || [];
-		const minMonth = Math.min(...availableMonths);
-		const maxMonth = Math.max(...availableMonths);
+    let year = Number.parseInt(yearSelect.value);
+    let month = Number.parseInt(monthSelect.value);
 
-		const firstYear = Math.min(...Object.keys(yearMonthMap).map(Number));
-		const lastYear = Math.max(...Object.keys(yearMonthMap).map(Number));
+    console.log(`Navigating ${direction}: Year=${year}, Month=${month}`); // Debug log
 
-		// Update the previous button state
-		if (year === firstYear && month === minMonth) {
-			prevButton.classList.remove("btn-light");
-			prevButton.classList.add("btn-secondary");
-			prevButton.disabled = true;
-		} else {
-			prevButton.classList.remove("btn-secondary");
-			prevButton.classList.add("btn-light");
-			prevButton.disabled = false;
-		}
+    const availableMonths = yearMonthMap[year] || [];
 
-		// Update the next button state
-		if (year === lastYear && month === maxMonth) {
-			console.log("Aqui no menor");
-			nextButton.classList.remove("btn-light");
-			nextButton.classList.add("btn-secondary");
-			nextButton.disabled = true;
-		} else {
-			console.log("Aqui no maior");
-			nextButton.classList.remove("btn-secondary");
-			nextButton.classList.add("btn-light");
-			nextButton.disabled = false;
-		}
-	}
+    if (direction === "prev") {
+        if (month === Math.min(...availableMonths)) {
+            year -= 1;
+            if (yearMonthMap[year]) {
+                const prevAvailableMonths = yearMonthMap[year];
+                month = Math.max(...prevAvailableMonths);
+            } else {
+                year += 1; // Prevent going beyond the first year
+            }
+        } else {
+            month -= 1;
+        }
+    } else if (direction === "next") {
+        if (month === Math.max(...availableMonths)) {
+            year += 1;
+            if (yearMonthMap[year]) {
+                const nextAvailableMonths = yearMonthMap[year];
+                month = Math.min(...nextAvailableMonths);
+            } else {
+                year -= 1; // Prevent going beyond the last year
+            }
+        } else {
+            month += 1;
+        }
+    }
 
-	prevButton.addEventListener("click", () => {
-		updateMonthYear("prev");
-	});
+    console.log(`Updated: Year=${year}, Month=${month}`); // Log updated values
 
-	nextButton.addEventListener("click", () => {
-		updateMonthYear("next");
-	});
-	yearSelect.addEventListener("change", () => {
-		updateButtonStates(
-			Number.parseInt(yearSelect.value),
-			Number.parseInt(monthSelect.value),
-		);
-		getTransactions(
-			Number.parseInt(yearSelect.value),
-			Number.parseInt(monthSelect.value),
-		);
-	});
+    yearSelect.value = year;
+    monthSelect.value = month;
 
-	monthSelect.addEventListener("change", () => {
-		updateButtonStates(
-			Number.parseInt(yearSelect.value),
-			Number.parseInt(monthSelect.value),
-		);
-		getTransactions(
-			Number.parseInt(yearSelect.value),
-			Number.parseInt(monthSelect.value),
-		);
-	});
-	const initialYear = Number.parseInt(yearSelect.value);
-	const initialMonth = Number.parseInt(monthSelect.value);
-	updateButtonStates(initialYear, initialMonth);
-    getTransactions(initialYear, initialMonth);
+    // Fetch transactions for the selected year and month
+    getTransactions(year, month);
+    updateButtonStates(year, month);
+}
+
+// Function to populate the year and month dropdowns
+function populateDropdowns() {
+    const yearSelect = document.getElementById("yearSelect");
+    const monthSelect = document.getElementById("monthSelect");
+
+    yearSelect.innerHTML = ""; // Clear current options
+    monthSelect.innerHTML = ""; // Clear current options
+
+    // Populate year options from yearMonthMap
+    Object.keys(yearMonthMap).forEach((year) => {
+        const option = document.createElement("option");
+        option.value = year;
+        option.textContent = year;
+        yearSelect.appendChild(option);
+    });
+
+    // Set initial year and month
+    const currentYear = new Date().getFullYear();
+    const currentMonth = new Date().getMonth() + 1;
+    yearSelect.value = currentYear;
+    populateMonthsForYear(currentYear);
+
+    updateButtonStates(currentYear, currentMonth);
+}
+
+// Function to populate the month dropdown based on the selected year
+function populateMonthsForYear(year) {
+    const monthSelect = document.getElementById("monthSelect");
+    monthSelect.innerHTML = ""; // Clear existing options
+
+    const months = [
+        'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+    ];
+    const availableMonths = yearMonthMap[year] || [];
+
+    availableMonths.forEach((monthIndex) => {
+        const option = document.createElement("option");
+        option.value = monthIndex;
+        option.textContent = months[monthIndex - 1];
+        monthSelect.appendChild(option);
+    });
+    monthSelect.selectedIndex = monthSelect.options.length - 1;
+}
+
+document.addEventListener("DOMContentLoaded", async () => {
+    const prevButton = document.getElementById("prevButton");
+    const nextButton = document.getElementById("nextButton");
+    const yearSelect = document.getElementById("yearSelect");
+    const monthSelect = document.getElementById("monthSelect");
+
+    try {
+        const response = await fetch("/treasury/get-balances/");
+        const data = await response.json();
+
+        yearMonthMap = data.year_month_map;
+
+        populateDropdowns();
+
+        prevButton.addEventListener("click", () => {
+            updateMonthYear("prev");
+        });
+
+        nextButton.addEventListener("click", () => {
+            updateMonthYear("next");
+        });
+
+        yearSelect.addEventListener("change", () => {
+            const selectedYear = Number.parseInt(yearSelect.value);
+            populateMonthsForYear(selectedYear);
+            updateButtonStates(selectedYear, Number.parseInt(monthSelect.value));
+            getTransactions(selectedYear, Number.parseInt(monthSelect.value));
+        });
+
+        monthSelect.addEventListener("change", () => {
+            const selectedYear = Number.parseInt(yearSelect.value);
+            const selectedMonth = Number.parseInt(monthSelect.value);
+            updateButtonStates(selectedYear, selectedMonth);
+            getTransactions(selectedYear, selectedMonth);
+        });
+    } catch (error) {
+        console.error("Error fetching year/month map:", error);
+    }
 });
