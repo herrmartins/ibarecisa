@@ -1,7 +1,5 @@
 {% extends 'core/base.html' %} {% load static %}{% block content %}
 
-<p class="fs-3">Bem vindo, {{user}}!</p>
-<p class="fw-light">Veja nossos eventos...</p>
 <div class="container-sm my-4">
   {% include "events/includes/list_events.html" %}
 </div>
