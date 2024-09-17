@@ -1,13 +1,37 @@
 {% extends 'core/base.html' %} {% block content %}
-
+{% load static %}
+<link href="{% static 'css/index_styles.css' %}" rel="stylesheet">
 
 {% if not user.is_authenticated %}
-
-<p>Bem vindo, Anônimo!</p>
 <div class="container-sm my-4">
+  <div class="container">
+    <div id="carouselExample" class="carousel slide">
+      <div class="carousel-inner">
+        <div class="carousel-item active">
+          <img src="{% static 'img/pictures/igreja1.jpg' %}" class="d-block w-100 fixed-size" alt="Image 1">
+        </div>
+        <div class="carousel-item">
+          <img src="{% static 'img/pictures/igreja2.jpg' %}" class="d-block w-100 fixed-size" alt="Image 2">
+        </div>
+        <div class="carousel-item">
+          <img src="{% static 'img/pictures/igreja3.jpg' %}" class="d-block w-100 fixed-size" alt="Image 3">
+        </div>
+        <div class="carousel-item">
+          <img src="{% static 'img/pictures/igreja4.jpg' %}" class="d-block w-100 fixed-size" alt="Image 3">
+        </div>
+      </div>
+      <button class="carousel-control-prev" type="button" data-bs-target="#carouselExample" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Previous</span>
+      </button>
+      <button class="carousel-control-next" type="button" data-bs-target="#carouselExample" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Next</span>
+      </button>
+    </div>
+  </div>
   <div class="row justify-content-center">
     <div class="col-sm-auto">
-
       <p>Digite seus dados para entrar...</p>
       <form action="{% url 'login' %}" method="post">
         {%csrf_token%}{{login_form.as_p}}
@@ -20,6 +44,7 @@
 </div>
 
 {% else %}
+{% if post %}
 <div class="container">
   <p></p>
   <div class="col-md-8 offset-md-2 mb-4">
@@ -43,7 +68,7 @@
     </div>
   </div>
 </div>
-
+{% endif %}
 {% endif %}
 
 {% endblock %}

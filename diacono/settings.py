@@ -1,7 +1,7 @@
 from pathlib import Path
 from decouple import config
 import mimetypes
-
+import sys
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     "phonenumber_field",
     "ckeditor",
     "rest_framework",
+    "easyaudit",
     "xhtml2pdf",
     "weasyprint",
     "corsheaders",
@@ -43,6 +44,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "easyaudit.middleware.easyaudit.EasyAuditMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -81,6 +83,10 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": BASE_DIR / "db.sqlite3",
+    },
+    "audit_db": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "audit_db.sqlite3",
     }
 }
 
@@ -141,6 +147,11 @@ CKEDITOR_CONFIGS = {
         "toolbarCanCollapse": "true",
     },
 }
+
+IS_TESTING = "test" in sys.argv
+
+if not IS_TESTING:
+    DATABASE_ROUTERS = ["diacono.dbrouters.AuditRouter"]
 
 
 mimetypes.add_type("image/jpeg", ".jpg", strict=True)

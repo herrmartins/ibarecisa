@@ -2,30 +2,30 @@
 
 <div x-data>
     <div class="row justify-content-end align-items-end">
-    <div class="col-auto">
-        <div class="form-group">
-            <label for="start_date" class="form-label">Início:</label>
-            <input type="date" class="form-control" id="start_date" name="start_date" x-model="start_date" x-ref="input_start_date" />
+        <div class="col-auto">
+            <div class="form-group">
+                <label for="start_date" class="form-label">Início:</label>
+                <input type="date" class="form-control" id="start_date" name="start_date" x-model="start_date" x-ref="input_start_date" />
+            </div>
+        </div>
+
+        <div class="col-auto">
+            <div class="form-group">
+                <label for="end_date" class="form-label">Fim:</label>
+                <input type="date" class="form-control" id="end_date" name="end_date" x-model="end_date" x-ref="input_end_date" />
+            </div>
+        </div>
+
+        <div class="col-auto">
+            <button
+                type="button"
+                class="btn btn-outline-info"
+                x-on:click="$store.allEvents.findByDate($refs.input_start_date._x_model.get(), $refs.input_end_date._x_model.get())"
+            >
+                Ver Mais
+            </button>
         </div>
     </div>
-
-    <div class="col-auto">
-        <div class="form-group">
-            <label for="end_date" class="form-label">Fim:</label>
-            <input type="date" class="form-control" id="end_date" name="end_date" x-model="end_date" x-ref="input_end_date" />
-        </div>
-    </div>
-
-    <div class="col-auto">
-        <button
-            type="button"
-            class="btn btn-outline-info"
-            x-on:click="$store.allEvents.findByDate($refs.input_start_date._x_model.get(), $refs.input_end_date._x_model.get())"
-        >
-            Ver Mais
-        </button>
-    </div>
-</div>
 
 </div>
 
