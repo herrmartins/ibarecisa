@@ -1,0 +1,30 @@
+{% extends 'core/base.html' %}
+{% block content %}
+<div class="container text-center" x-data="{ query: '', results: [] }">
+  <p class="fs-1">Departamento de Música</p>
+  <div class="d-flex justify-content-center">
+    <div class="input-group input-group-lg">
+      <input type="text" class="form-control" placeholder="Busca uma canção..."
+             x-model="query"
+             x-on:input.debounce.300ms="
+                 fetch('{% url 'worship:song-search' %}?q=' + encodeURIComponent(query))
+                     .then(response => response.json())
+                     .then(data => results = data)
+             ">
+    </div>
+  </div>
+
+  <div class="mt-3">
+    <template x-if="results.length > 0">
+      <ul class="list-group">
+        <template x-for="result in results" :key="result.id">
+          <li class="list-group-item">
+            <strong x-text="result.title"></strong> - <span x-text="result.artist"></span>
+          </li>
+        </template>
+      </ul>
+    </template>
+    <p x-show="query && results.length === 0">Não há resultados...</p>
+  </div>
+</div>
+{% endblock %}

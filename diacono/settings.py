@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     "users.apps.UsersConfig",
     "secretarial.apps.SecretarialConfig",
     "treasury.apps.TreasuryConfig",
+    "worship.apps.WorshipConfig",
 ]
 
 MIDDLEWARE = [

@@ -15,6 +15,7 @@ urlpatterns = [
     path("api/", include("api.urls")),
     path("api2/", include("api2.urls")),
     path("blog/", include("blog.urls")),
+    path("worship/", include("worship.urls")),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
