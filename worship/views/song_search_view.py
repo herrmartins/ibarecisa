@@ -2,6 +2,7 @@ from django.http import JsonResponse
 from django.views.generic import View
 from django.db.models import Q
 from worship.models import Song
+import re
 
 
 class SongSearchView(View):
@@ -26,7 +27,7 @@ class SongSearchView(View):
                 {
                     "id": song.id,
                     "title": song.title,
-                    "artist": song.artist.name if song.artist else "Unknown",
+                    "artist": song.artist.name if song.artist else "Desconhecido",
                 }
                 for song in results_by_title
             ],
@@ -34,7 +35,7 @@ class SongSearchView(View):
                 {
                     "id": song.id,
                     "title": song.title,
-                    "artist": song.artist.name if song.artist else "Unknown",
+                    "artist": song.artist.name if song.artist else "Desconhecido",
                 }
                 for song in results_by_artist
             ],
@@ -42,7 +43,18 @@ class SongSearchView(View):
                 {
                     "id": song.id,
                     "title": song.title,
-                    "artist": song.artist.name if song.artist else "Unknown",
+                    "artist": song.artist.name if song.artist else "Desconhecido",
+                    "snippet": (
+                        lambda lyrics: (
+                            re.sub(
+                                f"({query})", r"<strong>\1</strong>",
+                                re.search(f"(.{{0,50}}{query}.{{0,50}})", lyrics, re.IGNORECASE).group(1),
+                                flags=re.IGNORECASE
+                            )
+                            if re.search(f"{query}", lyrics, re.IGNORECASE)
+                            else "Desconhecido"
+                        )
+                    )(song.lyrics) if song.lyrics else "Desconhecido",
                 }
                 for song in results_by_lyrics
             ],
@@ -50,7 +62,11 @@ class SongSearchView(View):
                 {
                     "id": song.id,
                     "title": song.title,
-                    "artist": song.artist.name if song.artist else "Unknown",
+                    "theme": (
+                        [theme.title for theme in song.themes.all()]
+                        if song.themes.exists()
+                        else ["Desconhecido"]
+                    ),
                 }
                 for song in results_by_theme
             ],
