@@ -115,7 +115,7 @@
 </div>
 
 <div class="modal fade" id="addSongModal" tabindex="-1">
-  <div class="modal-dialog modal-lg modal-dialog-centered">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
       <div class="modal-content">
           <div class="modal-header">
               <h5 class="modal-title">Adicionar nova canção</h5>
@@ -132,7 +132,7 @@
                           </div>
                           <div class="mb-3">
                             <div x-data="{ search: '', selectedArtist: '', isOpen: false, artists: ['Artist 1', 'Artist 2', 'Artist 3', 'Artist 4'] }">
-                              <label for="artistSearch" class="form-label">Artist</label>
+                              <label for="artistSearch" class="form-label">Artista</label>
                               <input type="text" x-model="search" placeholder="Search artist..." @focus="isOpen = true" @click.away="isOpen = false"
                               class="form-control">
                               <div x-show="isOpen" class="dropdown-menu show" style="display: block; max-height: 200px; overflow-y: auto;">
@@ -144,9 +144,38 @@
                           
                           </div>
                           <div class="mb-3">
-                              <label for="songTheme" class="form-label">Tema</label>
-                              <input type="text" id="songTheme" class="form-control" x-model="theme">
+                            <div x-data="{ 
+                              search: '', 
+                              selectedTheme: '', 
+                              isOpen: false, 
+                              themes: [], 
+                              async fetchThemes() {
+                                  const response = await fetch('{% url "worship:theme-list" %}?q=' + encodeURIComponent(this.search));
+                                  const data = await response.json();
+                                  this.themes = data.results; // Adjust based on your API response format
+                              },
+                              init() {
+                                  this.fetchThemes();
+                                  this.$watch('search', (value) => {
+                                  this.isOpen = true;
+                                  this.fetchThemes();
+                                  });
+                              }
+                          }">
+                            <label for="themeSearch" class="form-label">Tema</label>
+                            <input type="text" x-model="search" placeholder="Search theme..." 
+                                  @focus="isOpen = true" @click.away="isOpen = false" class="form-control">
+                        
+                            <div x-show="isOpen" class="dropdown-menu show" style="display: block; max-height: 200px; overflow-y: auto;">
+                                <template x-for="theme in themes" :key="theme.id">
+                                    <div @click="selectedTheme = theme.text; isOpen = false" class="dropdown-item" x-text="theme.text"></div>
+                                </template>
+                            </div>
+                        
+                            <!-- Hidden input for storing the selected theme -->
+                            <input type="hidden" x-model="selectedTheme">
                           </div>
+                        </div>
                       </div>
 
                       <!-- Right Column: Lyrics -->
@@ -160,7 +189,9 @@
                   <button type="submit" class="btn btn-primary">Salvar</button>
               </form>
           </div>
+          </div>
       </div>
+    </div>
   </div>
 </div>
 
