@@ -131,15 +131,39 @@
                               <input type="text" id="songTitle" class="form-control" x-model="title" required>
                           </div>
                           <div class="mb-3">
-                            <div x-data="{ search: '', selectedArtist: '', isOpen: false, artists: ['Artist 1', 'Artist 2', 'Artist 3', 'Artist 4'] }">
-                              <label for="artistSearch" class="form-label">Artista</label>
-                              <input type="text" x-model="search" placeholder="Search artist..." @focus="isOpen = true" @click.away="isOpen = false"
-                              class="form-control">
-                              <div x-show="isOpen" class="dropdown-menu show" style="display: block; max-height: 200px; overflow-y: auto;">
-                                  <template x-for="artist in artists.filter(a => a.toLowerCase().includes(search.toLowerCase()))" :key="artist">
-                                      <div @click="selectedArtist = artist; isOpen = false" class="dropdown-item" x-text="artist"></div>
-                                  </template>
-                              </div>
+                            <div x-data="{ 
+                              search: '', 
+                              selectedArtist: '', 
+                              isOpen: false, 
+                              artists: [], 
+                              async fetchArtists() {
+                                  // Fetch artists from the server with the current search term
+                                  const response = await fetch('{% url "worship:composer-list" %}?q=' + encodeURIComponent(this.search));
+                                  const data = await response.json();
+                                  this.artists = data.results; // Adjust based on your API response format
+                              },
+                              init() {
+                                  this.fetchArtists();  // Fetch all artists initially
+                                  this.$watch('search', (value) => {
+                                      this.isOpen = true; // Open dropdown when search changes
+                                      this.fetchArtists(); // Fetch artists regardless of search term length
+                                  });
+                              }
+                          }"
+                      >
+                          <label for="artistSearch" class="form-label">Artist</label>
+                          <input type="text" x-model="search" placeholder="Search artist..." 
+                                 @focus="isOpen = true" @click.away="isOpen = false" class="form-control">
+                      
+                          <div x-show="isOpen" class="dropdown-menu show" style="display: block; max-height: 200px; overflow-y: auto;">
+                              <template x-for="artist in artists" :key="artist.id">
+                                  <div @click="selectedArtist = artist.text; isOpen = false" class="dropdown-item" x-text="artist.text"></div>
+                              </template>
+                          </div>
+                      
+                          <!-- Hidden input for storing the selected artist -->
+                          <input type="hidden" x-model="selectedArtist">
+                      
                           </div>
                           
                           </div>
@@ -188,7 +212,6 @@
                   </div>
                   <button type="submit" class="btn btn-primary">Salvar</button>
               </form>
-          </div>
           </div>
       </div>
     </div>
