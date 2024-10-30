@@ -14,9 +14,11 @@ class SongAddView(View):
             artist_name = data.get('artist')
             theme_title = data.get('theme')
             lyrics = data.get('lyrics')
+
+            print("DADOS:", data)
             
-            if not title or not artist_name or not theme_title:
-                return JsonResponse({"success": False, "error": "Title, artist, and theme are required."}, status=400)
+            if not title or not artist_name:
+                return JsonResponse({"success": False, "error": "Title and artist are required."}, status=400)
 
             artist, _ = Composer.objects.get_or_create(name=artist_name)
             theme, _ = SongTheme.objects.get_or_create(title=theme_title)

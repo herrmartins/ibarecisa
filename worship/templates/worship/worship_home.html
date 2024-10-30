@@ -113,109 +113,147 @@
       </div>
   </div>
 </div>
-
 <div class="modal fade" id="addSongModal" tabindex="-1">
-  <div class="modal-dialog modal-xl modal-dialog-centered">
-      <div class="modal-content">
-          <div class="modal-header">
-              <h5 class="modal-title">Adicionar nova canção</h5>
-              <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body">
-              <form x-data="{ title: '', artist: '', theme: '', lyrics: '' }" x-on:submit.prevent="submitForm">
-                  <div class="row">
-                      <!-- Left Column: Title, Artist, and Theme -->
-                      <div class="col-md-6">
-                          <div class="mb-3">
-                              <label for="songTitle" class="form-label">Título</label>
-                              <input type="text" id="songTitle" class="form-control" x-model="title" required>
-                          </div>
-                          <div class="mb-3">
-                            <div x-data="{ 
-                              search: '', 
-                              selectedArtist: '', 
-                              isOpen: false, 
-                              artists: [], 
-                              async fetchArtists() {
-                                  // Fetch artists from the server with the current search term
-                                  const response = await fetch('{% url "worship:composer-list" %}?q=' + encodeURIComponent(this.search));
-                                  const data = await response.json();
-                                  this.artists = data.results; // Adjust based on your API response format
-                              },
-                              init() {
-                                  this.fetchArtists();  // Fetch all artists initially
-                                  this.$watch('search', (value) => {
-                                      this.isOpen = true; // Open dropdown when search changes
-                                      this.fetchArtists(); // Fetch artists regardless of search term length
-                                  });
-                              }
-                          }"
-                      >
-                          <label for="artistSearch" class="form-label">Artist</label>
-                          <input type="text" x-model="search" placeholder="Search artist..." 
-                                 @focus="isOpen = true" @click.away="isOpen = false" class="form-control">
-                      
-                          <div x-show="isOpen" class="dropdown-menu show" style="display: block; max-height: 200px; overflow-y: auto;">
-                              <template x-for="artist in artists" :key="artist.id">
-                                  <div @click="selectedArtist = artist.text; isOpen = false" class="dropdown-item" x-text="artist.text"></div>
-                              </template>
-                          </div>
-                      
-                          <!-- Hidden input for storing the selected artist -->
-                          <input type="hidden" x-model="selectedArtist">
-                      
-                          </div>
-                          
-                          </div>
-                          <div class="mb-3">
-                            <div x-data="{ 
-                              search: '', 
-                              selectedTheme: '', 
-                              isOpen: false, 
-                              themes: [], 
-                              async fetchThemes() {
-                                  const response = await fetch('{% url "worship:theme-list" %}?q=' + encodeURIComponent(this.search));
-                                  const data = await response.json();
-                                  this.themes = data.results; // Adjust based on your API response format
-                              },
-                              init() {
-                                  this.fetchThemes();
-                                  this.$watch('search', (value) => {
-                                  this.isOpen = true;
-                                  this.fetchThemes();
-                                  });
-                              }
-                          }">
-                            <label for="themeSearch" class="form-label">Tema</label>
-                            <input type="text" x-model="search" placeholder="Search theme..." 
-                                  @focus="isOpen = true" @click.away="isOpen = false" class="form-control">
-                        
-                            <div x-show="isOpen" class="dropdown-menu show" style="display: block; max-height: 200px; overflow-y: auto;">
-                                <template x-for="theme in themes" :key="theme.id">
-                                    <div @click="selectedTheme = theme.text; isOpen = false" class="dropdown-item" x-text="theme.text"></div>
-                                </template>
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Adicionar nova canção</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Main Alpine Component for Form Submission -->
+                <form x-data="{ 
+                    title: '', 
+                    artist: '', 
+                    theme: '', 
+                    hymnal: '', 
+                    lyrics: '', 
+                    submitForm() {
+                        fetch('{% url 'worship:song-add' %}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': '{{ csrf_token }}'
+                            },
+                            body: JSON.stringify({
+                                title: this.title,
+                                artist: this.artist,
+                                theme: this.theme,
+                                hymnal: this.hymnal,
+                                lyrics: this.lyrics
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                alert('Song added successfully!');
+                                this.resetForm();
+                            } else {
+                                alert('Error: ' + (data.error || 'Unknown error'));
+                            }
+                        })
+                        .catch(error => alert('Submission failed: ' + error.message));
+                    },
+                    resetForm() {
+                        this.title = '';
+                        this.artist = '';
+                        this.theme = '';
+                        this.hymnal = '';
+                        this.lyrics = '';
+                    } 
+                }"
+                @artist-selected.window="artist = $event.detail"
+                @theme-selected.window="theme = $event.detail"
+                @hymnal-selected.window="hymnal = $event.detail"
+                >
+                    <div class="row">
+                        <!-- Left Column: Title, Artist, Theme, and Hymnal -->
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="songTitle" class="form-label">Título</label>
+                                <input type="text" id="songTitle" class="form-control" x-model="title" required>
                             </div>
-                        
-                            <!-- Hidden input for storing the selected theme -->
-                            <input type="hidden" x-model="selectedTheme">
-                          </div>
+                            
+                            <!-- Hymnal Dropdown -->
+                            <div class="mb-3" x-data="{ search: '', isOpen: false, hymnals: {{ hymnals|safe }} }">
+                                <label for="hymnalSearch" class="form-label">Hinário</label>
+                                <input type="text" x-model="search" placeholder="Busque o hinário..."
+                                       @focus="isOpen = true" @click.away="isOpen = false" class="form-control">
+                                <div x-show="isOpen" class="dropdown-menu show" style="display: block; max-height: 200px; overflow-y: auto;">
+                                    <template x-for="hymnal in hymnals.filter(h => h.title.toLowerCase().includes(search.toLowerCase()))" :key="hymnal.id">
+                                        <div @click="$dispatch('hymnal-selected', hymnal.title); search = hymnal.title; isOpen = false" 
+                                             class="dropdown-item" x-text="hymnal.title"></div>
+                                    </template>
+                                </div>
+                            </div>
+  
+                            <!-- Artist Dropdown -->
+                            <div class="mb-3" x-data="{ search: '', isOpen: false, artists: [], async fetchArtists() {
+                                const response = await fetch('{% url "worship:composer-list" %}?q=' + encodeURIComponent(this.search));
+                                const data = await response.json();
+                                this.artists = data.results;
+                            },
+                            init() {
+                                this.fetchArtists();
+                                this.$watch('search', () => {
+                                    this.isOpen = true;
+                                    this.fetchArtists();
+                                });
+                            } }">
+                                <label for="artistSearch" class="form-label">Adorador</label>
+                                <input type="text" x-model="search" placeholder="Busque um artista" 
+                                       @focus="isOpen = true" @click.away="isOpen = false" class="form-control">
+                                <div x-show="isOpen" class="dropdown-menu show" style="display: block; max-height: 200px; overflow-y: auto;">
+                                    <template x-for="artist in artists" :key="artist.id">
+                                        <div @click="$dispatch('artist-selected', artist.text); search = artist.text; isOpen = false" 
+                                             class="dropdown-item" x-text="artist.text"></div>
+                                    </template>
+                                </div>
+                            </div>
+  
+                            <!-- Theme Dropdown -->
+                            <div class="mb-3" x-data="{ search: '', isOpen: false, themes: [], async fetchThemes() {
+                                const response = await fetch('{% url "worship:theme-list" %}?q=' + encodeURIComponent(this.search));
+                                const data = await response.json();
+                                this.themes = data.results;
+                            },
+                            init() {
+                                this.fetchThemes();
+                                this.$watch('search', () => {
+                                    this.isOpen = true;
+                                    this.fetchThemes();
+                                });
+                            } }">
+                                <label for="themeSearch" class="form-label">Tema</label>
+                                <input type="text" x-model="search" placeholder="Busque um tema..." 
+                                       @focus="isOpen = true" @click.away="isOpen = false" class="form-control">
+                                <div x-show="isOpen" class="dropdown-menu show" style="display: block; max-height: 200px; overflow-y: auto;">
+                                    <template x-for="theme in themes" :key="theme.id">
+                                        <div @click="$dispatch('theme-selected', theme.text); search = theme.text; isOpen = false" 
+                                             class="dropdown-item" x-text="theme.text"></div>
+                                    </template>
+                                </div>
+                            </div>
                         </div>
-                      </div>
-
-                      <!-- Right Column: Lyrics -->
-                      <div class="col-md-6">
-                          <div class="mb-3">
-                              <label for="songLyrics" class="form-label">Letra</label>
-                              <textarea id="songLyrics" class="form-control" x-model="lyrics" rows="8"></textarea>
-                          </div>
-                      </div>
-                  </div>
-                  <button type="submit" class="btn btn-primary">Salvar</button>
-              </form>
-          </div>
+  
+                        <!-- Right Column: Lyrics -->
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="songLyrics" class="form-label">Letra</label>
+                                <textarea id="songLyrics" class="form-control" x-model="lyrics" rows="8"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Submit Button with @click to trigger submitForm -->
+                    <button type="button" class="btn btn-primary" @click="submitForm">Salvar</button>
+                </form>
+            </div>
+        </div>
       </div>
     </div>
   </div>
-</div>
+  
+  
 
 {% endblock %}
