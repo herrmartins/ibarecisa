@@ -1,0 +1,26 @@
+{% extends 'core/base.html' %}
+{% block content %}
+<div class="container text-center">
+    <p class="fs-1">Departamento de Música</p>
+    
+    <h2 class="mt-4">{{ song.title }}</h2>
+    <p><strong>Artista:</strong> {{ song.artist.name }}</p>
+    <p><strong>Tema:</strong> {% for theme in song.themes.all %} {{ theme.title }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+    <p><strong>Hinário:</strong> {{ song.hymnal.title }}</p>
+    <p><strong>Letra:</strong></p>
+    <div class="border p-3 mb-4">
+        <pre>{{ song.lyrics }}</pre>
+    </div>
+
+    <h3>Arquivos Associados</h3>
+    <ul class="list-group">
+        {% for file in song.files.all %}
+            <li class="list-group-item">
+                <a href="{{ file.file.url }}" download>{{ file.file.name }}</a>
+            </li>
+        {% empty %}
+            <li class="list-group-item">Nenhum arquivo associado</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

@@ -5,6 +5,7 @@ from worship.views import (
     ThemeListView,
     ComposerListView,
     SongAddView,
+    SongDetailView
 )
 
 app_name = "worship"
@@ -15,4 +16,5 @@ urlpatterns = [
     path("songs/add/", SongAddView.as_view(), name="song-add"),
     path('composers/search', ComposerListView.as_view(), name='composer-list'),
     path('themes/search', ThemeListView.as_view(), name='theme-list'),
+    path('song/<int:pk>/', SongDetailView.as_view(), name='song-detail'),
 ]

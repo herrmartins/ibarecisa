@@ -5,12 +5,25 @@ from django.urls import reverse
 from django.contrib import messages
 from treasury.models import MonthlyBalance, TransactionModel
 from django.db.models import Sum
+import logging
 
+logger = logging.getLogger(__name__)
 
 class FixFinancialDataView(PermissionRequiredMixin, View):
     permission_required = "treasury.add_transactionmodel"
 
-    def post(self, request, *args, **kwargs):
+    def has_permission(self):
+        """
+        Allow superusers and users with the required permission.
+        """
+        if self.request.method == "GET" and self.request.user.is_superuser:
+            return True
+        return super().has_permission()
+
+    def get(self, request, *args, **kwargs):
+        """
+        Handle GET requests to fix financial data.
+        """
         try:
             # Fetch the first month balance
             first_month_balance = MonthlyBalance.objects.get(is_first_month=True)
@@ -31,7 +44,10 @@ class FixFinancialDataView(PermissionRequiredMixin, View):
                 balance.save()
 
             messages.success(request, "Financial data has been successfully corrected.")
+        except MonthlyBalance.DoesNotExist:
+            messages.error(request, "First month balance is missing.")
         except Exception as e:
+            logger.error(f"Error fixing financial data: {e}")
             messages.error(
                 request, f"An error occurred while fixing financial data: {e}"
             )

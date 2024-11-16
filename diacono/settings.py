@@ -76,7 +76,11 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "diacono.wsgi.application"
 
+IS_TESTING = "test" in sys.argv
 
+if not IS_TESTING:
+    DATABASE_ROUTERS = ["diacono.dbrouters.AuditRouter"]
+    
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
@@ -148,11 +152,6 @@ CKEDITOR_CONFIGS = {
         "toolbarCanCollapse": "true",
     },
 }
-
-IS_TESTING = "test" in sys.argv
-
-if not IS_TESTING:
-    DATABASE_ROUTERS = ["diacono.dbrouters.AuditRouter"]
 
 
 mimetypes.add_type("image/jpeg", ".jpg", strict=True)
