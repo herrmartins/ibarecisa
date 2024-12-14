@@ -29,7 +29,6 @@ INSTALLED_APPS = [
     "phonenumber_field",
     "ckeditor",
     "rest_framework",
-    "easyaudit",
     "xhtml2pdf",
     "weasyprint",
     "corsheaders",
@@ -45,7 +44,6 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    "easyaudit.middleware.easyaudit.EasyAuditMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -76,11 +74,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "diacono.wsgi.application"
 
-IS_TESTING = "test" in sys.argv
-
-if not IS_TESTING:
-    DATABASE_ROUTERS = ["diacono.dbrouters.AuditRouter"]
-    
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
@@ -88,10 +81,6 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": BASE_DIR / "db.sqlite3",
-    },
-    "audit_db": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "audit_db.sqlite3",
     }
 }
 
@@ -132,9 +121,11 @@ USE_TZ = True
 
 
 STATIC_ROOT = BASE_DIR / "static"
-STATIC_URL = "static/"
+STATIC_URL = "/static/"
+STATICFILES_DIRS = [
+]
 MEDIA_ROOT = BASE_DIR / "media"
-MEDIA_URL = "media/"
+MEDIA_URL = "/media/"
 
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
