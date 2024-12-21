@@ -4,12 +4,14 @@
     <p class="fs-1">Departamento de Música</p>
     
     <h2 class="mt-4">{{ song.title }}</h2>
-    <p><strong>Artista:</strong> {{ song.artist.name }}</p>
+    <p><strong>Artista:</strong> {% if song.artist %}{{ song.artist.name }}{% else %}Desconhecido{% endif %}</p>
+    <p><strong>Chave:</strong> {{ song.key }}</p>
+    <p><strong>Categoria:</strong> {{ song.category }}</p>
     <p><strong>Tema:</strong> {% for theme in song.themes.all %} {{ theme.title }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
-    <p><strong>Hinário:</strong> {{ song.hymnal.title }}</p>
+    <p><strong>Hinário:</strong> {% if song.hymnal.title %} {{ song.hymnal }} {% else %} "Desconhecido" {% endif %}</p>
     <p><strong>Letra:</strong></p>
     <div class="border p-3 mb-4">
-        <pre>{{ song.lyrics }}</pre>
+        <p>{{ song.lyrics|linebreaksbr }}</p>
     </div>
 
     <h3>Arquivos Associados</h3>

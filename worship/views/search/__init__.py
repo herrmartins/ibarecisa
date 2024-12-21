@@ -1,2 +1,3 @@
 from .composer_list_view import ComposerListView
-from .song_themes_list_view import ThemeListView
+from .theme_list_view import ThemeListView
+from .hymnal_list_view import HymnalListView

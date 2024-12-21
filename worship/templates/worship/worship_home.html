@@ -115,7 +115,6 @@
         </div>
     </div>
 
-    <!-- Add Song Modal -->
     <div class="modal fade" id="addSongModal" tabindex="-1">
         <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content">
@@ -124,7 +123,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <form x-data="songForm()">
+                    <form x-data="songForm()" x-init="initAddSongForm()">
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
@@ -133,11 +132,30 @@
                                 </div>
                                 <div class="mb-3">
                                     <label for="artist" class="form-label">Adorador</label>
-                                    <input type="text" id="artist" class="form-control" x-model="artist">
+                                    <select id="artist" class="form-control" x-model="artist">
+                                        <option value="">Selecione um adorador</option>
+                                        <template x-for="artist in artists" :key="artist.id">
+                                            <option :value="artist.id" x-text="artist.text"></option>
+                                        </template>
+                                    </select>
                                 </div>
                                 <div class="mb-3">
                                     <label for="theme" class="form-label">Tema</label>
-                                    <input type="text" id="theme" class="form-control" x-model="theme">
+                                    <select id="theme" class="form-control" x-model="theme">
+                                        <option value="">Selecione um tema</option>
+                                        <template x-for="theme in themes" :key="theme.id">
+                                            <option :value="theme.id" x-text="theme.text"></option>
+                                        </template>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="hymnal" class="form-label">Hinário</label>
+                                    <select id="hymnal" class="form-control" x-model="hymnal">
+                                        <option value="">Selecione um hinário</option>
+                                        <template x-for="hymnal in hymnals" :key="hymnal.id">
+                                            <option :value="hymnal.id" x-text="hymnal.text"></option>
+                                        </template>
+                                    </select>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -149,7 +167,6 @@
                         </div>
                         <button type="button" class="btn btn-primary" @click="submitForm">Salvar</button>
                     </form>
-                    
                 </div>
             </div>
         </div>
