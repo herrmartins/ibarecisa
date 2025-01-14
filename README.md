@@ -31,11 +31,12 @@ I would recommend deleting the migrations files and doing this:
 
 1. `python manage.py makemigrations users`
 2. `python manage.py migrate`
-3. Create a superuser (necessary, because it  will be the default user, look at the code)
+3. Create a superuser (necessary, because it  will be the default user, look at the code) `python manage.py createsuperuser`
 4. `python manage.py init_groups`
 5. `python manage.py makemigrations`
 6. Change the migrations file of the treasury app to: **upload_to=treasury.utils.custom_upload_to**, Somehow django generates **upload_to=treasury.utils.custom_upload_to.custom_upload_to**, what throws and error
 7. `python manage.py migrate`
+8. `python manage.py migrate easyaudit --database=audit_db`
 
 The second step will create permissions groups and set the permissions
 You can change the standard permissions in run time or in the users app **/management/init_groups.py**
