@@ -12,7 +12,7 @@ SECRET_KEY = config("SECRET_KEY")
 DEBUG = config("DEBUG", cast=bool)
 
 if not DEBUG:
-    ALLOWED_HOSTS = ["ibarecisa.org.br", "104.251.208.79", "127.0.0.1"]
+    ALLOWED_HOSTS = ["app.ibarecisa.org.br", "186.202.57.220", "127.0.0.1"]
 else:
     ALLOWED_HOSTS = ["*"]
 
