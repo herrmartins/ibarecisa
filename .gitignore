@@ -1,6 +1,7 @@
 media/img/profile/
 media/treasury/receipts/
 .static/
+static/
 media/
 .vscode/
 data.json
@@ -31,6 +32,7 @@ wheels/
 .installed.cfg
 *.egg
 MANIFEST
+gunicorn-error-log
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
