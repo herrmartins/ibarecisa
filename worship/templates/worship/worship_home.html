@@ -1,6 +1,7 @@
 {% extends 'core/base.html' %}
 {% block content %}
 {% load static %}
+<link rel="stylesheet" href="{% static 'css/ckedit.css' %}">
 
 <div class="container text-center" x-data="songSearch()">
     <p class="fs-1">Departamento de Música</p>
@@ -23,98 +24,104 @@
     <!-- Responsive Results Display -->
     <div class="mt-4 row">
         <!-- Results by Title -->
-        <div class="col-lg-6 mb-4">
-            <div class="result-category" x-show="results.title_matches.length > 0">
-                <p class="fs-3">Resultados por Título</p>
-                <table class="table table-striped table-sm">
-                    <thead>
-                        <tr>
-                            <th scope="col">Título</th>
-                            <th scope="col">Artista</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <template x-for="song in results.title_matches" :key="song.id">
+        <div class="mt-4 row">
+            <!-- Results by Title -->
+            <div class="col-lg-6 mb-4">
+                <div class="result-category" x-show="results.title_matches.length > 0">
+                    <p class="fs-3">Resultados por Título</p>
+                    <table class="table table-striped table-sm">
+                        <thead>
                             <tr>
-                                <td><a :href="getSongDetailUrl(song.id)" class="fw-bold" x-text="song.title"></a></td>
-                                <td x-text="song.artist"></td>
+                                <th scope="col">Título</th>
+                                <th scope="col">Artista</th>
                             </tr>
-                        </template>
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            <template x-for="item in results.title_matches" :key="item.id">
+                                <tr>
+                                    <td x-text="item.title"></td>
+                                    <td x-text="item.artist"></td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        
+            <!-- Results by Artist -->
+            <div class="col-lg-6 mb-4">
+                <div class="result-category" x-show="results.artist_matches.length > 0">
+                    <p class="fs-3">Resultados por Artista</p>
+                    <table class="table table-striped table-sm">
+                        <thead>
+                            <tr>
+                                <th scope="col">Título</th>
+                                <th scope="col">Artista</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template x-for="item in results.artist_matches" :key="item.id">
+                                <tr>
+                                    <td x-text="item.title"></td>
+                                    <td x-text="item.artist"></td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        
+            <!-- Results by Lyrics -->
+            <div class="col-lg-6 mb-4">
+                <div class="result-category" x-show="results.lyrics_matches.length > 0">
+                    <p class="fs-3">Resultados por Letras</p>
+                    <table class="table table-striped table-sm">
+                        <thead>
+                            <tr>
+                                <th scope="col">Título</th>
+                                <th scope="col">Artista</th>
+                                <th scope="col">Trecho</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template x-for="item in results.lyrics_matches" :key="item.id">
+                                <tr>
+                                    <td x-text="item.title"></td>
+                                    <td x-text="item.artist"></td>
+                                    <td x-html="item.snippet"></td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        
+            <!-- Results by Theme -->
+            <div class="col-lg-6 mb-4">
+                <div class="result-category" x-show="results.theme_matches.length > 0">
+                    <p class="fs-3">Resultados por Tema</p>
+                    <table class="table table-striped table-sm">
+                        <thead>
+                            <tr>
+                                <th scope="col">Título</th>
+                                <th scope="col">Temas</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template x-for="item in results.theme_matches" :key="item.id">
+                                <tr>
+                                    <td x-text="item.title"></td>
+                                    <td x-text="item.theme.join(', ')"></td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
+        
 
-        <!-- Results by Artist -->
-        <div class="col-lg-6 mb-4">
-            <div class="result-category" x-show="results.artist_matches.length > 0">
-                <p class="fs-3">Resultados por Artista</p>
-                <table class="table table-striped table-sm">
-                    <thead>
-                        <tr>
-                            <th scope="col">Título</th>
-                            <th scope="col">Artista</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <template x-for="song in results.artist_matches" :key="song.id">
-                            <tr>
-                                <td><a :href="getSongDetailUrl(song.id)" class="fw-bold" x-text="song.title"></a></td>
-                                <td x-text="song.artist"></td>
-                            </tr>
-                        </template>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Results by Lyrics -->
-        <div class="col-lg-6 mb-4">
-            <div class="result-category" x-show="results.lyrics_matches.length > 0">
-                <p class="fs-3">Resultados por Letra</p>
-                <table class="table table-striped table-sm">
-                    <thead>
-                        <tr>
-                            <th scope="col">Título</th>
-                            <th scope="col">Trecho</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <template x-for="song in results.lyrics_matches" :key="song.id">
-                            <tr>
-                                <td><a :href="getSongDetailUrl(song.id)" class="fw-bold" x-text="song.title"></a></td>
-                                <td x-html="song.snippet"></td>
-                            </tr>
-                        </template>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Results by Theme -->
-        <div class="col-lg-6 mb-4">
-            <div class="result-category" x-show="results.theme_matches.length > 0">
-                <p class="fs-3">Resultados por Tema</p>
-                <table class="table table-striped table-sm">
-                    <thead>
-                        <tr>
-                            <th scope="col">Título</th>
-                            <th scope="col">Tema</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <template x-for="song in results.theme_matches" :key="song.id">
-                            <tr>
-                                <td><a :href="getSongDetailUrl(song.id)" class="fw-bold" x-text="song.title"></a></td>
-                                <td x-text="song.theme.join(', ')"></td>
-                            </tr>
-                        </template>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-
+    <!-- Add Song Modal -->
     <div class="modal fade" id="addSongModal" tabindex="-1">
         <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content">
@@ -123,7 +130,8 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <form x-data="songForm()" x-init="initAddSongForm()">
+                    <form x-data="songForm()" x-init="initAddSongForm()" method="POST">
+                        {% csrf_token %}
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
@@ -161,7 +169,13 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="lyrics" class="form-label">Letra</label>
-                                    <textarea id="lyrics" class="form-control" x-model="lyrics" rows="8"></textarea>
+                                    <div class="ck-editor-container h-100">
+                                        <textarea id="id_lyrics" name="lyrics" class="django_ckeditor_5 w-100 h-100" x-model="lyrics"></textarea>
+                                        <div></div> <!-- this div or any empty element is required -->
+                                        <span class="word-count" id="id_lyrics_script-word-count"></span>
+                                    </div>
+                                    <input type="hidden" id="id_lyrics_script-ck-editor-5-upload-url" data-upload-url="/ckeditor5/image_upload/" data-csrf_cookie_name="new_csrf_cookie_name">
+                                    <span id="id_lyrics_script-span"><script id="id_lyrics_script" type="application/json">{your ckeditor config}</script></span>
                                 </div>
                             </div>
                         </div>
@@ -172,5 +186,19 @@
         </div>
     </div>
 </div>
+
+<script src="https://cdn.ckeditor.com/ckeditor5/34.1.0/classic/ckeditor.js"></script>
 <script src="{% static 'js/song_search.js' %}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const config = {
+            // Your CKEditor configuration here
+        };
+        window.ClassicEditor
+            .create(document.querySelector('#id_lyrics'), config)
+            .catch(error => {
+                console.error(error);
+            });
+    });
+</script>
 {% endblock %}

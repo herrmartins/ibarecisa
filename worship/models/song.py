@@ -1,5 +1,8 @@
 from django.db import models
 from core.models import BaseModel
+from ckeditor.fields import RichTextField
+from worship.models.worship_utils import count_syllables_portuguese
+from bs4 import BeautifulSoup
 
 
 class Song(models.Model):
@@ -32,7 +35,7 @@ class Song(models.Model):
         related_name="songs",
     )
     key = models.CharField(max_length=2, choices=MUSICAL_KEYS, blank=True, null=True)
-    lyrics = models.TextField(blank=True, null=True)
+    lyrics = RichTextField(blank=True, null=True)
     category = models.CharField(max_length=50, blank=True, null=True)
     themes = models.ManyToManyField("SongTheme", related_name="songs", blank=True)
     hymnal = models.ForeignKey(
@@ -42,6 +45,35 @@ class Song(models.Model):
         blank=True,
         null=True,
     )
+    syllable_counts_json = models.JSONField(default=dict)
+
+    def save(self, *args, **kwargs):
+        self.syllable_counts_json = self.calculate_syllables()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.title
+
+    @property
+    def syllable_counts(self):
+        return self.syllable_counts_json
+
+    @staticmethod
+    def count_syllables_in_line(line):
+        """
+        Count the number of syllables in a line of text.
+        """
+        return count_syllables_portuguese(line)
+
+    def calculate_syllables(self):
+        """
+        Calculate the syllable counts for each line in the lyrics.
+        """
+        if not self.lyrics:
+            return {}
+
+        soup = BeautifulSoup(self.lyrics, "html.parser")
+        text = soup.get_text()
+        lines = text.splitlines()
+        syllable_counts = {line: self.count_syllables_in_line(line) for line in lines}
+        return syllable_counts
