@@ -3,6 +3,8 @@ from users.models import CustomUser
 from events.models import Event, Venue, EventCategory
 from events.forms import EventForm
 from model_mommy import mommy
+from django.utils import timezone
+from datetime import timedelta
 
 
 class EventFormTestCase(TestCase):
@@ -13,12 +15,15 @@ class EventFormTestCase(TestCase):
         self.location = mommy.make(Venue)
         mommy.make(EventCategory, _quantity=5)
 
+        future_start = timezone.now() + timedelta(days=1)
+        future_end = future_start + timedelta(hours=2)
+
         self.valid_data = {
             "user": self.user.id,
             "title": "Sample Event",
             "description": "A description for the event.",
-            "start_date": "2025-01-01 12:00:00",
-            "end_date": "2025-01-01 14:00:00",
+            "start_date": future_start.strftime("%Y-%m-%d %H:%M:%S"),
+            "end_date": future_end.strftime("%Y-%m-%d %H:%M:%S"),
             "price": "10.00",
             "location": self.location.id,
             "contact_user": "",

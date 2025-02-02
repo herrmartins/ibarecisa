@@ -1,12 +1,13 @@
 {% extends 'core/base.html' %}
 {% block content %}
 {% load static %}
-<!-- <link rel="stylesheet" href="{% static 'css/ckedit.css' %}"> -->
-<script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
-<link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
+<!-- <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet"> -->
+<script src="{% static 'core/js/quill.js' %}"></script>
+<link rel="stylesheet" href="{% static 'core/css/quill.css' %}">
 <link rel="stylesheet" href="{% static 'css/worship.css' %}">
 
-<div class="container text-center" x-data="songSearch">
+<div class="container text-center" x-data="songSearch" x-cloak>
     <p class="fs-1">Departamento de Música</p>
 
     <button type="button" class="btn btn-primary rounded-circle"
