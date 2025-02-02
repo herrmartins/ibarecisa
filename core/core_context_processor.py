@@ -4,7 +4,7 @@ import json
 
 
 def context_user_data(request):
-    file_path = find("core/json/church_info.json")
+    file_path = find("json/church_info.json")
 
     church_info = {}
     try:

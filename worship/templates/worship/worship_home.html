@@ -1,10 +1,8 @@
 {% extends 'core/base.html' %}
 {% block content %}
 {% load static %}
-<!-- <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
-<link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet"> -->
-<script src="{% static 'core/js/quill.js' %}"></script>
-<link rel="stylesheet" href="{% static 'core/css/quill.css' %}">
+<script src="{% static 'js/quill.js' %}"></script>
+<link rel="stylesheet" href="{% static 'css/quill.css' %}">
 <link rel="stylesheet" href="{% static 'css/worship.css' %}">
 
 <div class="container text-center" x-data="songSearch" x-cloak>
@@ -125,93 +123,142 @@
         </div>
         
 
-    <div class="modal fade" id="addSongModal" tabindex="-1">
-        <div class="modal-dialog modal-xl modal-dialog-centered">
-            <div class="modal-content">
+        <div class="modal fade" id="addSongModal" tabindex="-1">
+            <div class="modal-dialog modal-xl modal-dialog-centered">
+              <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Adicionar nova canção</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                  <h5 class="modal-title">Adicionar nova canção</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <form x-data="songForm()" x-init="initAddSongForm()" method="POST">
-                        {% csrf_token %}
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="songTitle" class="form-label">Título</label>
-                                    <input type="text" id="songTitle" class="form-control" x-model="title" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="artist" class="form-label">Compositor</label>
-                                    <select id="artist" class="form-control" x-model="artist">
-                                        <option value="">Selecione um compositor</option>
-                                        <template x-for="artist in artists" :key="artist.id">
-                                            <option :value="artist.id" x-text="artist.text"></option>
-                                        </template>
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="theme" class="form-label">Tema</label>
-                                    <select id="theme" class="form-control" x-model="theme">
-                                        <option value="">Selecione um tema</option>
-                                        <template x-for="theme in themes" :key="theme.id">
-                                            <option :value="theme.id" x-text="theme.text"></option>
-                                        </template>
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="hymnal" class="form-label">Hinário</label>
-                                    <select id="hymnal" class="form-control" x-model="hymnal">
-                                        <option value="">Selecione um hinário</option>
-                                        <template x-for="hymnal in hymnals" :key="hymnal.id">
-                                            <option :value="hymnal.id" x-text="hymnal.text"></option>
-                                        </template>
-                                    </select>
-                                </div>
-                                <div class="row mb-3">
-                                    <div class="col-md-7">
-                                      <label for="songMetrics" class="form-label">Métrica</label>
-                                      <input type="text" id="songMetrics" class="form-control" x-model="metrics">
-                                    </div>
-                                  
-                                    <div class="col-md-5">
-                                      <label for="songKey" class="form-label">Tom</label>
-                                      <select id="songKey" class="form-control" x-model="key">
-                                        <option value="">Selecione uma nota</option>
-                                        <option value="C">C</option>
-                                        <option value="C#">C#</option>
-                                        <option value="Db">Db</option>
-                                        <option value="D">D</option>
-                                        <option value="D#">D#</option>
-                                        <option value="Eb">Eb</option>
-                                        <option value="E">E</option>
-                                        <option value="F">F</option>
-                                        <option value="F#">F#</option>
-                                        <option value="Gb">Gb</option>
-                                        <option value="G">G</option>
-                                        <option value="G#">G#</option>
-                                        <option value="Ab">Ab</option>
-                                        <option value="A">A</option>
-                                        <option value="A#">A#</option>
-                                        <option value="Bb">Bb</option>
-                                        <option value="B">B</option>
-                                      </select>
-                                    </div>
-                                  </div>
-                                  
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <div id="editor"></div>
-                                </div>
-                            </div>
+                  <!-- Initialize the Alpine component -->
+                  <form x-data="songForm()" x-init="initAddSongForm()" method="POST">
+                    {% csrf_token %}
+                    <div class="row">
+                      <div class="col-md-6">
+                        <div class="mb-3">
+                          <label for="songTitle" class="form-label">Título</label>
+                          <input type="text" id="songTitle" class="form-control" x-model="title" required>
                         </div>
-                        <button type="button" class="btn btn-primary" @click="submitForm">Salvar</button>
-                    </form>
+                        <div class="mb-3">
+                          <label for="artist" class="form-label">Compositor</label>
+                          <select id="artist" class="form-control" x-model="artist">
+                            <option value="">Selecione um compositor</option>
+                            <template x-for="artist in artists" :key="artist.id">
+                              <option :value="artist.id" x-text="artist.text"></option>
+                            </template>
+                          </select>
+                        </div>
+                        <div class="mb-3">
+                          <label for="theme" class="form-label">Tema</label>
+                          <select id="theme" class="form-control" x-model="theme">
+                            <option value="">Selecione um tema</option>
+                            <template x-for="theme in themes" :key="theme.id">
+                              <option :value="theme.id" x-text="theme.text"></option>
+                            </template>
+                          </select>
+                        </div>
+                        <div class="mb-3">
+                          <label for="hymnal" class="form-label">Hinário</label>
+                          <select id="hymnal" class="form-control" x-model="hymnal">
+                            <option value="">Selecione um hinário</option>
+                            <template x-for="hymnal in hymnals" :key="hymnal.id">
+                              <option :value="hymnal.id" x-text="hymnal.text"></option>
+                            </template>
+                          </select>
+                        </div>
+                        <div class="row mb-3">
+                          <div class="col-md-7">
+                            <label for="songMetrics" class="form-label">Métrica</label>
+                            <input type="text" id="songMetrics" class="form-control" x-model="metrics">
+                          </div>
+                          <div class="col-md-5">
+                            <label for="songKey" class="form-label">Tom</label>
+                            <select id="songKey" class="form-control" x-model="key">
+                              <option value="">Selecione uma nota</option>
+                              <option value="C">C</option>
+                              <option value="C#">C#</option>
+                              <option value="Db">Db</option>
+                              <option value="D">D</option>
+                              <option value="D#">D#</option>
+                              <option value="Eb">Eb</option>
+                              <option value="E">E</option>
+                              <option value="F">F</option>
+                              <option value="F#">F#</option>
+                              <option value="Gb">Gb</option>
+                              <option value="G">G</option>
+                              <option value="G#">G#</option>
+                              <option value="Ab">Ab</option>
+                              <option value="A">A</option>
+                              <option value="A#">A#</option>
+                              <option value="Bb">Bb</option>
+                              <option value="B">B</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="mb-3">
+                          <div id="editor"></div>
+                        </div>
+                      </div>
+                    </div>
+                    <button type="button" class="btn btn-primary" @click="submitForm">Salvar</button>
+                    
+                    <div x-show="success" x-transition class="alert alert-success mt-3" role="alert" x-text="message"></div>
+
+                    <div x-show="songId" class="mt-4 border-top pt-3">
+                        <h6>Arquivos relacionados à canção</h6>
+                        
+                        <div class="d-flex flex-wrap">
+                          <template x-for="file in files" :key="file.id">
+                            <div class="text-center m-2">
+                              <a :href="file.url" target="_blank" class="text-decoration-none">
+                                <template x-if="file.file_type === 'audio'">
+                                  <i class="bi bi-file-earmark-music" style="font-size: 2rem;"></i>
+                                </template>
+                                <template x-if="file.file_type === 'sheet'">
+                                  <i class="bi bi-file-earmark-text" style="font-size: 2rem;"></i>
+                                </template>
+                                <template x-if="file.file_type === 'other'">
+                                  <i class="bi bi-file-earmark" style="font-size: 2rem;"></i>
+                                </template>
+                                <template x-if="file.file_type === ''">
+                                    <i class="bi bi-file-earmark" style="font-size: 2rem;"></i>
+                                  </template>
+                                <div x-text="file.file_title || file.file_type" class="small mt-1"></div>
+                              </a>
+                            </div>
+                          </template>
+                        </div>
+                        
+                        <div class="mt-3">
+                          <h6>Enviar novo arquivo</h6>
+                          <div class="mb-2">
+                            <input type="file" @change="selectedFile = $event.target.files[0]" class="form-control">
+                          </div>
+                          <div class="mb-2">
+                            <select x-model="fileType" class="form-control">
+                              <option value="">Selecione o tipo de arquivo</option>
+                              <option value="audio">Áudio</option>
+                              <option value="sheet">Partitura</option>
+                              <option value="other">Outro</option>
+                            </select>
+                          </div>
+                          <div class="mb-2">
+                            <input type="text" placeholder="Título" x-model="file_title" class="form-control">
+                          </div>
+                          <div class="mb-2">
+                            <input type="text" placeholder="Descrição" x-model="description" class="form-control">
+                          </div>
+                          <button type="button" class="btn btn-primary" @click="submitFile">Enviar Arquivo</button>
+                        </div>
+                      </div>
+                  </form>
                 </div>
+              </div>
             </div>
-        </div>
-    </div>
+          </div>          
 </div>
 <script src="{% static 'js/song_search.js' %}"></script>
 {% endblock %}

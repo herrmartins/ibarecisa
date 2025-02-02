@@ -9,7 +9,6 @@ class SongSearchView(View):
     def get(self, request):
         query = request.GET.get("q", "")
 
-        # Perform separate searches for each category
         results_by_title = Song.objects.filter(title__icontains=query).distinct()[:5]
         results_by_artist = Song.objects.filter(
             artist__name__icontains=query
@@ -19,9 +18,8 @@ class SongSearchView(View):
             themes__title__icontains=query
         ).distinct()[
             :5
-        ]  # assuming 'themes' is a ManyToManyField to SongTheme
+        ]
 
-        # Organize results into a grouped JSON response
         data = {
             "title_matches": [
                 {
