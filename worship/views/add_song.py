@@ -12,6 +12,7 @@ class SongAddView(View):
             theme_title = data.get('theme')
             lyrics = data.get('lyrics')
             metrics = data.get('metrics')
+            key = data.get('key')
 
             print("DADOS:", data)
             
@@ -25,7 +26,8 @@ class SongAddView(View):
                 title=title,
                 artist=artist,
                 lyrics=lyrics,
-                metrics=metrics
+                metrics=metrics,
+                key=key
             )
             song.themes.add(theme)
 

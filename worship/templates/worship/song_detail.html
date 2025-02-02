@@ -5,7 +5,7 @@
         <div class="col-md-8">
             <!-- Song Detail Card -->
             <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white text-center">
+                <div class="card-header bg-info text-white text-center">
                     <h1 class="mb-0">Departamento de Música</h1>
                 </div>
                 <div class="card-body">
@@ -33,6 +33,7 @@
                                 Desconhecido
                             {% endif %}
                         </li>
+                        <li><strong>Tom:</strong> {{ song.key }}</li>
                     </ul>
 
                     <!-- Lyrics Section -->
