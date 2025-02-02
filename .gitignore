@@ -4,7 +4,6 @@ media/treasury/receipts/
 media/
 .vscode/
 data.json
-static/
 migrations/
 # Byte-compiled / optimized / DLL files
 __pycache__/

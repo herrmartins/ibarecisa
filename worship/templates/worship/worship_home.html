@@ -1,9 +1,11 @@
 {% extends 'core/base.html' %}
 {% block content %}
 {% load static %}
-<link rel="stylesheet" href="{% static 'css/ckedit.css' %}">
+<!-- <link rel="stylesheet" href="{% static 'css/ckedit.css' %}"> -->
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 
-<div class="container text-center" x-data="songSearch()">
+<div class="container text-center" x-data="songSearch">
     <p class="fs-1">Departamento de Música</p>
 
     <!-- Add Song Button -->
@@ -23,8 +25,7 @@
 
     <!-- Responsive Results Display -->
     <div class="mt-4 row">
-        <!-- Results by Title -->
-        <div class="mt-4 row">
+        
             <!-- Results by Title -->
             <div class="col-lg-6 mb-4">
                 <div class="result-category" x-show="results.title_matches.length > 0">
@@ -39,7 +40,9 @@
                         <tbody>
                             <template x-for="item in results.title_matches" :key="item.id">
                                 <tr>
-                                    <td x-text="item.title"></td>
+                                    <td>
+                                        <a :href="getSongDetailUrl(item.id)" x-text="item.title"></a>
+                                    </td>
                                     <td x-text="item.artist"></td>
                                 </tr>
                             </template>
@@ -62,7 +65,9 @@
                         <tbody>
                             <template x-for="item in results.artist_matches" :key="item.id">
                                 <tr>
-                                    <td x-text="item.title"></td>
+                                    <td>
+                                        <a :href="getSongDetailUrl(item.id)" x-text="item.title"></a>
+                                    </td>
                                     <td x-text="item.artist"></td>
                                 </tr>
                             </template>
@@ -86,7 +91,9 @@
                         <tbody>
                             <template x-for="item in results.lyrics_matches" :key="item.id">
                                 <tr>
-                                    <td x-text="item.title"></td>
+                                    <td>
+                                        <a :href="getSongDetailUrl(item.id)" x-text="item.title"></a>
+                                    </td>
                                     <td x-text="item.artist"></td>
                                     <td x-html="item.snippet"></td>
                                 </tr>
@@ -110,7 +117,9 @@
                         <tbody>
                             <template x-for="item in results.theme_matches" :key="item.id">
                                 <tr>
-                                    <td x-text="item.title"></td>
+                                    <td>
+                                        <a :href="getSongDetailUrl(item.id)" x-text="item.title"></a>
+                                    </td>
                                     <td x-text="item.theme.join(', ')"></td>
                                 </tr>
                             </template>
@@ -168,14 +177,7 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="lyrics" class="form-label">Letra</label>
-                                    <div class="ck-editor-container h-100">
-                                        <textarea id="id_lyrics" name="lyrics" class="django_ckeditor_5 w-100 h-100" x-model="lyrics"></textarea>
-                                        <div></div> <!-- this div or any empty element is required -->
-                                        <span class="word-count" id="id_lyrics_script-word-count"></span>
-                                    </div>
-                                    <input type="hidden" id="id_lyrics_script-ck-editor-5-upload-url" data-upload-url="/ckeditor5/image_upload/" data-csrf_cookie_name="new_csrf_cookie_name">
-                                    <span id="id_lyrics_script-span"><script id="id_lyrics_script" type="application/json">{your ckeditor config}</script></span>
+                                    <div id="editor"></div>
                                 </div>
                             </div>
                         </div>
@@ -189,16 +191,4 @@
 
 <script src="https://cdn.ckeditor.com/ckeditor5/34.1.0/classic/ckeditor.js"></script>
 <script src="{% static 'js/song_search.js' %}"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const config = {
-            // Your CKEditor configuration here
-        };
-        window.ClassicEditor
-            .create(document.querySelector('#id_lyrics'), config)
-            .catch(error => {
-                console.error(error);
-            });
-    });
-</script>
 {% endblock %}
