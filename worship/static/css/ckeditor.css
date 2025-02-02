@@ -1,9 +1,0 @@
-.ck-editor__editable_inline {
-    min-height: 200px; /* Set a minimum height */
-    max-height: 400px; /* Set a maximum height */
-    overflow-y: auto; /* Add a scrollbar if content exceeds the height */
-}
-
-.modal .ck-editor-container {
-    height: 300px; /* Match the desired height in the modal */
-}

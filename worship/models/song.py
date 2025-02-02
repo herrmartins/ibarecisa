@@ -45,18 +45,15 @@ class Song(models.Model):
         blank=True,
         null=True,
     )
-    syllable_counts_json = models.JSONField(default=dict)
+    metrics = models.CharField(max_length=50, blank=True, null=True)
+    """ syllable_counts_json = models.JSONField(default=dict) """
 
     def save(self, *args, **kwargs):
-        self.syllable_counts_json = self.calculate_syllables()
+        """ self.syllable_counts_json = self.calculate_syllables() """
         super().save(*args, **kwargs)
 
     def __str__(self):
         return self.title
-
-    @property
-    def syllable_counts(self):
-        return self.syllable_counts_json
 
     @staticmethod
     def count_syllables_in_line(line):

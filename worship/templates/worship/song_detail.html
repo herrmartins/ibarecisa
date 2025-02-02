@@ -1,28 +1,66 @@
 {% extends 'core/base.html' %}
 {% block content %}
-<div class="container text-center">
-    <p class="fs-1">Departamento de Música</p>
-    
-    <h2 class="mt-4">{{ song.title }}</h2>
-    <p><strong>Artista:</strong> {% if song.artist %}{{ song.artist.name }}{% else %}Desconhecido{% endif %}</p>
-    <p><strong>Chave:</strong> {{ song.key }}</p>
-    <p><strong>Categoria:</strong> {{ song.category }}</p>
-    <p><strong>Tema:</strong> {% for theme in song.themes.all %} {{ theme.title }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
-    <p><strong>Hinário:</strong> {% if song.hymnal.title %} {{ song.hymnal }} {% else %} "Desconhecido" {% endif %}</p>
-    <p><strong>Letra:</strong></p>
-    <div class="border p-3 mb-4">
-        <p>{{ song.lyrics|linebreaksbr }}</p>
-    </div>
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <!-- Song Detail Card -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white text-center">
+                    <h1 class="mb-0">Departamento de Música</h1>
+                </div>
+                <div class="card-body">
+                    <!-- Song Title -->
+                    <h2 class="card-title text-center">{{ song.title }}</h2>
+                    
+                    <!-- Song Metadata -->
+                    <ul class="list-unstyled mt-4">
+                        <li><strong>Artista:</strong> {% if song.artist %}{{ song.artist.name }}{% else %}Desconhecido{% endif %}</li>
+                        <li><strong>Chave:</strong> {{ song.key }}</li>
+                        <li><strong>Categoria:</strong> {{ song.category }}</li>
+                        <li>
+                            <strong>Tema:</strong>
+                            {% for theme in song.themes.all %}
+                                {{ theme.title }}{% if not forloop.last %}, {% endif %}
+                            {% empty %}
+                                Nenhum tema informado
+                            {% endfor %}
+                        </li>
+                        <li>
+                            <strong>Hinário:</strong>
+                            {% if song.hymnal and song.hymnal.title %}
+                                {{ song.hymnal.title }}
+                            {% else %}
+                                Desconhecido
+                            {% endif %}
+                        </li>
+                    </ul>
 
-    <h3>Arquivos Associados</h3>
-    <ul class="list-group">
-        {% for file in song.files.all %}
-            <li class="list-group-item">
-                <a href="{{ file.file.url }}" download>{{ file.file.name }}</a>
-            </li>
-        {% empty %}
-            <li class="list-group-item">Nenhum arquivo associado</li>
-        {% endfor %}
-    </ul>
+                    <!-- Lyrics Section -->
+                    <div class="mt-4">
+                        <h4>Letra</h4>
+                        <div>
+                            {{ song.lyrics|safe }}
+                        </div>
+                    </div>
+
+                    <!-- Associated Files Section -->
+                    <div class="mt-4">
+                        <h4>Arquivos Associados</h4>
+                        {% if song.files.all %}
+                            <ul class="list-group">
+                                {% for file in song.files.all %}
+                                    <li class="list-group-item">
+                                        <a href="{{ file.file.url }}" download>{{ file.file.name }}</a>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p>Nenhum arquivo associado</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

@@ -2,8 +2,9 @@
 {% block content %}
 {% load static %}
 <!-- <link rel="stylesheet" href="{% static 'css/ckedit.css' %}"> -->
-<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/worship.css' %}">
 
 <div class="container text-center" x-data="songSearch">
     <p class="fs-1">Departamento de Música</p>
@@ -148,9 +149,9 @@
                                     <input type="text" id="songTitle" class="form-control" x-model="title" required>
                                 </div>
                                 <div class="mb-3">
-                                    <label for="artist" class="form-label">Adorador</label>
+                                    <label for="artist" class="form-label">Compositor</label>
                                     <select id="artist" class="form-control" x-model="artist">
-                                        <option value="">Selecione um adorador</option>
+                                        <option value="">Selecione um compositor</option>
                                         <template x-for="artist in artists" :key="artist.id">
                                             <option :value="artist.id" x-text="artist.text"></option>
                                         </template>
@@ -174,6 +175,10 @@
                                         </template>
                                     </select>
                                 </div>
+                                <div class="mb-3" class="editor-div">
+                                    <label for="metrics" class="form-label">Métrica</label>
+                                    <input type="text" id="songMetrics" class="form-control" x-model="metrics">
+                                </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
@@ -188,7 +193,5 @@
         </div>
     </div>
 </div>
-
-<script src="https://cdn.ckeditor.com/ckeditor5/34.1.0/classic/ckeditor.js"></script>
 <script src="{% static 'js/song_search.js' %}"></script>
 {% endblock %}

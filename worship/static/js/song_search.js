@@ -28,6 +28,7 @@ document.addEventListener('alpine:init', () => {
         hymnal: '',
         lyrics: '',
         message: '',
+        metrics: '',
         artists: [],
         themes: [],
         hymnals: [],
@@ -44,7 +45,9 @@ document.addEventListener('alpine:init', () => {
             });
             quill.on('text-change', () => {
                 this.lyrics = quill.root.innerHTML;
-                console.log('Updated lyrics:', this.lyrics);
+            });
+            this.$watch('metrics', (value) => {
+                console.log('Metrics:', this.metrics);
             });
         },
 
@@ -88,6 +91,7 @@ document.addEventListener('alpine:init', () => {
             this.hymnal = '';
             this.lyrics = '';
             this.message = '';
+            this.metrics = '';
         },
 
         async submitForm() {
@@ -105,6 +109,7 @@ document.addEventListener('alpine:init', () => {
                         theme: this.theme,
                         hymnal: this.hymnal,
                         lyrics: this.lyrics,
+                        metrics: this.metrics,
                     }),
                 });
 
