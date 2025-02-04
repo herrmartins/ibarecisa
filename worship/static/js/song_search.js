@@ -187,7 +187,6 @@ document.addEventListener('alpine:init', () => {
           });
           const data = await response.json();
           if (response.ok && data.success) {
-            alert('Arquivo enviado com sucesso!');
             this.fetchSongFiles();
             this.selectedFile = null;
             this.fileType = '';

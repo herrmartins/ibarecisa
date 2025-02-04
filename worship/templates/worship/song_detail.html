@@ -1,5 +1,8 @@
 {% extends 'core/base.html' %}
+{% load static %}
 {% block content %}
+
+<link rel="stylesheet" href="{% static 'css/worship.css' %}">
 <div class="container my-5">
     <div class="row justify-content-center">
         <div class="col-md-8">
@@ -11,26 +14,27 @@
                 <div class="card-body">
                     <!-- Song Title -->
                     <h2 class="card-title text-center">{{ song.title }}</h2>
-                    
+
                     <!-- Song Metadata -->
                     <ul class="list-unstyled mt-4">
-                        <li><strong>Artista:</strong> {% if song.artist %}{{ song.artist.name }}{% else %}Desconhecido{% endif %}</li>
+                        <li><strong>Artista:</strong> {% if song.artist %}{{ song.artist.name }}{% else %}Desconhecido
+                            {% endif %}</li>
                         <li><strong>Chave:</strong> {{ song.key }}</li>
                         <li><strong>Categoria:</strong> {{ song.category }}</li>
                         <li>
                             <strong>Tema:</strong>
                             {% for theme in song.themes.all %}
-                                {{ theme.title }}{% if not forloop.last %}, {% endif %}
+                            {{ theme.title }}{% if not forloop.last %}, {% endif %}
                             {% empty %}
-                                Nenhum tema informado
+                            Nenhum tema informado
                             {% endfor %}
                         </li>
                         <li>
                             <strong>Hinário:</strong>
                             {% if song.hymnal and song.hymnal.title %}
-                                {{ song.hymnal.title }}
+                            {{ song.hymnal.title }}
                             {% else %}
-                                Desconhecido
+                            Desconhecido
                             {% endif %}
                         </li>
                         <li><strong>Tom:</strong> {{ song.key }}</li>
@@ -44,24 +48,59 @@
                         </div>
                     </div>
 
-                    <!-- Associated Files Section -->
-                    <div class="mt-4">
+                    <div x-data="fileManager({{ song.id }})" class="mt-4">
                         <h4>Arquivos Associados</h4>
-                        {% if song.files.all %}
-                            <ul class="list-group">
-                                {% for file in song.files.all %}
-                                    <li class="list-group-item">
-                                        <a href="{{ file.file.url }}" download>{{ file.file.name }}</a>
-                                    </li>
-                                {% endfor %}
-                            </ul>
-                        {% else %}
-                            <p>Nenhum arquivo associado</p>
-                        {% endif %}
+                   
+                        <!-- Files Display Area (flex layout) -->
+                        <div class="d-flex flex-wrap">
+                            <template x-for="file in files" :key="file.id">
+                                <div class="text-center m-2 files-div">
+                                    <a :href="file.url" download class="text-decoration-none">
+                                        <!-- Choose an icon based on file type -->
+                                        <template x-if="file.file_type === 'audio'">
+                                            <i class="bi bi-file-earmark-music" style="font-size: 2rem;"></i>
+                                        </template>
+                                        <template x-if="file.file_type === 'sheet'">
+                                            <i class="bi bi-file-earmark-text" style="font-size: 2rem;"></i>
+                                        </template>
+                                        <template x-if="file.file_type === 'other'">
+                                            <i class="bi bi-file-earmark" style="font-size: 2rem;"></i>
+                                        </template>
+                                        <!-- Title / Description of the file -->
+                                        <div class="small mt-1" x-text="file.file_title || file.file_type"></div>
+                                    </a>
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- File Upload Form -->
+                        <div class="mt-3">
+                            <h6>Enviar novo arquivo</h6>
+                            <div class="mb-2">
+                                <input type="file" @change="selectedFile = $event.target.files[0]" class="form-control">
+                            </div>
+                            {% csrf_token %}
+                            <div class="mb-2">
+                                <select x-model="fileType" class="form-control">
+                                    <option value="">Selecione o tipo de arquivo</option>
+                                    <option value="audio">Áudio</option>
+                                    <option value="sheet">Partitura</option>
+                                    <option value="other">Outro</option>
+                                </select>
+                            </div>
+                            <div class="mb-2">
+                                <input type="text" placeholder="Título" x-model="file_title" class="form-control">
+                            </div>
+                            <div class="mb-2">
+                                <input type="text" placeholder="Descrição" x-model="description" class="form-control">
+                            </div>
+                            <button type="button" class="btn btn-primary" @click="submitFile">Enviar Arquivo</button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+<script src="{% static 'js/file_manager.js' %}"></script>
 {% endblock %}

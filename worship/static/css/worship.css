@@ -8,4 +8,11 @@
     height: 370px;
     max-height: 370px;
 }
+.files-div {
+    background-color: aliceblue;
+    border-radius: 10px;
+    padding: 5px;
+    width: 100px;
+    height: 100px;
+}
 [x-cloak] { display: none !important; }
