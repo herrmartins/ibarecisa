@@ -8,28 +8,25 @@ class SongAddView(View):
         try:
             data = json.loads(request.body)
             title = data.get('title')
-            artist_id = data.get('artist')  # Expecting an ID
-            theme_id = data.get('theme')  # Expecting a single ID now
+            artist_id = data.get('artist')
+            theme_id = data.get('theme')
             lyrics = data.get('lyrics')
             metrics = data.get('metrics')
             key = data.get('key')
 
             print("DADOS:", data)
 
-            # Validate required fields
             if not title or not artist_id:
                 return JsonResponse(
                     {"success": False, "error": "Compositor e título são requeridos..."},
                     status=400
                 )
 
-            # Get the artist by ID
             try:
                 artist = Composer.objects.get(id=artist_id)
             except Composer.DoesNotExist:
                 return JsonResponse({"success": False, "error": "Compositor não encontrado."}, status=400)
 
-            # Get the theme by ID (if provided)
             theme = None
             if theme_id:
                 try:
@@ -37,7 +34,6 @@ class SongAddView(View):
                 except SongTheme.DoesNotExist:
                     return JsonResponse({"success": False, "error": "Tema não encontrado."}, status=400)
 
-            # Create the song
             song = Song.objects.create(
                 title=title,
                 artist=artist,
@@ -46,7 +42,6 @@ class SongAddView(View):
                 key=key
             )
 
-            # Associate the single theme
             if theme:
                 song.themes.add(theme)
 
