@@ -17,6 +17,11 @@ document.addEventListener('alpine:init', () => {
           const data = await response.json();
           if (data.success) {
             this.files = data.results;
+            this.$refs.fileInput.value = '';
+            this.selectedFile = null;
+            this.fileType = '';
+            this.file_title = '';
+            this.description = '';
           } else {
             console.error('Error fetching files:', data.error);
           }
@@ -50,10 +55,6 @@ document.addEventListener('alpine:init', () => {
           const data = await response.json();
           if (data.success) {
             this.fetchSongFiles();
-            this.selectedFile = null;
-            this.fileType = '';
-            this.file_title = '';
-            this.description = '';
           } else {
             alert(`Erro ao enviar arquivo: ${data.error || 'Erro desconhecido'}`);
           }

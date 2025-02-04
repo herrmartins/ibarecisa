@@ -96,13 +96,16 @@ document.addEventListener('alpine:init', () => {
   
       resetForm() {
         this.title = '';
-        this.artist = '';
-        this.theme = '';
-        this.hymnal = '';
+        this.artist = null;
+        this.theme = null;
+        this.hymnal = null;
         this.lyrics = '';
         this.metrics = '';
-        this.key = '';
-      },
+        this.key = null;
+        if (this.quill) {
+            this.quill.root.innerHTML = '';  
+        }
+    },
   
       async submitForm() {
         try {
@@ -154,7 +157,7 @@ document.addEventListener('alpine:init', () => {
           const response = await fetch(`/worship/song-files/?songId=${this.songId}`);
           const data = await response.json();
           this.files = data.results;
-          console.log('Fetched song files:', data);
+          this.resetForm();
         } catch (error) {
           console.error('Erro carregando os arquivos:', error);
         }

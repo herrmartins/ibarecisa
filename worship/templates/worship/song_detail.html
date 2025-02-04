@@ -19,8 +19,7 @@
                     <ul class="list-unstyled mt-4">
                         <li><strong>Artista:</strong> {% if song.artist %}{{ song.artist.name }}{% else %}Desconhecido
                             {% endif %}</li>
-                        <li><strong>Chave:</strong> {{ song.key }}</li>
-                        <li><strong>Categoria:</strong> {{ song.category }}</li>
+                        <li><strong>Tom:</strong> {{ song.key }}</li>
                         <li>
                             <strong>Tema:</strong>
                             {% for theme in song.themes.all %}
@@ -77,7 +76,7 @@
                         <div class="mt-3">
                             <h6>Enviar novo arquivo</h6>
                             <div class="mb-2">
-                                <input type="file" @change="selectedFile = $event.target.files[0]" class="form-control">
+                                <input type="file" x-ref="fileInput" @change="selectedFile = $event.target.files[0]" class="form-control">
                             </div>
                             {% csrf_token %}
                             <div class="mb-2">
