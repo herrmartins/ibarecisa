@@ -1,3 +1,5 @@
+from datetime import timedelta
+from django.utils import timezone
 from django.test import TestCase
 from users.models import CustomUser
 from events.models import Event, Venue, EventCategory
@@ -17,8 +19,8 @@ class EventFormTestCase(TestCase):
             "user": self.user.id,
             "title": "Sample Event",
             "description": "A description for the event.",
-            "start_date": "2025-01-01 12:00:00",
-            "end_date": "2025-01-01 14:00:00",
+            "start_date": timezone.now() + timedelta(days=10),
+            "end_date": timezone.now() + timedelta(days=10, hours=2),
             "price": "10.00",
             "location": self.location.id,
             "contact_user": "",
