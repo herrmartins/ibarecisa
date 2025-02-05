@@ -14,10 +14,11 @@ class EventManagerTests(TestCase):
         self.venue = baker.make(Venue)
         baker.make(EventCategory, _quantity=3)
 
-        # Create events for testing
         for month in range(1, 13):
-            # Create events in future months
-            start_date = self.current_date + timedelta(days=30 * month)
+            future_date = self.current_date + timedelta(days=30 * month)
+
+            start_date = future_date.replace(year=self.current_date.year)
+
             end_date = start_date + timedelta(days=3)
             baker.make(Event,
                        user=self.user,
@@ -47,7 +48,6 @@ class EventManagerTests(TestCase):
 
         self.assertEqual(len(events_by_month), 12)
 
-        # Check if events are grouped by month correctly
         for month_num, events in events_by_month.items():
             month = self.current_date.replace(day=1, month=month_num)
             self.assertTrue(all(event.start_date.month ==

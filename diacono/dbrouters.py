@@ -32,5 +32,5 @@ class AuditRouter:
         return None
 
     def _is_test(self):
-        print(f"Current sys.argv: {sys.argv}")  # Debugging statement
+        print(f"Current sys.argv: {sys.argv}")
         return "test" in sys.argv
