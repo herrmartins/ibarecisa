@@ -1,0 +1,1 @@
+from .count_syllables_portuguese import count_syllables_portuguese

@@ -1,0 +1,105 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block content %}
+
+<link rel="stylesheet" href="{% static 'css/worship.css' %}">
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <!-- Song Detail Card -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white text-center">
+                    <h1 class="mb-0">Departamento de Música</h1>
+                </div>
+                <div class="card-body">
+                    <!-- Song Title -->
+                    <h2 class="card-title text-center">{{ song.title }}</h2>
+
+                    <!-- Song Metadata -->
+                    <ul class="list-unstyled mt-4">
+                        <li><strong>Artista:</strong> {% if song.artist %}{{ song.artist.name }}{% else %}Desconhecido
+                            {% endif %}</li>
+                        <li><strong>Tom:</strong> {{ song.key }}</li>
+                        <li>
+                            <strong>Tema:</strong>
+                            {% for theme in song.themes.all %}
+                            {{ theme.title }}{% if not forloop.last %}, {% endif %}
+                            {% empty %}
+                            Nenhum tema informado
+                            {% endfor %}
+                        </li>
+                        <li>
+                            <strong>Hinário:</strong>
+                            {% if song.hymnal and song.hymnal.title %}
+                            {{ song.hymnal.title }}
+                            {% else %}
+                            Desconhecido
+                            {% endif %}
+                        </li>
+                        <li><strong>Tom:</strong> {{ song.key }}</li>
+                    </ul>
+
+                    <!-- Lyrics Section -->
+                    <div class="mt-4">
+                        <h4>Letra</h4>
+                        <div>
+                            {{ song.lyrics|safe }}
+                        </div>
+                    </div>
+
+                    <div x-data="fileManager({{ song.id }})" class="mt-4">
+                        <h4>Arquivos Associados</h4>
+                   
+                        <!-- Files Display Area (flex layout) -->
+                        <div class="d-flex flex-wrap">
+                            <template x-for="file in files" :key="file.id">
+                                <div class="text-center m-2 files-div">
+                                    <a :href="file.url" download class="text-decoration-none">
+                                        <!-- Choose an icon based on file type -->
+                                        <template x-if="file.file_type === 'audio'">
+                                            <i class="bi bi-file-earmark-music" style="font-size: 2rem;"></i>
+                                        </template>
+                                        <template x-if="file.file_type === 'sheet'">
+                                            <i class="bi bi-file-earmark-text" style="font-size: 2rem;"></i>
+                                        </template>
+                                        <template x-if="file.file_type === 'other'">
+                                            <i class="bi bi-file-earmark" style="font-size: 2rem;"></i>
+                                        </template>
+                                        <!-- Title / Description of the file -->
+                                        <div class="small mt-1" x-text="file.file_title || file.file_type"></div>
+                                    </a>
+                                </div>
+                            </template>
+                        </div>
+
+                        <!-- File Upload Form -->
+                        <div class="mt-3">
+                            <h6>Enviar novo arquivo</h6>
+                            <div class="mb-2">
+                                <input type="file" x-ref="fileInput" @change="selectedFile = $event.target.files[0]" class="form-control">
+                            </div>
+                            {% csrf_token %}
+                            <div class="mb-2">
+                                <select x-model="fileType" class="form-control">
+                                    <option value="">Selecione o tipo de arquivo</option>
+                                    <option value="audio">Áudio</option>
+                                    <option value="sheet">Partitura</option>
+                                    <option value="other">Outro</option>
+                                </select>
+                            </div>
+                            <div class="mb-2">
+                                <input type="text" placeholder="Título" x-model="file_title" class="form-control">
+                            </div>
+                            <div class="mb-2">
+                                <input type="text" placeholder="Descrição" x-model="description" class="form-control">
+                            </div>
+                            <button type="button" class="btn btn-primary" @click="submitFile">Enviar Arquivo</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="{% static 'js/file_manager.js' %}"></script>
+{% endblock %}
