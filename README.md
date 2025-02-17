@@ -49,3 +49,16 @@ python manage.py runserver
 ## Versioning
 
 When a new task is created, it is customary to follow the workflow of the [Git flow](https://www.atlassian.com/br/git/tutorials/comparing-workflows/gitflow-workflow) for developing new features and/or resolving bugs.
+
+## Deploy
+```bash
+git stash 
+git pull
+git stash pop
+source venv/bin/activate
+pip install -r requirements.txt
+python manage.py makemigrations
+python manage.py migrate
+python manage.py collectstatic
+sudo systemctl restart ibarecisasystem; sudo systemctl restart nginx
+```

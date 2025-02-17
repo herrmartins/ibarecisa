@@ -121,3 +121,6 @@ static_collected
 
 htmlcov/*
 .coveragerc
+
+# Unicorn
+gunicorn-error-log
