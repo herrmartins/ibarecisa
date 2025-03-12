@@ -60,5 +60,17 @@ pip install -r requirements.txt
 python manage.py makemigrations
 python manage.py migrate
 python manage.py collectstatic
-sudo systemctl restart ibarecisasystem; sudo systemctl restart nginx
+sudo systemctl restart ibarecisasystem && sudo systemctl restart nginx
+```
+
+## SSL certificate
+create
+```bash
+sudo certbot certonly --standalone -d app.ibarecisa.org.br -d diacono.ibarecisa.org.br
+sudo systemctl restart ibarecisasystem && sudo systemctl restart nginx
+```
+
+renew (_Let's Encrypt certificates are valid for 90 days_)
+```bash
+sudo certbot renew
 ```
