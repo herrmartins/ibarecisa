@@ -12,25 +12,30 @@ class CreateMinuteFormView(PermissionRequiredMixin, FormView):
     template_name = "secretarial/minute_creation.html"
     form_class = MinuteModelForm
 
-    def dispatch(self, request, *args, **kwargs):
-        if "project_pk" in self.kwargs:
-            try:
-                MinuteProjectModel.objects.get(pk=self.kwargs.get("project_pk"))
-            except MinuteProjectModel.DoesNotExist:
-                return redirect("secretarial:home")
-        elif "template_pk" in self.kwargs:
-            try:
-                MinuteTemplateModel.objects.get(pk=self.kwargs.get("template_pk"))
-            except MinuteTemplateModel.DoesNotExist:
-                return redirect("secretarial:home")
-        else:
-            return redirect("secretarial:home")
-
-        return super().dispatch(request, *args, **kwargs)
-
     def get_initial(self):
         initial = super().get_initial()
 
+        if "project_pk" in self.kwargs:
+            print("ESTOU NO PK")
+            minute_data = MinuteProjectModel.objects.get(pk=self.kwargs["project_pk"])
+            initial["president"] = minute_data.president
+            initial["secretary"] = minute_data.secretary
+            initial["meeting_date"] = minute_data.meeting_date.isoformat()
+            initial["number_of_attendees"] = minute_data.number_of_attendees
+            initial["body"] = minute_data.body
+            initial["agenda"] = list(minute_data.meeting_agenda.values_list("pk", flat=True))
+
+        elif "template_pk" in self.kwargs:
+            print("ESTOU NO TEMPLATE")
+            minute_data = MinuteTemplateModel.objects.get(pk=self.kwargs["template_pk"])
+            initial["body"] = minute_data.body
+            initial["agenda"] = list(minute_data.agenda.values_list("pk", flat=True))
+
+        return initial
+
+
+    def get_initial(self):
+        initial = super().get_initial()
         if "project_pk" in self.kwargs:
             try:
                 minute_data = MinuteProjectModel.objects.get(
@@ -56,9 +61,6 @@ class CreateMinuteFormView(PermissionRequiredMixin, FormView):
             except MinuteTemplateModel.DoesNotExist:
                 # Handle the case where the template PK does not exist
                 return redirect("secretarial:home")
-        else:
-            # Redirect to home if no 'project_pk' or 'template_pk' parameters are provided
-            return redirect("secretarial:home")
 
         return initial
 

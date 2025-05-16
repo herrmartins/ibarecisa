@@ -24,6 +24,7 @@ from secretarial.views import (
     AgendaFormView,
     AgendaCreateView,
     CategoryUpdateView,
+    NewMinutesEditorView
 )
 
 
@@ -62,6 +63,11 @@ urlpatterns = [
         name="minute-from-template-view",
     ),
     path(
+        "create-minute/template/new/",
+        CreateMinuteFormView.as_view(),
+        name="new-minute-view",
+    ),
+    path(
         "meeting/create-minute", MinuteCreateView.as_view(), name="create-minute-view"
     ),
     path(
@@ -85,4 +91,5 @@ urlpatterns = [
     path("meeting/agenda", AgendaFormView.as_view(), name="agenda-form"),
     path("meeting/agenda/<int:pk>", CategoryUpdateView.as_view(), name="agenda-update"),
     path("meeting/agenda/create", AgendaCreateView.as_view(), name="agenda-create"),
+    path("editor", NewMinutesEditorView.as_view(), name="new-minutes-editor"),
 ]

@@ -31,6 +31,8 @@ class MinuteCreateView(PermissionRequiredMixin, CreateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
+        print("Contexto: ", self)
+
         context["excerpts_list"] = MinuteExcerptsModel.objects.all().order_by(
             "-times_used")
 

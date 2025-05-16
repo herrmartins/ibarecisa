@@ -55,11 +55,13 @@
                 {{form.media}}
                 {{form}}
                 <input type="submit" class="btn btn-primary my-2" value="Enviar">
-                <a href="{% url 'secretarial:agenda-form' %}"><span class="btn btn-primary">Adicionar Assuntos</span></a>
+                <a href="{% url 'secretarial:agenda-form' %}"><span class="btn btn-primary">Adicionar
+                    Assuntos</span></a>
               </form>
             </div>
             <div class="col-7">
-              <p class="fs-3 fw-light text-center">Lista de atas</p>
+              <p class="fs-3 fw-light text-center">Lista de atas <a href="{% url 'secretarial:new-minute-view' %}"
+                  class="btn btn-primary"><i class="bi bi-file-earmark-plus-fill"></i> Nova Ata</a></p>
               <div class="col-5">
                 {% if meeting_minutes %}
                 {% for mm in meeting_minutes %}

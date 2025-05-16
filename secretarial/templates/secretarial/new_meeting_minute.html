@@ -1,0 +1,35 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block content %}
+
+<link href="{% static 'css/quill.css' %}" rel="stylesheet">
+<script src="{% static 'js/quill.js' %}"></script>
+
+<div class="container">
+  <div class="container text-center">
+    <p class="fs-3 fw-light">Nova ata</p>
+  </div>
+  <div class="container">
+
+    <div id="editor" style="height: 300px;"></div>
+
+    <form action="{% url 'secretarial:new-minute-view' %}" method="POST">
+      {% csrf_token %}
+      <input type="hidden" name="content" id="quill-content">
+      <button type="submit" class="btn btn-primary mt-3">Salvar</button>
+    </form>
+
+  </div>
+</div>
+
+<script>
+  const quill = new Quill('#editor', {
+    theme: 'snow'
+  });
+
+  document.querySelector('form').onsubmit = function () {
+    document.querySelector('#quill-content').value = quill.root.innerHTML;
+  };
+</script>
+
+{% endblock %}

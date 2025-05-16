@@ -1,13 +1,12 @@
 from django.test import TestCase
 from django.urls import reverse
-from treasury.models.category import CategoryModel
 from events.models import Event, EventCategory, Venue
 from events.forms import EventForm
 from events.views import EventCreateView
 from users.models import CustomUser
 from django.test import Client
 from django.contrib.auth.models import Permission
-from model_mommy import mommy
+from model_bakery import baker
 
 
 class EventCreateViewTest(TestCase):
@@ -20,8 +19,8 @@ class EventCreateViewTest(TestCase):
         self.user.user_permissions.add(self.permission)
         self.client.login(username='testuser', password='testpassword')
         self.create_url = reverse('events:create-event')
-        self.category = mommy.make(EventCategory)
-        self.venue = mommy.make(Venue, _quantity=5)
+        self.category = baker.make(EventCategory)
+        self.venue = baker.make(Venue, _quantity=5)
 
     def test_event_create_view(self):
         response = self.client.get(self.create_url)
@@ -31,13 +30,13 @@ class EventCreateViewTest(TestCase):
         self.assertIsInstance(response.context['form'], EventForm)
 
     def test_event_create_success(self):
-        contact_user = mommy.make(CustomUser, _quantity=5)
-        categories = mommy.make(EventCategory, _quantity=5)
+        contact_user = baker.make(CustomUser, _quantity=5)
+        categories = baker.make(EventCategory, _quantity=5)
         event_data = {
             "title": "Sunset Serenade Concert",
             "description": "An evening of mesmerizing melodies as the sun sets!",
-            "start_date": "2025-04-20T17:30:00Z",
-            "end_date": "2025-04-20T21:30:00Z",
+            "start_date": "2030-04-20T17:30:00Z",
+            "end_date": "2030-04-20T21:30:00Z",
             "price": "75.00",
             "location": self.venue[0].id,
             "contact_name": "Emily Watson",
