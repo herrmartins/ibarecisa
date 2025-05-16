@@ -4,7 +4,6 @@ media/treasury/receipts/
 media/
 .vscode/
 data.json
-migrations/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -92,7 +91,6 @@ celerybeat-schedule
 *.sage.py
 
 # Environments
-.env
 .venv
 env/
 venv/
@@ -118,7 +116,8 @@ static_collected
 
 # Exclude machine-specific vs code settings
 .vscode/settings.json
-.env
+.qodo
+
 
 htmlcov/*
 .coveragerc
