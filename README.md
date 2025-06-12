@@ -73,4 +73,5 @@ sudo systemctl restart ibarecisasystem && sudo systemctl restart nginx
 renew (_Let's Encrypt certificates are valid for 90 days_)
 ```bash
 sudo certbot renew
+sudo systemctl restart ibarecisasystem && sudo systemctl restart nginx
 ```
