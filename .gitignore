@@ -3,6 +3,7 @@ media/treasury/receipts/
 .static/
 media/
 .vscode/
+.idea/
 data.json
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -90,7 +91,6 @@ celerybeat-schedule
 *.sage.py
 
 # Environments
-.env
 .venv
 env/
 venv/
