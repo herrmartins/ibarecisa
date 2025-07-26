@@ -78,7 +78,6 @@ class MinuteProjectModel(BaseModel):
 
         data_dict["minute_reading_acceptance_proposal"] = mr_acceptor_name
 
-        # For minute_reading_acceptance_proposal_support
         if self.minute_reading_acceptance_proposal_support and (
             self.minute_reading_acceptance_proposal_support.first_name
             or self.minute_reading_acceptance_proposal_support.last_name
@@ -88,8 +87,6 @@ class MinuteProjectModel(BaseModel):
             mr_supporter_name = "Minute Reading Acceptor Supporter Name Not Available"
 
         data_dict["minute_reading_acceptance_proposal_support"] = mr_supporter_name
-
-        # Similar logic can be applied to other fields...
 
         self.body = make_minute(data_dict)
         self.body = make_minute(data_dict)

@@ -29,7 +29,6 @@ INSTALLED_APPS = [
     "phonenumber_field",
     "ckeditor",
     "rest_framework",
-    "easyaudit",
     "xhtml2pdf",
     "weasyprint",
     "corsheaders",
