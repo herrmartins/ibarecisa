@@ -91,7 +91,19 @@ jobs:
             sudo systemctl restart ibarecisa
             sudo systemctl reload nginx
 
-            # Health check
-            curl -fsS -I -H "Host: $HOST_HEADER" \
-              --unix-socket "$APP_DIR/ibarecisa.sock" http://localhost/ | head -n1
+            # Health check with retries (socket first, then HTTPS via nginx)
+            set +e
+            OK=""
+            for i in {1..10}; do
+              curl -fsS -I -H "Host: $HOST_HEADER" \
+                --unix-socket "$APP_DIR/ibarecisa.sock" http://localhost/ | head -n1 && OK=1 && break
+              sleep 2
+            done
+            if [ -z "$OK" ]; then
+              curl -fsSkI -H "Host: $HOST_HEADER" https://127.0.0.1/ | head -n1 && OK=1
+            fi
+            if [ -z "$OK" ]; then
+              echo "❌ Health check failed"
+              exit 1
+            fi
             echo "✅ Deploy OK"
