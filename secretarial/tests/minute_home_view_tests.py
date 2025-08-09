@@ -10,7 +10,7 @@ from secretarial.models import (
     MinuteTemplateModel,
 )
 from secretarial.forms import MinuteProjectModelForm
-from model_mommy import mommy
+from model_bakery import baker
 
 
 class MinuteHomeViewTest(TestCase):
@@ -41,10 +41,10 @@ class MinuteHomeViewTest(TestCase):
         self.client.login(username="testuser", password="password123")
         response = self.client.get(reverse("secretarial:minute-home"))
 
-        mommy.make(MeetingMinuteModel, _quantity=5)
-        mommy.make(MinuteProjectModel, _quantity=5)
-        mommy.make(MinuteTemplateModel, _quantity=5)
-        mommy.make(MinuteExcerptsModel, _quantity=5)
+        baker.make(MeetingMinuteModel, _quantity=5)
+        baker.make(MinuteProjectModel, _quantity=5)
+        baker.make(MinuteTemplateModel, _quantity=5)
+        baker.make(MinuteExcerptsModel, _quantity=5)
 
         self.assertTrue("form" in response.context)
         self.assertIsInstance(response.context["form"], MinuteProjectModelForm)
@@ -58,11 +58,11 @@ class MinuteHomeViewTest(TestCase):
         self.assertEqual(len(response.context["minutes"]), 5)
 
     def test_get_context_data(self):
-        # Creating test instances using Model Mommy
-        mommy.make(MeetingMinuteModel, _quantity=5)
-        mommy.make(MinuteProjectModel, _quantity=3)
-        mommy.make(MinuteExcerptsModel, _quantity=7)
-        mommy.make(MinuteTemplateModel, _quantity=4)
+        # Creating test instances using Model baker
+        baker.make(MeetingMinuteModel, _quantity=5)
+        baker.make(MinuteProjectModel, _quantity=3)
+        baker.make(MinuteExcerptsModel, _quantity=7)
+        baker.make(MinuteTemplateModel, _quantity=4)
 
         try:
             # Check if the context is generated properly and not None

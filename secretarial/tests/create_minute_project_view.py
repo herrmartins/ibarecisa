@@ -7,7 +7,7 @@ from secretarial.models import (
     MeetingAgendaModel,
 )
 from users.models import CustomUser
-from model_mommy import mommy
+from model_bakery import baker
 from django.contrib.auth.models import Group, Permission
 
 

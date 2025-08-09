@@ -3,7 +3,7 @@ from django.utils import timezone
 from treasury.utils import check_and_create_missing_balances
 from treasury.models import TransactionModel, MonthlyBalance, CategoryModel
 from users.models import CustomUser
-from model_mommy import mommy
+from model_bakery import baker
 from dateutil.relativedelta import relativedelta
 from decimal import Decimal
 
@@ -18,20 +18,20 @@ class SpecialTransactionModelTests(TestCase):
         self.one_month_ago = self.current_month - relativedelta(months=1)
         self.a_year_ago = self.current_month - relativedelta(months=12)
         self.eleven_months_ago = self.current_month - relativedelta(months=11)
-        self.cat_1 = mommy.make(CategoryModel, name="Sample Category 1")
-        self.cat_2 = mommy.make(CategoryModel, name="Sample Category 2")
+        self.cat_1 = baker.make(CategoryModel, name="Sample Category 1")
+        self.cat_2 = baker.make(CategoryModel, name="Sample Category 2")
         self.user = CustomUser.objects.create_user(
             username="test_user", password="password"
         )
 
     def test_create_transactions_no_monthly_balance(self):
-        mommy.make(
+        baker.make(
             MonthlyBalance, month=self.a_year_ago, balance=100, is_first_month=True
         )
 
         MonthlyBalance.objects.get(month=self.five_months_ago).delete(is_testing=True)
 
-        transaction = mommy.make(
+        transaction = baker.make(
             TransactionModel, date=self.five_months_ago, category=self.cat_1
         )
 
@@ -55,7 +55,7 @@ class SpecialTransactionModelTests(TestCase):
         self.assertEqual(number_of_balances, 13)
 
     def test_create_transactions_no_monthly_balances(self):
-        mommy.make(
+        baker.make(
             MonthlyBalance, month=self.a_year_ago, balance=100, is_first_month=True
         )
 
@@ -64,7 +64,7 @@ class SpecialTransactionModelTests(TestCase):
         MonthlyBalance.objects.get(month=self.one_month_ago).delete(is_testing=True)
 
         with transaction.atomic():
-            my_transaction = mommy.make(
+            my_transaction = baker.make(
                 TransactionModel, date=self.five_months_ago, category=self.cat_1
             )
 

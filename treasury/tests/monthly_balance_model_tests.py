@@ -1,5 +1,5 @@
 from django.test import TestCase
-from model_mommy import mommy
+from model_bakery import baker
 from treasury.models import MonthlyBalance, TransactionModel, CategoryModel
 from django.utils import timezone
 from dateutil.relativedelta import relativedelta
@@ -17,9 +17,9 @@ class MonthlyBalanceModelTest(TestCase):
         self.a_year_ago = self.current_month - relativedelta(months=12)
         self.balance = MonthlyBalance.objects.create(
             month=self.current_month, is_first_month=True, balance=10)
-        self.category_1 = mommy.make(CategoryModel, name="One Cat")
-        self.category_2 = mommy.make(CategoryModel, name="Two Cat")
-        self.category_3 = mommy.make(CategoryModel, name="Expense 2")
+        self.category_1 = baker.make(CategoryModel, name="One Cat")
+        self.category_2 = baker.make(CategoryModel, name="Two Cat")
+        self.category_3 = baker.make(CategoryModel, name="Expense 2")
 
     def test_monthly_balance_creation(self):
         self.assertTrue(isinstance(self.balance, MonthlyBalance))
@@ -39,7 +39,7 @@ class MonthlyBalanceModelTest(TestCase):
     def test_create_transaction_without_any_balances(self):
         MonthlyBalance.objects.all().delete()
         with self.assertRaises(Exception):
-            mommy.make(TransactionModel, category=self.category_1)
+            baker.make(TransactionModel, category=self.category_1)
 
     def test_monthly_balance_creation_year_ago(self):
         MonthlyBalance.objects.all().delete()

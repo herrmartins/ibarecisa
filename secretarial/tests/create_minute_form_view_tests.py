@@ -7,7 +7,7 @@ from secretarial.models import (
     MeetingAgendaModel,
 )
 from users.models import CustomUser
-from model_mommy import mommy
+from model_bakery import baker
 from django.contrib.auth.models import Group, Permission
 
 
@@ -25,7 +25,7 @@ class CreateMinuteFormViewTestCase(TestCase):
 
     def test_project_data_initialization(self):
         # Create a MinuteProjectModel for testing
-        project = mommy.make(MinuteProjectModel, number_of_attendees=50)
+        project = baker.make(MinuteProjectModel, number_of_attendees=50)
 
         url = reverse(
             "secretarial:minute-creation-form-view", kwargs={"project_pk": project.pk}
@@ -36,7 +36,7 @@ class CreateMinuteFormViewTestCase(TestCase):
 
     def test_template_data_initialization(self):
         # Create a MinuteTemplateModel for testing
-        template = mommy.make(MinuteTemplateModel)
+        template = baker.make(MinuteTemplateModel)
         url = reverse(
             "secretarial:minute-from-template-view", kwargs={"template_pk": template.pk}
         )
@@ -44,8 +44,8 @@ class CreateMinuteFormViewTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_context_data(self):
-        project = mommy.make(MinuteProjectModel)
-        mommy.make(MinuteExcerptsModel, _quantity=5)
+        project = baker.make(MinuteProjectModel)
+        baker.make(MinuteExcerptsModel, _quantity=5)
         url = reverse(
             "secretarial:minute-creation-form-view", kwargs={"project_pk": project.pk}
         )
@@ -64,10 +64,10 @@ class CreateMinuteFormViewTestCase(TestCase):
         response_with_project = self.client.get(url_with_non_existing_project)
         self.assertIn(response_with_project.status_code, [302, 404])
 
-        president = mommy.make(CustomUser, first_name="Sample President")
-        secretary = mommy.make(CustomUser, first_name="Sample Secretary")
+        president = baker.make(CustomUser, first_name="Sample President")
+        secretary = baker.make(CustomUser, first_name="Sample Secretary")
 
-        project_with_data = mommy.make(
+        project_with_data = baker.make(
             MinuteProjectModel,
             president=president,
             secretary=secretary,
@@ -101,8 +101,8 @@ class CreateMinuteFormViewTestCase(TestCase):
         self.assertIn("agenda", initial_data)
 
     def test_get_initial_with_template_pk(self):
-        # Create a template with specific data for testing using Model Mommy
-        template_with_data = mommy.make(MinuteTemplateModel)
+        # Create a template with specific data for testing using Model baker
+        template_with_data = baker.make(MinuteTemplateModel)
 
         # Get the URL with the created template's PK
         url_with_existing_template = reverse(

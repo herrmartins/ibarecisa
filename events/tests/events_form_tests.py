@@ -2,7 +2,7 @@ from django.test import TestCase
 from users.models import CustomUser
 from events.models import Event, Venue, EventCategory
 from events.forms import EventForm
-from model_mommy import mommy
+from model_bakery import baker
 
 
 class EventFormTestCase(TestCase):
@@ -10,15 +10,15 @@ class EventFormTestCase(TestCase):
         self.user = CustomUser.objects.create(
             username="testuser", email="test@example.com"
         )
-        self.location = mommy.make(Venue)
-        mommy.make(EventCategory, _quantity=5)
+        self.location = baker.make(Venue)
+        baker.make(EventCategory, _quantity=5)
 
         self.valid_data = {
             "user": self.user.id,
             "title": "Sample Event",
             "description": "A description for the event.",
-            "start_date": "2025-01-01 12:00:00",
-            "end_date": "2025-01-01 14:00:00",
+            "start_date": "2030-01-01 12:00:00",
+            "end_date": "2030-01-01 14:00:00",
             "price": "10.00",
             "location": self.location.id,
             "contact_user": "",

@@ -1,7 +1,7 @@
 from django.test import TestCase
 from datetime import datetime, timedelta
 
-from model_mommy import mommy
+from model_bakery import baker
 from users.models import CustomUser
 from events.models import Event, Venue,EventCategory
 
@@ -16,8 +16,8 @@ class EventModelTestCase(TestCase):
             name='Test Venue', address='123 Test St', capacity=200)
         self.venue1 = Venue.objects.create(
             name='Test Venue 1', address='345 Test St', capacity=100)
-        self.category = mommy.make(EventCategory)
-        self.event = mommy.make(Event,
+        self.category = baker.make(EventCategory)
+        self.event = baker.make(Event,
                                 title='Test Event',
                                 start_date=datetime.now(),
                                 user=self.user1,
@@ -43,7 +43,7 @@ class EventModelTestCase(TestCase):
 
     def test_default_values(self):
         # Default value for 'user' and 'location' fields should be set properly
-        default_event = mommy.make(Event, title='Default Test Event')
+        default_event = baker.make(Event, title='Default Test Event')
         # Assuming default user ID is 1
         self.assertEqual(default_event.user_id, 1)
         # Assuming default location ID is 1
@@ -61,7 +61,7 @@ class EventModelTestCase(TestCase):
 
     def test_event_creation(self):
         # Test creating an event with mandatory fields
-        new_event = mommy.make(Event,
+        new_event = baker.make(Event,
                                title='New Event',
                                start_date=datetime.now(),
                                user=self.user,
@@ -70,7 +70,7 @@ class EventModelTestCase(TestCase):
         self.assertEqual(new_event.title, 'New Event')
 
         # Test creating an event with optional fields
-        optional_event = mommy.make(Event,
+        optional_event = baker.make(Event,
                                     title='Optional Event',
                                     start_date=datetime.now(),
                                     user=self.user,

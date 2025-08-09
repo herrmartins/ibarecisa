@@ -6,7 +6,7 @@ from django.test.client import Client
 from datetime import datetime, date
 from django.contrib.auth.models import Group, Permission
 from treasury.models import TransactionModel
-from model_mommy import mommy
+from model_bakery import baker
 from dateutil.relativedelta import relativedelta
 from datetime import datetime
 from django.utils import timezone
@@ -34,7 +34,7 @@ class FinanceReportsListViewTest(TestCase):
         self.client = Client()
         self.user.user_permissions.add(self.permission)
         self.client.login(username="testuser", password="password123")
-        self.monthly_balance = mommy.make(
+        self.monthly_balance = baker.make(
             MonthlyBalance,
             month=self.a_year_ago,
             balance=1000.00, is_first_month=True

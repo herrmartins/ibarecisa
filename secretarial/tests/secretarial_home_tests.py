@@ -3,7 +3,7 @@ from django.urls import reverse
 from users.models import CustomUser
 from secretarial.views import SecretarialHomeView
 from django.contrib.auth.models import Permission
-from model_mommy import mommy
+from model_bakery import baker
 
 
 class SecretarialHomeViewTests(TestCase):
@@ -50,8 +50,8 @@ class SecretarialHomeViewTests(TestCase):
         # Assign the required permission to the regular_user
         permission = Permission.objects.get(codename="view_meetingminutemodel")
         self.regular_user.user_permissions.add(permission)
-        mommy.make(CustomUser, type=CustomUser.Types.REGULAR, _quantity=13)
-        mommy.make(CustomUser, type=CustomUser.Types.CONGREGATED, _quantity=15)
+        baker.make(CustomUser, type=CustomUser.Types.REGULAR, _quantity=13)
+        baker.make(CustomUser, type=CustomUser.Types.CONGREGATED, _quantity=15)
 
         self.client.force_login(self.regular_user)
 
