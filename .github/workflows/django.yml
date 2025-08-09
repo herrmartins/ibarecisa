@@ -47,17 +47,6 @@ jobs:
           DEBUG: 'True'
         run: python manage.py test
 
-      - name: Send Slack Notification
-        if: always()
-        uses: slackapi/slack-github-action@v1.27.0
-        with:
-          payload: |
-            {
-              "text": "Build ${{ job.status }} for ${{ github.repository }} on ${{ github.ref }} — ${{ github.run_url }}"
-            }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-
   deploy:
     if: github.ref == 'refs/heads/main' && needs.build.result == 'success'
     needs: build
