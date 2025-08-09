@@ -1,47 +1,108 @@
-name: Django CI
+name: Django CI/CD
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
+
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 4
-      matrix:
-        python-version: [3.12]
+      matrix: { python-version: [3.12] }
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install Dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-    - name: Run Tests
-      env: 
-        SECRET_KEY: ${{ secrets.SECRET_KEY }}
-        EMAIL_HOST: ${{ secrets.EMAIL_HOST }}
-        EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
-        EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
-        EMAIL_PORT: ${{ secrets.EMAIL_PORT }}
-        DEBUG: 'True'
-      run: |
-        python manage.py test
-    - name: Send Slack Notification
-      if: always()
-      uses: slackapi/slack-github-action@v1.23.0
-      with:
-        payload: |
-          {
-            "text": "Build ${{ job.status }} for ${{ github.repository }} on branch ${{ github.ref }}. Check the details here: ${{ github.run_url }}"
-          }
-      env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      - uses: actions/checkout@v4
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('requirements.txt') }}
+          restore-keys: pip-${{ runner.os }}-${{ matrix.python-version }}-
+
+      - name: Install Deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Django tests
+        env:
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          EMAIL_HOST: ${{ secrets.EMAIL_HOST }}
+          EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
+          EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
+          EMAIL_PORT: ${{ secrets.EMAIL_PORT }}
+          DEBUG: 'True'
+        run: python manage.py test
+
+      - name: Send Slack Notification
+        if: always()
+        uses: slackapi/slack-github-action@v1.27.0
+        with:
+          payload: |
+            {
+              "text": "Build ${{ job.status }} for ${{ github.repository }} on ${{ github.ref }} — ${{ github.run_url }}"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  deploy:
+    if: github.ref == 'refs/heads/main' && needs.build.result == 'success'
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script_stop: true
+          script: |
+            set -euo pipefail
+            APP_DIR=/var/www/ibarecisa
+            HOST_HEADER=ibarecisa.org.br
+
+            cd "$APP_DIR"
+
+            # Optional SQLite backup
+            cp db.sqlite3 "db.sqlite3.backup-$(date +%F-%H%M)" || true
+
+            # Pull latest code (force local main to remote)
+            git fetch origin
+            git checkout -B main origin/main
+            git pull --ff-only origin main
+
+            # Update deps in stable venv
+            source .venv/bin/activate
+            python -V
+            pip install -U pip
+            pip install -r requirements.txt
+
+            # Sanity & housekeeping
+            python manage.py check --deploy || true
+            python manage.py migrate --noinput
+            python manage.py collectstatic --noinput
+
+            # Restart
+            sudo systemctl restart ibarecisa
+            sudo systemctl reload nginx
+
+            # Health check
+            curl -fsS -I -H "Host: $HOST_HEADER" \
+              --unix-socket "$APP_DIR/ibarecisa.sock" http://localhost/ | head -n1
+            echo "✅ Deploy OK"
