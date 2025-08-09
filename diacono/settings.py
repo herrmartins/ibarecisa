@@ -2,6 +2,7 @@ from pathlib import Path
 from decouple import config
 import mimetypes
 import sys
+import sentry_sdk
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -223,3 +224,11 @@ customColorPalette = [
 CAPTCHA_IMAGE_SIZE = (250, 100)
 CAPTCHA_FONT_SIZE = 40
 CAPTCHA_TEST_MODE = True
+
+if not DEBUG:
+    sentry_sdk.init(
+        dsn="https://56e7c96aedf9c170eeb59c9b515f6ef4@o4509815595597824.ingest.us.sentry.io/4509815598678016",
+        # Add data like request headers and IP for users,
+        # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
+        send_default_pii=True,
+    )
