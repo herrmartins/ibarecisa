@@ -1,8 +1,11 @@
 from django.contrib.auth.forms import UserCreationForm
 from users.models import CustomUser
+from captcha.fields import CaptchaField
 
 
 class RegisterUserForm(UserCreationForm):
+    captcha = CaptchaField(label="Você é humano")
+
     # exemplo de um campo comum, mas o username não dá, nem o password
     """username = forms.CharField(widget=forms.TextInput(
     attrs={"class": "form-control"}))"""

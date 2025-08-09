@@ -4,7 +4,7 @@
 
     <h1>Financial Data Health</h1>
     <p>{{ integrity }}</p>
-    <form method="post" action="{% url 'treasury:fix-financial-data' %}">
+    <form method="get" action="{% url 'treasury:fix-financial-data' %}">
         {% csrf_token %}
         <button type="submit" class="btn btn-warning">Fix Financial Data</button>
     </form>
