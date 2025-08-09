@@ -11,7 +11,7 @@ from treasury.utils import (
     custom_upload_to
 )
 from users.models import CustomUser
-from model_mommy import mommy
+from model_bakery import baker
 from decimal import Decimal
 from django.test import TestCase
 from unittest.mock import Mock
@@ -21,33 +21,33 @@ import os
 
 class TestTransactionUtils(TestCase):
     def setUp(self):
-        self.user = mommy.make(CustomUser)
+        self.user = baker.make(CustomUser)
         self.now = timezone.now().date().replace(day=1)
         self.one_month_ago = timezone.now().date().replace(day=1) - \
             relativedelta(months=1)
-        mommy.make(MonthlyBalance, month=self.one_month_ago,
+        baker.make(MonthlyBalance, month=self.one_month_ago,
                    is_first_month=True)
 
-        self.category1 = mommy.make(CategoryModel, name="Category 1")
-        self.category2 = mommy.make(CategoryModel, name="Category 2")
-        self.category3 = mommy.make(CategoryModel, name="Category 3")
+        self.category1 = baker.make(CategoryModel, name="Category 1")
+        self.category2 = baker.make(CategoryModel, name="Category 2")
+        self.category3 = baker.make(CategoryModel, name="Category 3")
 
-        # Create transactions using mommy.prepare
-        self.transaction1 = mommy.make(
+        # Create transactions using baker.prepare
+        self.transaction1 = baker.make(
             TransactionModel,
             category=self.category1,
             amount=Decimal("50.00"),
             date=self.now,
             description="Test Transaction 1",
         )
-        self.transaction2 = mommy.make(
+        self.transaction2 = baker.make(
             TransactionModel,
             category=self.category2,
             amount=Decimal("100.00"),
             date=self.now,
             description="Test Transaction 2",
         )
-        self.transaction3 = mommy.make(
+        self.transaction3 = baker.make(
             TransactionModel,
             category=self.category3,
             amount=Decimal("75.00"),
@@ -55,14 +55,14 @@ class TestTransactionUtils(TestCase):
             description="Test Transaction 3",
         )
 
-        self.transaction4 = mommy.make(
+        self.transaction4 = baker.make(
             TransactionModel,
             category=self.category1,
             amount=Decimal("-50.00"),
             date=self.now,
             description="Test Transaction - Category 1",
         )
-        self.transaction5 = mommy.make(
+        self.transaction5 = baker.make(
             TransactionModel,
             category=self.category3,
             amount=Decimal("-25.00"),

@@ -3,7 +3,7 @@ from django.urls import reverse
 from secretarial.models import MeetingMinuteModel
 from unittest.mock import patch
 from secretarial.utils.topdfutils import render_to_pdf
-from model_mommy import mommy
+from model_bakery import baker
 from django.contrib.auth.models import Group, Permission
 from users.models import CustomUser
 
@@ -19,7 +19,7 @@ class GeneratePDFViewTestCase(TestCase):
         self.user.groups.add(self.secretary_group)
         self.user.user_permissions.add(self.permission)
         self.client.login(username="testuser", password="password123")
-        self.meeting = mommy.make("secretarial.MeetingMinuteModel")
+        self.meeting = baker.make("secretarial.MeetingMinuteModel")
         self.url = reverse(
             "secretarial:minute-generate-pdf", kwargs={"pk": self.meeting.pk}
         )

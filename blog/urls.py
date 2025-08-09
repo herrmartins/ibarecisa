@@ -19,11 +19,14 @@ urlpatterns = [
     path("edit/<int:pk>", PostFormView.as_view(), name="edit"),
     path("form/category", CategoryFormView.as_view(), name="category-form"),
     path("create/category", CategoryCreateView.as_view(), name="create-category"),
-    path("edit/category/<int:pk>", CategoryUpdateView.as_view(), name="edit-category"),
+    path("edit/category/<int:pk>",
+         CategoryUpdateView.as_view(), name="edit-category"),
     path(
-        "update/category/<int:pk>", CategoryUpdateView.as_view(), name="update-category"
+        "update/category/<int:pk>",
+        CategoryUpdateView.as_view(), name="update-category"
     ),
     path(
-        "category/delete/<int:pk>", CategoryDeleteView.as_view(), name="delete-category"
+        "category/delete/<int:pk>",
+        CategoryDeleteView.as_view(), name="delete-category"
     ),
 ]

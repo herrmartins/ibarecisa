@@ -31,11 +31,11 @@ jobs:
         EMAIL_HOST_USER: ${{ secrets.EMAIL_HOST_USER }}
         EMAIL_HOST_PASSWORD: ${{ secrets.EMAIL_HOST_PASSWORD }}
         EMAIL_PORT: ${{ secrets.EMAIL_PORT }}
-        DEBUG: 'True'  # Set DEBUG environment variable here, adjust the value as needed
+        DEBUG: 'True'
       run: |
         python manage.py test
     - name: Send Slack Notification
-      if: always()  # Ensure this step runs even if previous steps fail
+      if: always()
       uses: slackapi/slack-github-action@v1.23.0
       with:
         payload: |

@@ -10,7 +10,7 @@ from django.db.models.signals import post_save
 from treasury.signals import post_save_monthly_report
 from django.utils import timezone
 from dateutil.relativedelta import relativedelta
-from model_mommy import mommy
+from model_bakery import baker
 from treasury.utils import get_aggregate_transactions_by_category
 
 
@@ -33,12 +33,12 @@ class TestMonthlyReportSignal(TestCase):
 
     def test_monthly_report_signal(self):
         report_date = self.three_months_ago
-        category_1 = mommy.make(CategoryModel, name="Tithe")
-        category_2 = mommy.make(CategoryModel, name="Offering")
-        category_3 = mommy.make(CategoryModel, name="Expense")
-        mommy.make(TransactionModel, _quantity=5, amount=10, category=category_1, date=self.three_months_ago)
-        mommy.make(TransactionModel, _quantity=5, amount=10, category=category_2, date=self.three_months_ago)
-        mommy.make(TransactionModel, _quantity=3, amount=-5, category=category_3, date=self.three_months_ago)
+        category_1 = baker.make(CategoryModel, name="Tithe")
+        category_2 = baker.make(CategoryModel, name="Offering")
+        category_3 = baker.make(CategoryModel, name="Expense")
+        baker.make(TransactionModel, _quantity=5, amount=10, category=category_1, date=self.three_months_ago)
+        baker.make(TransactionModel, _quantity=5, amount=10, category=category_2, date=self.three_months_ago)
+        baker.make(TransactionModel, _quantity=3, amount=-5, category=category_3, date=self.three_months_ago)
 
         positive_transactions = get_aggregate_transactions_by_category(
             year=report_date.year, month=report_date.month
@@ -47,7 +47,7 @@ class TestMonthlyReportSignal(TestCase):
             year=report_date.year, month=report_date.month, is_positive=False
         )
 
-        mommy.make(
+        baker.make(
             MonthlyReportModel,
             month=report_date,
             previous_month_balance=1000.0,

@@ -102,7 +102,7 @@ class CreateMinuteFormViewTestCase(TestCase):
         self.assertIn("agenda", initial_data)
 
     def test_get_initial_with_template_pk(self):
-        # Create a template with specific data for testing using Model Mommy (agora Baker)
+        # Create a template with specific data for testing using Model baker
         template_with_data = baker.make(MinuteTemplateModel)
 
         # Get the URL with the created template's PK

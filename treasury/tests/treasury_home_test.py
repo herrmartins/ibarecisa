@@ -4,7 +4,7 @@ from django.contrib.auth.models import Group, Permission
 from treasury.models import MonthlyBalance
 from users.models import CustomUser
 from datetime import date
-from model_mommy import mommy
+from model_bakery import baker
 from unittest.mock import patch
 from django.utils import timezone
 from dateutil.relativedelta import relativedelta
@@ -54,7 +54,7 @@ class TreasuryHomeViewTest(TestCase):
         self.assertIn("form_balance", response.context)
 
     def test_context_data_with_balance(self):
-        mommy.make(MonthlyBalance, month=self.date_before,
+        baker.make(MonthlyBalance, month=self.date_before,
                    is_first_month=True, balance=1000)
 
         self.client.force_login(self.user)

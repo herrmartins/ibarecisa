@@ -30,7 +30,10 @@
           <a class="nav-link mx-2" href="{% url 'worship:home' %}">Música</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link mx-2" href="{% url 'logout' %}">Logout</a>
+            <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="nav-link mx-2 btn btn-link">Logout</button>
+            </form>
         </li>
 
         {% else %}

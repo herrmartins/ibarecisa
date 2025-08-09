@@ -4,7 +4,7 @@ from users.models import CustomUser
 from django.contrib.auth.models import User
 from django.test.client import Client
 from users.views import UserProfileView
-from model_mommy import mommy
+from model_bakery import baker
 
 
 class UserProfileViewTest(TestCase):
@@ -25,7 +25,7 @@ class UserProfileViewTest(TestCase):
 
     def test_user_profile_view_without_permission(self):
         CustomUser.objects.create_user(username="otheruser", password="password")
-        mommy.make('CustomUser')
+        baker.make('CustomUser')
         self.client.login(username="otheruser", password="password")
         response = self.client.get(
             reverse("users:user-profile", kwargs={"pk": self.custom_user.pk})

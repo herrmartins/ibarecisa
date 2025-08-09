@@ -3,7 +3,7 @@ from django.urls import reverse
 from users.models import CustomUser
 from django.contrib.auth.models import Group, Permission
 from treasury.models import MonthlyBalance, TransactionModel
-from model_mommy import mommy
+from model_bakery import baker
 from datetime import date
 from dateutil.relativedelta import relativedelta
 
@@ -23,8 +23,8 @@ class MonthlyCarchiveViewTests(TestCase):
         cls.user.groups.add(cls.treasury_group)
         cls.user.user_permissions.add(cls.permission)
 
-        mommy.make("treasury.MonthlyBalance", month=cls.date_before, is_first_month=True )
-        mommy.make("treasury.TransactionModel", date=cls.date, _quantity=10)
+        baker.make("treasury.MonthlyBalance", month=cls.date_before, is_first_month=True )
+        baker.make("treasury.TransactionModel", date=cls.date, _quantity=10)
 
     def setUp(self):
         self.client = Client()

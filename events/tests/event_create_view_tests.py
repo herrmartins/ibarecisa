@@ -35,8 +35,8 @@ class EventCreateViewTest(TestCase):
         event_data = {
             "title": "Sunset Serenade Concert",
             "description": "An evening of mesmerizing melodies as the sun sets!",
-            "start_date": "2030-04-20T17:30:00Z",
-            "end_date": "2030-04-20T21:30:00Z",
+            "start_date": "2035-04-20T17:30:00Z",
+            "end_date": "2035-04-20T21:30:00Z",
             "price": "75.00",
             "location": self.venue[0].id,
             "contact_name": "Emily Watson",
