@@ -28,7 +28,6 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "phonenumber_field",
     "ckeditor",
-    'django_ckeditor_5',
     "rest_framework",
     "xhtml2pdf",
     "weasyprint",
