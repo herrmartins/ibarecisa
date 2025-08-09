@@ -13,7 +13,7 @@ SECRET_KEY = config("SECRET_KEY")
 DEBUG = config("DEBUG", cast=bool)
 
 if not DEBUG:
-    ALLOWED_HOSTS = ["ibarecisa.org.br", "diacono.ibarecisa.org.br","104.251.208.79", "127.0.0.1"]
+    ALLOWED_HOSTS = ["ibarecisa.org.br", "diacono.ibarecisa.org.br","104.251.208.79", "127.0.0.1", "https://104.237.2.251"]
 else:
     ALLOWED_HOSTS = ["*"]
 
