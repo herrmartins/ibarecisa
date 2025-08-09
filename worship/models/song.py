@@ -2,7 +2,7 @@ from django.db import models
 from core.models import BaseModel
 from ckeditor.fields import RichTextField
 from worship.models.worship_utils import count_syllables_portuguese
-from bs4 import BeautifulSoup
+# from bs4 import BeautifulSoup
 
 
 class Song(models.Model):
@@ -55,17 +55,11 @@ class Song(models.Model):
     def __str__(self):
         return self.title
 
-    @staticmethod
+"""     @staticmethod
     def count_syllables_in_line(line):
-        """
-        Count the number of syllables in a line of text.
-        """
         return count_syllables_portuguese(line)
 
     def calculate_syllables(self):
-        """
-        Calculate the syllable counts for each line in the lyrics.
-        """
         if not self.lyrics:
             return {}
 
@@ -73,4 +67,4 @@ class Song(models.Model):
         text = soup.get_text()
         lines = text.splitlines()
         syllable_counts = {line: self.count_syllables_in_line(line) for line in lines}
-        return syllable_counts
+        return syllable_counts """
