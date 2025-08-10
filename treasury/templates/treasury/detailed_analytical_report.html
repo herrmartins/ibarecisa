@@ -86,7 +86,7 @@
       <div class="col-auto">
         <a href="{% url 'treasury:export-anreport-pdf' pk_value %}" class="btn btn-primary">Gerar PDF</a>
       </div>
-      {% if user.is_staff or user.type == 'TESOUREIRO' %}
+      {% if user.is_staff and user.is_treasurer %}
         <div class="col-auto">
           <form id="deleteForm" action="{% url 'treasury:delete-an_report' pk_value %}" method="POST">
             {% csrf_token %}

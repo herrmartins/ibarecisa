@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from decouple import config
 import mimetypes
@@ -13,7 +14,8 @@ SECRET_KEY = config("SECRET_KEY")
 DEBUG = config("DEBUG", cast=bool)
 
 if not DEBUG:
-    ALLOWED_HOSTS = ["ibarecisa.org.br", "diacono.ibarecisa.org.br","104.251.208.79", "127.0.0.1", "https://104.237.2.251"]
+    ALLOWED_HOSTS = ["ibarecisa.org.br", "diacono.ibarecisa.org.br",
+                     "104.251.208.79", "104.237.2.251", "https://104.237.2.251"]
 else:
     ALLOWED_HOSTS = ["*"]
 
@@ -121,7 +123,6 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-import os
 
 if not DEBUG:
     STATIC_ROOT = BASE_DIR / "staticfiles"

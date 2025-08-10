@@ -1,18 +1,18 @@
 {% extends 'core/base.html' %} {% load static%} {% block content %}
 
-<div class="container text-center">
-  <p class="fs-3 fw-light">Lista de Categorias de Transações</p>
-</div>
-<div class="container col-10">
-  <div class="row">
-    <div class="col-md-6 text-center">
-      {% for c in categories %}
-      <div class="row">
-        <a href="{% url 'treasury:edit-category' c.pk %}"><p>{{c}}</p></a>
-      </div>
-      {% endfor %}
+    <div class="container text-center">
+        <p class="fs-3 fw-light">Lista de Categorias de Transações</p>
     </div>
-  </div>
-</div>
+    <div class="container col-10">
+        <div class="row">
+            <div class="col-md-6 text-center">
+                {% for c in categories %}
+                    <div class="row">
+                        <a href="{% url 'treasury:edit-category' c.pk %}"><p>{{c}}</p></a>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
 
 {% endblock %}

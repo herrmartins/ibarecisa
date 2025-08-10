@@ -1,6 +1,7 @@
 from django.core.exceptions import ValidationError
 from treasury.utils import get_aggregate_transactions
 
+
 def check_financial_data_integrity():
     from treasury.models import MonthlyBalance
 
