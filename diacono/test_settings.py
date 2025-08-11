@@ -1,7 +1,7 @@
 from .settings import *
 
 DEBUG = False
-SECRET_KEY = "test-secret"
+SECRET_KEY = "$b42vbpjo!dsl*l3&-&&)8f_7iy$@=2$wcc$$03auiw4_ty7x1"
 ALLOWED_HOSTS = ["*"]
 
 from pathlib import Path, PurePath
