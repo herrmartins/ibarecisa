@@ -12,11 +12,11 @@ def generate_minute_body(prompt):
         "Content-Type": "application/json"
     }
     data = {
-        "model": "mistral-large-latest",
+        "model": "mistral-small-latest",
         "messages": [
             {
                 "role": "user",
-                "content": f"Gere uma ata de reunião formal para a Igreja Batista Regular de Cidade Satélite baseada na descrição fornecida: {prompt}. Inclua estrutura padrão de ata de igreja, com abertura (data, presidente, secretário, número de presentes), leitura da ata anterior se aplicável, relatório financeiro se mencionado, assuntos discutidos (agenda), decisões tomadas, e encerramento com aprovações, quando houver. Se houver só relatórios, ignore o resto, coloque só os relatórios, além do cabeçalho e fim padrão. Formate a saída em HTML puro, usando tags como <h1> ou <h2> para títulos, <p> para parágrafos, <ul> ou <ol> para listas de itens, <strong> para ênfase, e evite Markdown ou formatação de texto simples. O conteúdo deve ser renderizável diretamente em um editor rico como CKEditor."
+                "content": f"Gere o corpo de uma ata de reunião formal para a Igreja Batista Regular de Cidade Satélite baseado apenas na descrição fornecida: {prompt}. Crie um texto narrativo fluido e contínuo, sem divisões excessivas em seções, títulos ou subtítulos. Use parágrafos simples para conectar os eventos de forma natural, adicionando apenas elementos como abertura, decisões ou encerramento se explicitamente mencionados no prompt. Foque estritamente no conteúdo descrito pelo usuário. Formate a saída em HTML puro, usando principalmente <p> para parágrafos, <strong> ou <em> para ênfase, e evite <h1>, <h2>, listas ou quebras desnecessárias. O conteúdo deve ser renderizável diretamente em um editor rico como CKEditor."
             }
         ],
         "max_tokens": 5000,
