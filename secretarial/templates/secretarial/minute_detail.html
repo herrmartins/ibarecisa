@@ -8,5 +8,25 @@
 </div>
 <p>{{minute.id}}</p>
 <a href="{% url 'secretarial:minute-generate-pdf' minute.id %}" class="btn btn-primary">Generate PDF</a>
+<hr/>
+<h5>Arquivos anexados</h5>
+<ul>
+  {% for att in attachments %}
+    <li>
+      <a href="{{ att.file.url }}" target="_blank">{{ att.description|default:att.file.name }}</a>
+      <small class="text-muted"> — {{ att.uploaded_at }}</small>
+    </li>
+  {% empty %}
+    <li>Nenhum arquivo anexado ainda.</li>
+  {% endfor %}
+</ul>
+<hr/>
+<h5>Anexar novo arquivo</h5>
+<form action="{{ file_upload_url }}" method="post" enctype="multipart/form-data" class="row g-2">
+  {% csrf_token %}
+  <div class="col-6">{{ file_form.file }}</div>
+  <div class="col-4">{{ file_form.description }}</div>
+  <div class="col-2"><button type="submit" class="btn btn-secondary w-100">Enviar</button></div>
+</form>
 </div>
 {% endblock %}

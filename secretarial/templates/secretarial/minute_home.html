@@ -2,93 +2,169 @@
 {% load static %}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-<div class="container">
-  <div class="container text-center">
-    <p class="fs-3 fw-light">Registro de Reuniões</p>
-  </div>
-  <div class="col-12 d-flex justify-content-center">
-    <div class="col-2 p-3 mx-2 my-3 bg-success text-white rounded text-center fw-bold">Atas Registradas<br><a
-        href="{% url 'secretarial:list-minutes' %}"><img src="{% static 'img/archive.svg' %}"></a><br>
-      <p class="h2 mt-2 fw-light">{{number_of_minutes}}</p>
-    </div>
-    <div class="col-2 p-3 mx-2 my-3 bg-primary text-white rounded text-center fw-bold">Modelos de Atas<br><a
-        href="{% url 'secretarial:list-templates' %}"><img src="{% static 'img/file-text.svg' %}"></a><br>
-      <p class="h2 mt-2 fw-light">{{number_of_templates}}</p>
-    </div>
-    <div class="col-2 p-3 mx-2 my-3 bg-info text-white rounded text-center fw-bold">Trechos de Atas<br><a
-        href="{% url 'secretarial:list-excerpts' %}"><img src="{% static 'img/file-minus.svg' %}"></a><br>
-      <p class="h2 mt-2 fw-light">{{number_of_excerpts}}</p>
-    </div>
+<style>
+  .ai-hero {
+    min-height: 60vh;
+    display: grid;
+    place-items: center;
+    background: radial-gradient(1000px 600px at 10% -10%, rgba(99, 102, 241, 0.15), transparent),
+                radial-gradient(800px 500px at 110% 10%, rgba(16, 185, 129, 0.12), transparent),
+                linear-gradient(180deg, rgba(2,0,36,0) 0%, rgba(2,0,36,0.03) 100%);
+    border-radius: 24px;
+  }
+  .ai-card {
+    width: 100%;
+    max-width: 900px;
+    background: rgba(255,255,255,0.9);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(0,0,0,0.06);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    border-radius: 20px;
+    padding: 1rem;
+  }
+  .ai-textarea {
+    border-radius: 16px !important;
+    padding: 1.25rem 1.25rem 3.5rem 1.25rem;
+    font-size: 1.15rem;
+    min-height: 180px;
+  }
+  .ai-actions {
+    display: flex;
+    gap: .5rem;
+    position: relative;
+    margin-top: .75rem;
+    flex-wrap: wrap;
+  }
+  .pill {
+    border-radius: 999px;
+  }
+  .stat-card {
+    transition: transform .2s ease, box-shadow .2s ease;
+  }
+  .stat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.12); }
+</style>
 
-    <div class="col-2 p-3 mx-2 my-3 bg-warning text-white rounded text-center fw-bold">Projetos de Ata<br><a
-        href="{% url 'secretarial:list-minutes-projects' %}"><img src="{% static 'img/edit.svg' %}"></a><br>
-      <p class="h2 mt-2 fw-light">{{number_of_projects}}</p>
-    </div>
-
+<div class="container py-4">
+  <div class="text-center my-3">
+    <p class="display-6 fw-light">Registro de Reuniões</p>
+    <p class="text-muted">Gere atas com suporte de IA, pesquise conteúdos e gerencie modelos e trechos.</p>
   </div>
-  <div class="container-md">
-    <form id="search-form">
-      <div class="input-group input-group-lg">
-        <div class="form-floating">
-          <input type="text" id="searched" class="form-control" placeholder="Digite o critério de busca..." />
-          <label for="f_search" class="form-label">Escreva o(s) critério(s) da busca</label>
-        </div>
-        <select class="form-select">
-          <option>em atas</option>
-          <option>em modelos de atas</option>
-          <option>em pautas das atas</option>
-        </select>
-        <button type="submit" class="btn btn-primary">Buscar</button>
+
+  <div class="row g-3 justify-content-center mb-4">
+    <div class="col-6 col-md-3">
+      <div class="p-3 stat-card bg-success text-white rounded text-center fw-bold">
+        Atas Registradas<br>
+        <a class="d-inline-block mt-2" href="{% url 'secretarial:list-minutes' %}"><img width="28" height="28" src="{% static 'img/archive.svg' %}"></a>
+        <p class="h2 mt-2 fw-light mb-0">{{number_of_minutes}}</p>
       </div>
-    </form>
-    <div class="d-flex" id="search-results">
-
     </div>
-    {% if user.is_secretary %}
-    <div class="container my-3">
-      <div class="container-xl">
-        <div class="col-12">
-          <div class="row">
-            <div class="col-5">
-              <form method="POST">
-                {% csrf_token %}
-                <div class="form-floating mb-3">
-                  <textarea class="form-control" id="prompt" name="prompt" placeholder="Descreva a reunião para gerar a ata com IA..." rows="4"></textarea>
-                  <label for="prompt">Prompt para IA</label>
-                </div>
-                <input type="submit" class="btn btn-primary my-2" value="Gerar Ata com IA">
-              </form>
+    <div class="col-6 col-md-3">
+      <div class="p-3 stat-card bg-primary text-white rounded text-center fw-bold">
+        Modelos de Atas<br>
+        <a class="d-inline-block mt-2" href="{% url 'secretarial:list-templates' %}"><img width="28" height="28" src="{% static 'img/file-text.svg' %}"></a>
+        <p class="h2 mt-2 fw-light mb-0">{{number_of_templates}}</p>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="p-3 stat-card bg-info text-white rounded text-center fw-bold">
+        Trechos de Atas<br>
+        <a class="d-inline-block mt-2" href="{% url 'secretarial:list-excerpts' %}"><img width="28" height="28" src="{% static 'img/file-minus.svg' %}"></a>
+        <p class="h2 mt-2 fw-light mb-0">{{number_of_excerpts}}</p>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="p-3 stat-card bg-warning text-white rounded text-center fw-bold">
+        Projetos de Ata<br>
+        <a class="d-inline-block mt-2" href="{% url 'secretarial:list-minutes-projects' %}"><img width="28" height="28" src="{% static 'img/edit.svg' %}"></a>
+        <p class="h2 mt-2 fw-light mb-0">{{number_of_projects}}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="ai-hero mb-4">
+    <div class="ai-card">
+      <form id="search-form" class="mb-3">
+        <div class="row g-2 align-items-stretch">
+          <div class="col-12 col-md-8">
+            <div class="form-floating h-100">
+              <input type="text" id="searched" class="form-control h-100" placeholder="Digite o critério de busca..." />
+              <label for="searched" class="form-label">Escreva o(s) critério(s) da busca</label>
             </div>
-            <div class="col-7">
-              <p class="fs-3 fw-light text-center">Lista de atas <a href="{% url 'secretarial:new-minute-view' %}"
-                  class="btn btn-primary"><i class="bi bi-file-earmark-plus-fill"></i> Nova Ata</a></p>
-              <div class="col-5">
-                {% if meeting_minutes %}
-                {% for mm in meeting_minutes %}
-                <p><a href="{% url 'secretarial:minute-detail-view' mm.pk %}">{{ mm }}</a></p>
-                {% endfor %}
-                {% endif %}
-              </div>
-            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <select class="form-select h-100">
+              <option>em atas</option>
+              <option>em modelos de atas</option>
+              <option>em pautas das atas</option>
+            </select>
+          </div>
+          <div class="col-6 col-md-1 d-grid">
+            <button type="submit" class="btn btn-dark pill">Buscar</button>
+          </div>
+        </div>
+      </form>
+      <div id="search-results" class="d-flex flex-column gap-2"></div>
+
+      {% if user.is_secretary %}
+      <hr class="my-3"/>
+      <form method="POST">
+        {% csrf_token %}
+        <label class="form-label text-muted">Prompt para IA</label>
+        <textarea class="form-control ai-textarea" id="prompt" name="prompt" placeholder="Descreva a reunião para gerar a ata com IA..."></textarea>
+        <div class="ai-actions">
+          <button type="submit" class="btn btn-primary pill"><i class="bi bi-stars me-1"></i> Gerar Ata com IA</button>
+          <a href="{% url 'secretarial:new-minute-view' %}" class="btn btn-outline-secondary pill"><i class="bi bi-file-earmark-plus me-1"></i> Nova Ata em Branco</a>
+          <a href="{% url 'secretarial:list-templates' %}" class="btn btn-outline-dark pill"><i class="bi bi-layers me-1"></i> Ver Modelos</a>
+        </div>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if user.is_secretary %}
+  <div class="row g-3">
+    <div class="col-12 col-lg-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <h5 class="card-title fw-light">Lista de atas</h5>
+          <div class="list-group list-group-flush">
+            {% if meeting_minutes %}
+              {% for mm in meeting_minutes %}
+                <a class="list-group-item list-group-item-action" href="{% url 'secretarial:minute-detail-view' mm.pk %}">{{ mm }}</a>
+              {% endfor %}
+            {% else %}
+              <div class="text-muted small">Sem atas ainda.</div>
+            {% endif %}
           </div>
         </div>
       </div>
     </div>
-    {%else %}
-    <div class="container">
-      <div class="row justify-content-center py-2">
-        <div class="col-8">
-          <p class="fw-light text-center">Lista de Atas</p>
-          {% for m in minutes %}
-          <p><a href="{% url 'secretarial:minute-detail-view' m.pk %}">{{ m }}</a></p>
-          </p>
-          {% endfor %}
+    <div class="col-12 col-lg-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <h5 class="card-title fw-light">Ações rápidas</h5>
+          <div class="d-flex flex-wrap gap-2">
+            <a href="{% url 'secretarial:list-excerpts' %}" class="btn btn-outline-primary pill">Trechos</a>
+            <a href="{% url 'secretarial:list-templates' %}" class="btn btn-outline-primary pill">Modelos</a>
+            <a href="{% url 'secretarial:list-minutes-projects' %}" class="btn btn-outline-primary pill">Projetos</a>
+          </div>
         </div>
       </div>
     </div>
-    {% endif %}
   </div>
-
+  {% else %}
+  <div class="container">
+    <div class="row justify-content-center py-2">
+      <div class="col-12 col-md-10 col-lg-8">
+        <p class="fs-5 fw-light text-center">Lista de Atas</p>
+        {% for m in minutes %}
+          <p><a href="{% url 'secretarial:minute-detail-view' m.pk %}">{{ m }}</a></p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
 </div>
+
 <script type="module" src="{% static 'js/secretarial_search.js' %}"></script>
 {% endblock %}

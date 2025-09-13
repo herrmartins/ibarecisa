@@ -3,3 +3,4 @@ from .minute_model import MeetingMinuteModel
 from .minute_template_model import MinuteTemplateModel
 from .minute_excerpts_model import MinuteExcerptsModel
 from .minute_project_model import MinuteProjectModel
+from .minute_file_model import MinuteFileModel

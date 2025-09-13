@@ -6,3 +6,4 @@ from .minute_template_model_form import MinuteTemplateModelForm
 from .excerpt_model_form import MinuteExcerptsModelForm
 from .qualify_user_form import UserQualifyingForm
 from .agenda_form import MinuteAgendaModelForm
+from .minute_file_form import MinuteFileModelForm
