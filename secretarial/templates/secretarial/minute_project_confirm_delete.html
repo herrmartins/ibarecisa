@@ -1,0 +1,14 @@
+{% extends 'core/base.html' %}
+{% block title %}Confirmar Exclusão de Projeto de Ata{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Confirmar Exclusão</h2>
+    <p>Tem certeza de que deseja excluir o projeto de ata para a reunião em {{ object.meeting_date }}?</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Sim, Excluir</button>
+        <a href="{% url 'secretarial:list-minutes-projects' %}" class="btn btn-secondary">Cancelar</a>
+    </form>
+</div>
+{% endblock %}

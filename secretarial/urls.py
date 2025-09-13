@@ -24,7 +24,8 @@ from secretarial.views import (
     AgendaFormView,
     AgendaCreateView,
     CategoryUpdateView,
-    NewMinutesEditorView
+    NewMinutesEditorView,
+    MinuteProjectDeleteView
 )
 
 
@@ -42,6 +43,11 @@ urlpatterns = [
         "meeting/projects",
         MinutesProjectListView.as_view(),
         name="list-minutes-projects",
+    ),
+    path(
+        "meeting/projects/delete/<int:pk>/",
+        MinuteProjectDeleteView.as_view(),
+        name="delete-minute-project",
     ),
     path("meeting/list", MinutesListView.as_view(), name="list-minutes"),
     path("meeting/excerpts", MinutesExcerptsListView.as_view(), name="list-excerpts"),

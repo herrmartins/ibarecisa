@@ -23,3 +23,4 @@ from .agenda_form_view import AgendaFormView
 from .agenda_create_view import AgendaCreateView
 from .agenda_update_view import CategoryUpdateView
 from .meeting_minute_editor import NewMinutesEditorView
+from .delete_project_minute_view import MinuteProjectDeleteView
