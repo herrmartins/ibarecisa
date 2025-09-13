@@ -226,6 +226,8 @@ CAPTCHA_IMAGE_SIZE = (250, 100)
 CAPTCHA_FONT_SIZE = 40
 CAPTCHA_TEST_MODE = True
 
+MISTRAL_API_KEY = config("MISTRAL_API_KEY", default="")
+
 if not DEBUG:
     sentry_sdk.init(
         dsn="https://56e7c96aedf9c170eeb59c9b515f6ef4@o4509815595597824.ingest.us.sentry.io/4509815598678016",

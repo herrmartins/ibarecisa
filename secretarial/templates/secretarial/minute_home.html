@@ -50,13 +50,13 @@
         <div class="col-12">
           <div class="row">
             <div class="col-5">
-              <form action="{% url 'secretarial:create-minute-project' %}" method="POST">
+              <form method="POST">
                 {% csrf_token %}
-                {{form.media}}
-                {{form}}
-                <input type="submit" class="btn btn-primary my-2" value="Enviar">
-                <a href="{% url 'secretarial:agenda-form' %}"><span class="btn btn-primary">Adicionar
-                    Assuntos</span></a>
+                <div class="form-floating mb-3">
+                  <textarea class="form-control" id="prompt" name="prompt" placeholder="Descreva a reunião para gerar a ata com IA..." rows="4"></textarea>
+                  <label for="prompt">Prompt para IA</label>
+                </div>
+                <input type="submit" class="btn btn-primary my-2" value="Gerar Ata com IA">
               </form>
             </div>
             <div class="col-7">

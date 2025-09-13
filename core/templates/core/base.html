@@ -12,11 +12,10 @@
         {% endblock pre_alpine_scripts %}
         <script defer src="{% static 'js/alpinejs.min.js' %}"></script>
         <link rel="stylesheet" href="{% static 'img/icons/font/bootstrap-icons.css' %}">
+        <link rel="stylesheet" href="{% static 'css/bootstrap5.3/bootstrap.min.css' %}">
     </head>
 
-    <body>
-        <link rel="stylesheet" href="{% static 'css/bootstrap5.3/bootstrap.min.css' %}">
-
+    <body class="pt-3">
         {% include 'core/navbar.html' %} {% include 'core/messages.html' %} {% block content %} {% endblock %}
         <script src="{% static 'js/bootstrap5.3/bootstrap.bundle.min.js' %}"></script>
     </body>
