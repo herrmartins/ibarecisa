@@ -12,7 +12,7 @@ class TransactionSignalTests(TestCase):
     def setUp(self):
         # Setting up a user and a transaction
         self.user = CustomUser.objects.create(
-            username='testuser', password='12345')
+            username='testuser', email='treasury_tracking@example.com', password='12345')
         self.first_balance = baker.make(
             "MonthlyBalance", month=datetime.date(2021, 1, 1), is_first_month=True)
         self.transaction = TransactionModel.objects.create(

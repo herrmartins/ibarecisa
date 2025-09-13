@@ -70,7 +70,7 @@ class TransactionModelMethodsTests(TestCase):
         self.image = SimpleUploadedFile(
             name='test.jpg', content=image_io.getvalue(), content_type='image/jpeg')
 
-        self.user = CustomUser.objects.create(username='testuser')
+        self.user = CustomUser.objects.create(username='testuser', email='treasury_tx_methods@example.com')
 
         self.category = CategoryModel.objects.create(name='Test Category')
 

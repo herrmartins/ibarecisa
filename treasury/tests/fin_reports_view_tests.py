@@ -16,7 +16,7 @@ class FinanceReportsListViewTest(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = CustomUser.objects.create_user(
-            username="testuser", email="test@example.com", password="password123"
+            username="testuser", email="treasury_reports@example.com", password="password123"
         )
         cls.treasury_group = Group.objects.create(name="treasury")
         cls.permission = Permission.objects.get(

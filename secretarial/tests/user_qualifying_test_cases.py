@@ -7,15 +7,15 @@ class UsersQualifyingListViewTests(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.regular_user = CustomUser.objects.create(
-            username='regular_user',
+            username='regular_user', email='regular_user_qualify@example.com',
             type=CustomUser.Types.REGULAR
         )
         cls.staff_user = CustomUser.objects.create(
-            username='staff_user',
+            username='staff_user', email='staff_user_qualify@example.com',
             type=CustomUser.Types.STAFF
         )
         cls.admin_user = CustomUser.objects.create(
-            username='admin_user',
+            username='admin_user', email='admin_user_qualify@example.com',
             is_superuser=True
         )
 

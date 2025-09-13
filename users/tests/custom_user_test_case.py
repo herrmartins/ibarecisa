@@ -10,7 +10,7 @@ from django.test.utils import override_settings
 class CustomUserTestCase(TestCase):
     def setUp(self):
         self.regular_group = Group.objects.create(name="members")
-        self.user_regular = CustomUser.objects.create(username="user_regular")
+        self.user_regular = CustomUser.objects.create(username="user_regular", email="user_regular@example.com")
         self.user_regular.groups.add(self.regular_group)
 
     def test_user_creation(self):
@@ -25,7 +25,7 @@ class CustomUserTestCase(TestCase):
     def test_user_assigned_to_group(self):
         unique_username = "unique_user_test"
         # Create a user and associate it with the 'members' group
-        user_regular = CustomUser.objects.create(username=unique_username)
+        user_regular = CustomUser.objects.create(username=unique_username, email=f"{unique_username}@example.com")
         user_regular.groups.add(self.regular_group)
 
         # Retrieve the 'members' group
@@ -45,7 +45,7 @@ class CustomUserTestCase(TestCase):
 
     @override_settings(DEBUG=True)
     def test_signal_handling(self):
-        user = CustomUser.objects.create(username="test_user")
+        user = CustomUser.objects.create(username="test_user", email="test_user@example.com")
         users_group = Group.objects.get(name="users")
 
         self.assertTrue(users_group in user.groups.all())
@@ -72,7 +72,7 @@ class CustomUserTestCase(TestCase):
         self.assertFalse(user.is_treasurer)
 
     def test_pastor_only(self):
-        user = CustomUser.objects.create(username="test_user")
+        user = CustomUser.objects.create(username="test_user", email="pastor_only@example.com")
         user.type = CustomUser.Types.STAFF
         user.is_pastor = True
         user.save()
@@ -91,7 +91,7 @@ class CustomUserTestCase(TestCase):
         self.assertFalse(user.is_treasurer)
 
     def test_pastor_and_secretary(self):
-        user = CustomUser.objects.create(username="test_user")
+        user = CustomUser.objects.create(username="test_user", email="pastor_and_secretary@example.com")
         user.type = CustomUser.Types.STAFF
         user.is_pastor = True
         user.is_secretary = True
@@ -111,7 +111,7 @@ class CustomUserTestCase(TestCase):
         self.assertFalse(user.is_treasurer)
 
     def test_pastor_and_treasurer(self):
-        user = CustomUser.objects.create(username="test_user")
+        user = CustomUser.objects.create(username="test_user", email="pastor_and_treasurer@example.com")
         user.type = CustomUser.Types.STAFF
         user.is_pastor = True
         user.is_treasurer = True
@@ -131,7 +131,7 @@ class CustomUserTestCase(TestCase):
         self.assertFalse(user.is_secretary)
 
     def test_pastor_and_treasurer_and_secretary(self):
-        user = CustomUser.objects.create(username="test_user")
+        user = CustomUser.objects.create(username="test_user", email="pastor_treasurer_secretary@example.com")
         user.type = CustomUser.Types.STAFF
         user.is_pastor = True
         user.is_treasurer = True
@@ -152,7 +152,7 @@ class CustomUserTestCase(TestCase):
         self.assertTrue(user.is_secretary)
 
     def test_treasurer_and_secretary(self):
-        user = CustomUser.objects.create(username="test_user")
+        user = CustomUser.objects.create(username="test_user", email="treasurer_and_secretary@example.com")
         user.type = CustomUser.Types.STAFF
         user.is_pastor = False
         user.is_treasurer = True
@@ -173,7 +173,7 @@ class CustomUserTestCase(TestCase):
         self.assertTrue(user.is_secretary)
 
     def test_simpleuser_with_function(self):
-        user = CustomUser.objects.create(username="test_user")
+        user = CustomUser.objects.create(username="test_user", email="simple_user_with_function@example.com")
         user.is_pastor = True
         user.save()
 
@@ -193,7 +193,7 @@ class CustomUserTestCase(TestCase):
         self.assertFalse(user.is_treasurer)
 
     def test_congregated_with_function(self):
-        user = CustomUser.objects.create(username="test_user")
+        user = CustomUser.objects.create(username="test_user", email="congregated_with_function@example.com")
         user.type = CustomUser.Types.CONGREGATED
         user.is_pastor = True
         user.save()

@@ -23,7 +23,7 @@ class GenerateMonthlyReportViewTests(TestCase):
         cls.current_year = cls.current_date.year
 
         cls.user = CustomUser.objects.create_user(
-            username="testuser", email="test@example.com", password="password123"
+            username="testuser", email="treasury_monthly_report@example.com", password="password123"
         )
         cls.treasury_group = Group.objects.create(name="treasury")
         cls.permission = Permission.objects.get(codename="view_monthlyreportmodel")

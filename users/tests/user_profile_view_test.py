@@ -10,7 +10,7 @@ from model_bakery import baker
 class UserProfileViewTest(TestCase):
     def setUp(self):
         self.custom_user = CustomUser.objects.create_user(
-            username="testuser", password="password"
+            username="testuser", email="user_profile_test1@example.com", password="password"
         )
         self.client = Client()
 
@@ -24,8 +24,8 @@ class UserProfileViewTest(TestCase):
         self.assertEqual(response.context["user_object"], self.custom_user)
 
     def test_user_profile_view_without_permission(self):
-        CustomUser.objects.create_user(username="otheruser", password="password")
-        baker.make('CustomUser')
+        CustomUser.objects.create_user(username="otheruser", email="user_profile_test2@example.com", password="password")
+        baker.make('CustomUser', email='user_profile_bakery1@example.com')
         self.client.login(username="otheruser", password="password")
         response = self.client.get(
             reverse("users:user-profile", kwargs={"pk": self.custom_user.pk})

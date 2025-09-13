@@ -15,7 +15,7 @@ class MonthlyCarchiveViewTests(TestCase):
         cls.date_before = date(2023, 11, 1)
 
         cls.user = CustomUser.objects.create_user(
-            username="testuser", email="test@example.com", password="password123"
+            username="testuser", email="treasury_month_archive@example.com", password="password123"
         )
         cls.treasury_group = Group.objects.create(name="treasury")
         cls.permission = Permission.objects.get(codename="view_transactionmodel")

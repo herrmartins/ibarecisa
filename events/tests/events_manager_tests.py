@@ -8,7 +8,7 @@ from model_bakery import baker
 
 class EventManagerTests(TestCase):
     def setUp(self):
-        self.user = CustomUser.objects.create(username='testuser')
+        self.user = CustomUser.objects.create(username='testuser', email='events_manager_user@example.com')
         self.event_manager = Event.objects
         self.current_date = timezone.now()
         self.venue = baker.make(Venue)

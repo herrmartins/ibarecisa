@@ -60,7 +60,7 @@ class EventCreateViewTest(TestCase):
         self.assertEqual(response.status_code, 302)
 
         non_permitted_user = CustomUser.objects.create_user(
-            username='non_permitted', password='testpassword')
+            username='non_permitted', email='testiuserenvet@gmail.com', password='testpassword')
         self.client.login(username='non_permitted', password='testpassword')
         response = self.client.get(self.create_url)
         self.assertEqual(response.status_code, 403)

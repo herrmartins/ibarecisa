@@ -10,13 +10,13 @@ class SecretarialHomeViewTests(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.regular_user = CustomUser.objects.create(
-            username="regular_user", type=CustomUser.Types.REGULAR
+            username="regular_user", email="regular_user_sec_home@example.com", type=CustomUser.Types.REGULAR
         )
         cls.staff_user = CustomUser.objects.create(
-            username="staff_user", type=CustomUser.Types.STAFF
+            username="staff_user", email="staff_user_sec_home@example.com", type=CustomUser.Types.STAFF
         )
         cls.visitor_user = CustomUser.objects.create(
-            username="visitor_user", type=CustomUser.Types.CONGREGATED
+            username="visitor_user", email="visitor_user_sec_home@example.com", type=CustomUser.Types.CONGREGATED
         )
 
     def test_view_redirects_for_unauthenticated_users(self):
@@ -26,7 +26,7 @@ class SecretarialHomeViewTests(TestCase):
     def test_unauthorized_user_access(self):
         # Create a user without the necessary permission
         unauthorized_user = CustomUser.objects.create_user(
-            username="unauthorized", password="testpass"
+            username="unauthorized", email="unauthorized_sec_home@example.com", password="testpass"
         )
         self.client.force_login(unauthorized_user)
 
