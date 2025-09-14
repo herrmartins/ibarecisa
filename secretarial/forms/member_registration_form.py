@@ -26,10 +26,14 @@ class MemberRegistrationForm(forms.ModelForm):
             "first_name": forms.TextInput(attrs={"class": "form-control"}),
             "last_name": forms.TextInput(attrs={"class": "form-control"}),
             "email": forms.EmailInput(attrs={"class": "form-control"}),
-            "date_of_birth": forms.DateInput(attrs={"class": "form-control", "type": "date"}),
+            "date_of_birth": forms.DateInput(
+                attrs={"class": "form-control", "type": "date"}
+            ),
             "phone_number": forms.TextInput(attrs={"class": "form-control"}),
             "cpf": forms.TextInput(attrs={"class": "form-control"}),
-            "baptism_date": forms.DateInput(attrs={"class": "form-control", "type": "date"}),
+            "baptism_date": forms.DateInput(
+                attrs={"class": "form-control", "type": "date"}
+            ),
             "address": forms.Textarea(attrs={"class": "form-control", "rows": 2}),
             "about": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
             "type": forms.Select(attrs={"class": "form-control"}),

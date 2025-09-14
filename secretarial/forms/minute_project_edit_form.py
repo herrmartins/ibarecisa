@@ -8,9 +8,10 @@ class MinuteProjectEditForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(MinuteProjectEditForm, self).__init__(*args, **kwargs)
 
-        # Filtrar apenas pastores e secretários
         self.fields["president"].queryset = CustomUser.objects.filter(is_pastor=True)
         self.fields["secretary"].queryset = CustomUser.objects.filter(is_secretary=True)
+
+        self.fields['meeting_date'].input_formats = ['%Y-%m-%d', '%d/%m/%Y', '%m/%d/%Y']
 
     class Meta:
         model = MinuteProjectModel
@@ -29,8 +30,10 @@ class MinuteProjectEditForm(forms.ModelForm):
             "meeting_date": forms.DateInput(
                 attrs={
                     "class": "form-control",
-                    "type": "date",
-                }
+                    "type": "text",
+                    "placeholder": "DD/MM/YYYY",
+                },
+                format='%d/%m/%Y'
             ),
             "number_of_attendees": forms.TextInput(
                 attrs={
