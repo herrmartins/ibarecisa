@@ -122,6 +122,7 @@ def unifiedSearch(request):
     search_category = request.data.get("category")
     search_criterion = request.data.get("searched")
 
+
     if search_category == "users":
         queryset = CustomUser.objects.filter(
             Q(type=CustomUser.Types.SIMPLE_USER)
@@ -134,8 +135,37 @@ def unifiedSearch(request):
         return Response(serialized_data.data)
 
     elif search_category == "minutes":
+
+        search_terms = [search_criterion]
+
+        if 'í' in search_criterion:
+            search_terms.append(search_criterion.replace('í', '&iacute;'))
+        if 'á' in search_criterion:
+            search_terms.append(search_criterion.replace('á', '&aacute;'))
+        if 'é' in search_criterion:
+            search_terms.append(search_criterion.replace('é', '&eacute;'))
+        if 'ó' in search_criterion:
+            search_terms.append(search_criterion.replace('ó', '&oacute;'))
+        if 'ú' in search_criterion:
+            search_terms.append(search_criterion.replace('ú', '&uacute;'))
+        if 'ã' in search_criterion:
+            search_terms.append(search_criterion.replace('ã', '&atilde;'))
+        if 'õ' in search_criterion:
+            search_terms.append(search_criterion.replace('õ', '&otilde;'))
+        if 'â' in search_criterion:
+            search_terms.append(search_criterion.replace('â', '&acirc;'))
+        if 'ê' in search_criterion:
+            search_terms.append(search_criterion.replace('ê', '&ecirc;'))
+        if 'ô' in search_criterion:
+            search_terms.append(search_criterion.replace('ô', '&ocirc;'))
+
+        q_objects = Q()
+        for term in search_terms:
+            q_objects |= Q(body__icontains=term)
+
         queryset = MeetingMinuteModel.objects.filter(
-            body__icontains=search_criterion)
+            q_objects | Q(meeting_date__icontains=search_criterion)
+        ).filter(body__isnull=False).exclude(body__exact='')
         serialized_data = MeetingMinuteModelSerializer(queryset, many=True)
 
         for data in serialized_data.data:
@@ -143,6 +173,7 @@ def unifiedSearch(request):
             if president_id:
                 president = get_object_or_404(CustomUser, pk=president_id)
                 data["president"] = f"{president.first_name} {president.last_name}"
+        return Response(serialized_data.data)
 
     elif search_category == "templates":
         queryset = MinuteTemplateModel.objects.filter(
@@ -150,6 +181,7 @@ def unifiedSearch(request):
                 body__icontains=search_criterion)
         )
         serialized_data = MinuteTemplateModelSerializer(queryset, many=True)
+        return Response(serialized_data.data)
 
     elif search_category == "members":
         queryset = CustomUser.objects.filter(
@@ -158,6 +190,7 @@ def unifiedSearch(request):
             | Q(last_name__icontains=search_criterion),
         )
         serialized_data = CustomUserSerializer(queryset, many=True)
+        return Response(serialized_data.data)
 
     elif search_category == "projects":
         queryset = MinuteProjectModel.objects.filter(
@@ -169,6 +202,8 @@ def unifiedSearch(request):
             if president_id:
                 president = get_object_or_404(CustomUser, pk=president_id)
                 data["president"] = f"{president.first_name} {president.last_name}"
+
+        return Response(serialized_data.data)
 
     else:
         return Response(
