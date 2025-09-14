@@ -14,28 +14,6 @@ class CreateMinuteFormView(PermissionRequiredMixin, FormView):
 
     def get_initial(self):
         initial = super().get_initial()
-
-        if "project_pk" in self.kwargs:
-            print("ESTOU NO PK")
-            minute_data = MinuteProjectModel.objects.get(pk=self.kwargs["project_pk"])
-            initial["president"] = minute_data.president
-            initial["secretary"] = minute_data.secretary
-            initial["meeting_date"] = minute_data.meeting_date.isoformat()
-            initial["number_of_attendees"] = minute_data.number_of_attendees
-            initial["body"] = minute_data.body
-            initial["agenda"] = list(minute_data.meeting_agenda.values_list("pk", flat=True))
-
-        elif "template_pk" in self.kwargs:
-            print("ESTOU NO TEMPLATE")
-            minute_data = MinuteTemplateModel.objects.get(pk=self.kwargs["template_pk"])
-            initial["body"] = minute_data.body
-            initial["agenda"] = list(minute_data.agenda.values_list("pk", flat=True))
-
-        return initial
-
-
-    def get_initial(self):
-        initial = super().get_initial()
         if "project_pk" in self.kwargs:
             try:
                 minute_data = MinuteProjectModel.objects.get(
@@ -46,7 +24,6 @@ class CreateMinuteFormView(PermissionRequiredMixin, FormView):
                 initial["meeting_date"] = minute_data.meeting_date.isoformat()
                 initial["number_of_attendees"] = minute_data.number_of_attendees
                 initial["body"] = minute_data.body
-                initial["agenda"] = minute_data.meeting_agenda.all()
             except MinuteProjectModel.DoesNotExist:
                 # Handle the case where the project PK does not exist
                 return redirect("secretarial:home")

@@ -1,5 +1,6 @@
 from .search_minute_form import SearchMinuteForm
 from .minute_project_model_form import MinuteProjectModelForm
+from .minute_project_edit_form import MinuteProjectEditForm
 from .update_user_role_form import UpdateUserRoleModelForm
 from .minute_model_form import MinuteModelForm
 from .minute_template_model_form import MinuteTemplateModelForm

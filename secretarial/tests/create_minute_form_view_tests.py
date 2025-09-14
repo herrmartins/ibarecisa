@@ -73,7 +73,6 @@ class CreateMinuteFormViewTestCase(TestCase):
             secretary=secretary,
             body="Sample Body",
         )
-        project_with_data.meeting_agenda.set(baker.make(MeetingAgendaModel, _quantity=2))
 
         url_with_existing_project = reverse(
             "secretarial:minute-creation-form-view",
@@ -99,7 +98,6 @@ class CreateMinuteFormViewTestCase(TestCase):
         )
         self.assertIn("meeting_date", initial_data)
         self.assertEqual(initial_data["body"], project_with_data.body)
-        self.assertIn("agenda", initial_data)
 
     def test_get_initial_with_template_pk(self):
         # Create a template with specific data for testing using Model baker

@@ -54,18 +54,8 @@ class MinuteHomeView(PermissionRequiredMixin, TemplateView):
         minute_project = MinuteProjectModel(
             president=request.user if request.user.is_pastor else None,
             secretary=request.user if request.user.is_secretary else None,
-            treasurer=None,
             meeting_date=date.today(),
             number_of_attendees='',
-            previous_minute_reading=True,
-            minute_reading_acceptance_proposal=None,
-            minute_reading_acceptance_proposal_support=None,
-            previous_finance_report_reading=True,
-            finance_report_acceptance_proposal=None,
-            finance_report_acceptance_proposal_support=None,
-            last_months_balance=0.00,
-            revenue=0.00,
-            expenses=0.00,
             body=body,
         )
         minute_project.save()

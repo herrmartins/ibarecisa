@@ -13,6 +13,7 @@
         <div class="col-3">
           {{m.meeting_date}}<br>
           <a href="{% url 'secretarial:minute-creation-form-view' m.id %}" class="btn btn-primary">Criar ata</a>
+          <a href="{% url 'secretarial:edit-minute-project' m.id %}" class="btn btn-warning ms-2">Editar</a>
           <form method="post" action="{% url 'secretarial:delete-minute-project' m.id %}" style="display: inline;" onsubmit="return confirm('Tem certeza que deseja excluir este projeto de ata?')">
               {% csrf_token %}
               <button type="submit" class="btn btn-danger ms-2">Excluir</button>
