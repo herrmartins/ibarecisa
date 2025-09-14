@@ -19,20 +19,25 @@
 <div class="container">
   <form id="search-form">
     {% csrf_token %}
-    <div class="input-group input-group-lg">
-      <div class="form-floating">
+    <div class="row g-2 align-items-end justify-content-center" style="max-width: 1000px; margin: 0 auto;">
+      <div class="col-12 col-md-4 col-lg-3">
+        <label for="searched" class="form-label">Buscar por</label>
         <input type="search" id="searched" class="form-control" placeholder="Digite o critério de busca..." />
-        <label for="searched" class="form-label">Escreva o(s) critério(s) da busca</label>
       </div>
-      <select class="form-select">
-        <option value="minutes">em atas</option>
-        {% if perms.secretarial.add_meetingminutemodel or perms.users.add_customuser %}
-        <option value="templates">em modelos de atas</option>
-        <option value="users">em usuários</option>
-        <option value="members">em membros</option>
-        {% endif %}
-      </select>
-      <button type="submit" class="btn btn-primary">Buscar</button>
+      <div class="col-12 col-md-4 col-lg-3">
+        <label for="search-type" class="form-label">em</label>
+        <select id="search-type" class="form-select">
+          <option value="minutes">em atas</option>
+          {% if perms.secretarial.add_meetingminutemodel or perms.users.add_customuser %}
+          <option value="templates">em modelos de atas</option>
+          <option value="users">em usuários</option>
+          <option value="members">em membros</option>
+          {% endif %}
+        </select>
+      </div>
+      <div class="col-12 col-md-4 col-lg-3 d-grid">
+        <button type="submit" class="btn btn-primary">Buscar</button>
+      </div>
     </div>
   </form>
 
