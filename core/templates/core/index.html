@@ -3,72 +3,105 @@
 <link href="{% static 'css/index_styles.css' %}" rel="stylesheet">
 
 {% if not user.is_authenticated %}
-<div class="container-sm my-4">
+<div class="welcome-section py-5">
   <div class="container">
-    <div id="carouselExample" class="carousel slide">
-      <div class="carousel-inner">
-        <div class="carousel-item active">
-          <img src="{% static 'img/pictures/igreja1.jpg' %}" class="d-block w-100 fixed-size" alt="Image 1">
-        </div>
-        <div class="carousel-item">
-          <img src="{% static 'img/pictures/igreja2.jpg' %}" class="d-block w-100 fixed-size" alt="Image 2">
-        </div>
-        <div class="carousel-item">
-          <img src="{% static 'img/pictures/igreja3.jpg' %}" class="d-block w-100 fixed-size" alt="Image 3">
-        </div>
-        <div class="carousel-item">
-          <img src="{% static 'img/pictures/igreja4.jpg' %}" class="d-block w-100 fixed-size" alt="Image 3">
+    <div class="row justify-content-center">
+      <div class="col-lg-8 text-center mb-5">
+        <h1 class="display-4 fw-bold text-primary mb-4">Bem-vindo ao Sistema da Igreja Batista Regular de Cidade Satélite</h1>
+        <p class="lead text-muted mb-4">Uma comunidade de fé, amor e serviço. Junte-se a nós em prol da transparência e cooperação.</p>
+        <div class="row justify-content-center">
+          <div class="col-md-4 mb-3">
+            <div class="feature-card">
+              <i class="bi bi-receipt text-primary fs-1 mb-3"></i>
+              <h5>Gestão Administrativa</h5>
+              <p>Transparência e organização dos assuntos administrativos da igreja.</p>
+            </div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <div class="feature-card">
+              <i class="bi bi-people-fill text-primary fs-1 mb-3"></i>
+              <h5>Para Membros</h5>
+              <p>Acesso a atas, eventos e informações exclusivas da comunidade.</p>
+            </div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <div class="feature-card">
+              <i class="bi bi-chat-dots text-primary fs-1 mb-3"></i>
+              <h5>Blog e Discussões</h5>
+              <p>Qualquer usuário cadastrado pode participar de comentários e discussões em nosso blog comunitário.</p>
+            </div>
+          </div>
         </div>
       </div>
-      <button class="carousel-control-prev" type="button" data-bs-target="#carouselExample" data-bs-slide="prev">
-        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-        <span class="visually-hidden">Previous</span>
-      </button>
-      <button class="carousel-control-next" type="button" data-bs-target="#carouselExample" data-bs-slide="next">
-        <span class="carousel-control-next-icon" aria-hidden="true"></span>
-        <span class="visually-hidden">Next</span>
-      </button>
+    </div>
+    <div class="row justify-content-center mt-4">
+      <div class="col-md-6 col-lg-4">
+        <div class="card shadow">
+          <div class="card-header bg-primary text-white text-center">
+            <h5 class="card-title mb-0">Entrar no Sistema</h5>
+          </div>
+          <div class="card-body">
+            <form action="{% url 'login' %}" method="post">
+              {% csrf_token %}
+              {{ login_form.as_p }}
+              <div class="d-grid mt-3">
+                <input type="submit" class="btn btn-primary" value="Entrar" />
+              </div>
+            </form>
+          </div>
+          <div class="card-footer text-center">
+            <a href="{% url 'users:reset-password' %}" class="text-decoration-none">Esqueci a senha</a>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
-  <div class="row justify-content-center">
-    <div class="col-sm-auto">
-      <p>Digite seus dados para entrar...</p>
-      <form action="{% url 'login' %}" method="post">
-        {%csrf_token%}{{login_form.as_p}}
-        <input type="submit" class="btn btn-primary" value="Entrar" />
-      </form><a href="{% url 'users:reset-password' %}">
-        <p class="text-sm-end">Esqueci a senha</p>
-      </a>
-    </div>
-  </div>
+</div>
+  
 </div>
 
 {% else %}
-{% if post %}
-<div class="container">
-  <p></p>
-  <div class="col-md-8 offset-md-2 mb-4">
-    <div class="card">
-      <div class="card-header">
-        <h5 class="card-title">{{ post.title }}</h5>
-        <p class="card-text">
-          <small class="text-muted">Postado por {{ post.author.first_name }} {{ post.author.last_name }} em {{ post.created }}{% if post.created != post.modified %}, atualizado em {{post.modified}}. {% endif %}</small>
-        </p>
-      </div>
-      <div class="card-body">
-        <p class="card-text">{{ post.content|safe }}</p>
-      </div>
-      <div class="card-footer">
-        <small class="text-muted">Categorias: {% for category in post.categories.all %}
-          {{ category.name }}{% if not forloop.last %}, {% endif %}
-          {% empty %}
-          Não categorizado...
-          {% endfor %}</small>
+<div class="welcome-section py-5 bg-light">
+  <div class="container">
+    <div class="text-center mb-5">
+      <h1 class="display-4 fw-bold text-primary">Bem-vindo de Volta!</h1>
+      <p class="lead text-muted">Veja as últimas novidades da nossa comunidade.</p>
+    </div>
+    {% if post %}
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="card shadow-lg border-0">
+          <div class="card-header bg-gradient-primary text-white">
+            <h5 class="card-title mb-0">{{ post.title }}</h5>
+          </div>
+          <div class="card-body">
+            <p class="card-text">{{ post.content|safe }}</p>
+          </div>
+          <div class="card-footer bg-light">
+            <div class="d-flex justify-content-between align-items-center">
+              <small class="text-muted">
+                Por {{ post.author.first_name }} {{ post.author.last_name }} em {{ post.created|date:"d/m/Y" }}
+                {% if post.created != post.modified %}• Atualizado em {{ post.modified|date:"d/m/Y" }}{% endif %}
+              </small>
+              <div>
+                {% for category in post.categories.all %}
+                  <span class="badge bg-secondary me-1">{{ category.name }}</span>
+                {% empty %}
+                  <span class="badge bg-secondary">Não categorizado</span>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
+    {% else %}
+    <div class="text-center">
+      <p class="text-muted">Nenhuma postagem recente disponível.</p>
+    </div>
+    {% endif %}
   </div>
 </div>
-{% endif %}
 {% endif %}
 
 {% endblock %}
