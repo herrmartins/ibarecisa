@@ -7,15 +7,25 @@
   <div class="container text-center">
     <p class="fs-3 fw-light">Sessão de usuários</p>
   </div>
+
+  <div class="container mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+      <h6 class="fw-light mb-0">Lista de Membros</h6>
+      <a href="{% url 'secretarial:member-registration' %}" class="btn btn-primary">
+        <i class="fas fa-user-plus"></i> Cadastrar Novo Membro
+      </a>
+    </div>
+  </div>
+
   <div class="container">
-    <h6 class="fw-light"> Lista de Membros</h6>
     <table class="table">
       <thead>
         <tr>
           <th>Nome</th>
           <th>Funções</th>
           <th>Telefone</th>
-          <th>Ação</th>
+          <th>E-mail</th>
+          <th>Ações</th>
         </tr>
       </thead>
       <tbody>
@@ -40,9 +50,27 @@
             {{m.phone_number}}
           </td>
           <td>
-            <a href="{% url 'secretarial:user-qualify' m.id %}">
-              <img src="{% static 'img/edit-black.svg' %}" class="">
-            </a>
+            {{m.email}}
+          </td>
+          <td>
+            <div class="btn-group" role="group">
+              <a href="{% url 'secretarial:user-qualify' m.id %}" class="btn btn-sm btn-outline-primary" title="Editar">
+                <i class="fas fa-edit"></i>
+              </a>
+              {% if m.email and not m.has_usable_password %}
+              <form method="post" action="{% url 'secretarial:send-password-email' m.id %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-outline-success" title="Enviar senha por e-mail"
+                        onclick="return confirm('Enviar e-mail de definição de senha para {{ m.first_name }}?')">
+                  <i class="fas fa-envelope"></i> Enviar Senha
+                </button>
+              </form>
+              {% elif m.has_usable_password %}
+              <span class="badge bg-success">Usuário ativo</span>
+              {% else %}
+              <span class="badge bg-warning">Sem e-mail</span>
+              {% endif %}
+            </div>
           </td>
         </tr>
         {% endfor %}

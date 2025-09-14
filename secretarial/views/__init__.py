@@ -26,3 +26,5 @@ from .meeting_minute_editor import NewMinutesEditorView
 from .delete_project_minute_view import MinuteProjectDeleteView
 from .minute_file_upload_view import MinuteFileUploadView
 from .minute_project_edit_view import MinuteProjectEditView
+from .send_password_email_view import SendPasswordEmailView
+from .member_registration_view import MemberRegistrationView

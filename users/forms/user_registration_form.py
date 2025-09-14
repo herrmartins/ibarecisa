@@ -6,10 +6,6 @@ from captcha.fields import CaptchaField
 class RegisterUserForm(UserCreationForm):
     captcha = CaptchaField(label="Você é humano")
 
-    # exemplo de um campo comum, mas o username não dá, nem o password
-    """username = forms.CharField(widget=forms.TextInput(
-    attrs={"class": "form-control"}))"""
-
     class Meta:
         model = CustomUser
         fields = (
@@ -30,6 +26,14 @@ class RegisterUserForm(UserCreationForm):
 
     def __init__(self, *args, **kwargs):
         super(RegisterUserForm, self).__init__(*args, **kwargs)
+
+        self.fields["username"].required = True
+        self.fields["first_name"].required = True
+        self.fields["last_name"].required = True
+        self.fields["email"].required = True
+        self.fields["password1"].required = True
+        self.fields["password2"].required = True
+
         self.fields["username"].widget.attrs["class"] = "form-control"
         self.fields["username"].widget.attrs[
             "placeholder"

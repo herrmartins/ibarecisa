@@ -34,6 +34,14 @@ class CustomUser(AbstractUser):
     date_of_marriage = models.DateField(
         blank=True, null=True, auto_now=False, auto_now_add=False
     )
+    cpf = models.CharField(
+        max_length=14, blank=True, null=True, unique=True,
+        help_text="CPF do membro (formato: XXX.XXX.XXX-XX)"
+    )
+    baptism_date = models.DateField(
+        blank=True, null=True, auto_now=False, auto_now_add=False,
+        help_text="Data do batismo"
+    )
     is_pastor = models.BooleanField(blank=True, default=False)
     is_secretary = models.BooleanField(blank=True, default=False)
     is_treasurer = models.BooleanField(blank=True, default=False)
@@ -83,7 +91,6 @@ class CustomUser(AbstractUser):
 
 @receiver(post_save, sender=CustomUser)
 def set_initial_user_type(sender, instance, created, **kwargs):
-    # Retrieve or create necessary groups
     regular_group, _ = Group.objects.get_or_create(name="members")
     secretarial_group, _ = Group.objects.get_or_create(name="secretary")
     treasury_group, _ = Group.objects.get_or_create(name="treasurer")
@@ -155,8 +162,6 @@ def set_initial_user_type(sender, instance, created, **kwargs):
     user_groups = instance.groups.all()
 
     with transaction.atomic():
-        # Disable the post_save signal temporarily while saving
         post_save.disconnect(set_initial_user_type, sender=CustomUser)
         instance.save()
-        # Reconnect the signal after saving
         post_save.connect(set_initial_user_type, sender=CustomUser)

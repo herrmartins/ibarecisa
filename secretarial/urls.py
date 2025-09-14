@@ -28,6 +28,8 @@ from secretarial.views import (
     MinuteProjectDeleteView,
     MinuteFileUploadView,
     MinuteProjectEditView,
+    SendPasswordEmailView,
+    MemberRegistrationView,
 )
 
 
@@ -38,6 +40,8 @@ urlpatterns = [
     path("minute", MinutesEditorView.as_view(), name="minutes-editor"),
     path("users", UsersQualifyingListView.as_view(), name="users-qualifying"),
     path("user/<int:pk>", UserDetailQualifyingView.as_view(), name="user-qualify"),
+    path("user/<int:pk>/send-password", SendPasswordEmailView.as_view(), name="send-password-email"),
+    path("member-registration", MemberRegistrationView.as_view(), name="member-registration"),
     path("meeting", MinuteHomeView.as_view(), name="minute-home"),
     path("cmproject", CreateMinuteProjectView.as_view(),
          name="create-minute-project"),
