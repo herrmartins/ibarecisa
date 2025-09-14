@@ -60,7 +60,6 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT }}
-          script_stop: true
           script: |
             set -euo pipefail
             APP_DIR=/var/www/ibarecisa
@@ -71,10 +70,9 @@ jobs:
             # Optional SQLite backup
             cp db.sqlite3 "db.sqlite3.backup-$(date +%F-%H%M)" || true
 
-            # Pull latest code (force local main to remote)
-            git fetch origin
-            git checkout -B main origin/main
-            git pull --ff-only origin main
+            # Pull latest code (force sync to GitHub main)
+            git fetch origin main
+            git reset --hard origin/main
 
             # Update deps in stable venv
             source .venv/bin/activate
@@ -91,12 +89,11 @@ jobs:
             sudo systemctl restart ibarecisa
             sudo systemctl reload nginx
 
-            # Health check with retries (socket first, then HTTPS via nginx)
+            # Health check with retries (Django endpoint first)
             set +e
             OK=""
             for i in {1..10}; do
-              curl -fsS -I -H "Host: $HOST_HEADER" \
-                --unix-socket "$APP_DIR/ibarecisa.sock" http://localhost/ | head -n1 && OK=1 && break
+              curl -fsS -H "Host: $HOST_HEADER" https://127.0.0.1/healthz && OK=1 && break
               sleep 2
             done
             if [ -z "$OK" ]; then

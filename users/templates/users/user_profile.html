@@ -1,45 +1,219 @@
 
 
 {% extends 'core/base.html' %} {% load static %}
+{% block pre_alpine_scripts %}
+<link rel="stylesheet" href="{% static 'css/profile.css' %}">
+{% endblock %}
 {% block content %}
 <div class="container">
-  <div class="row">
-    <div class="col-md-6 mx-auto">
-      <div class="card m-3">
-        <div class="card-header">
-          Perfil do Usuário
+  <div class="row justify-content-center">
+    <div class="col-lg-8 col-md-10">
+      <div class="card shadow-lg border-0 rounded-3 overflow-hidden">
+        <div class="card-header bg-primary border-0 text-white text-center py-4">
+          <h2 class="mb-0"><i class="bi bi-person-circle me-2"></i>Perfil do Usuário</h2>
         </div>
-        <div class="container">
-          <div class="row">
-            <div class="col-4 py-2">
-        {% if user_object.profile_image %}
+        <div class="card-body bg-white">
+          <!-- Profile Image Section -->
+          <div class="text-center mb-4">
+            <div class="position-relative d-inline-block profile-image-container">
+              {% if user_object.profile_image %}
+                <img src="{{ user_object.profile_image.url }}" alt="Profile Image" class="rounded-circle border border-4 border-white shadow" style="width: 150px; height: 150px; object-fit: cover;">
+              {% else %}
+                <img src="{% static 'img/user.png' %}" alt="Default Image" class="rounded-circle border border-4 border-white shadow" style="width: 150px; height: 150px; object-fit: cover;">
+              {% endif %}
+              <div class="position-absolute bottom-0 end-0 bg-success rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                <i class="bi bi-check-circle-fill text-white"></i>
+              </div>
+            </div>
+            <h4 class="mt-3 text-dark">{{ user_object.first_name }} {{ user_object.last_name }}</h4>
+          </div>
 
-          <img src="{{ user_object.profile_image.url }}" alt="Profile Image">
+          <!-- Statistics Section -->
+          <div class="row g-3 mb-4">
+            <div class="col-md-4">
+              <div class="card bg-info text-white h-100 stats-card">
+                <div class="card-body text-center">
+                  <i class="bi bi-people-fill fs-1 mb-2"></i>
+                  <h5 class="card-title">{{ user_object.groups.count }}</h5>
+                  <p class="card-text mb-0">Grupos</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card bg-primary text-white h-100 stats-card">
+                <div class="card-body text-center">
+                  <i class="bi bi-calendar-event-fill fs-1 mb-2"></i>
+                  <h5 class="card-title">{{ user_object.date_joined|timesince }}</h5>
+                  <p class="card-text mb-0">Membro há</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card bg-success text-white h-100 stats-card">
+                <div class="card-body text-center">
+                  <i class="bi bi-star-fill fs-1 mb-2"></i>
+                  <h5 class="card-title">
+                    {% if user_object.is_pastor %}Pastor{% elif user_object.is_secretary %}Secretário{% elif user_object.is_treasurer %}Tesoureiro{% else %}Membro{% endif %}
+                  </h5>
+                  <p class="card-text mb-0">Função Principal</p>
+                </div>
+              </div>
+            </div>
+          </div>
 
-        {% else %}
-            <img src="{% static 'img/user.png' %}" alt="Default Image">
-        {% endif %}
-      </div>
-      </div>
-      </div>
-        <div class="card-body">
-      <h5 class="card-title">Nome: {{user_object.first_name}} {{user_object.last_name}}</h5>
-      <p class="card-text">Email: {{user_object.email}}</p>
-      <p class="card-text">Endereço: {{user_object.address}}</p>
-      <p class="card-text">Telefone: {{user_object.phone_number}}
-        {% if user_object.is_whatsapp %}
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-whatsapp"
-      viewBox="0 0 16 16">
-      <i class="bi bi-whatsapp"></i>
-        {% endif %}
-      </p>
-      <p class="card-text">Data de Nascimento: {{user_object.date_of_birth}}</p>
-      <p class="card-text">Sobre: {{user_object.about}}</p>
-      <p class="card-text ">Função: {% if user_object.is_pastor %}<p class="fw-light">Pastor</p>{% endif %}{% if user_object.is_secretary %}<p class="fw-light">Secretário</p>{% endif %}{% if user_object.is_treasurer %}<p class="fw-light">Tesoureiro</p>{% endif %}</p>
-      <div class="text-center">
-        <a href="{% url 'users:user-profile-update' user_object.id %}" class="btn btn-warning">Atualizar cadastro</a>
-        <a href="{% url 'users:change-user-password' %}" class="btn btn-warning">Alterar senha</a>
-      </div>
+          <!-- Profile Completeness -->
+          <div class="mb-4 completeness-indicator">
+            <h6 class="text-muted mb-2"><i class="bi bi-graph-up me-2"></i>Completude do Perfil</h6>
+            {% with total_fields=8 completed_fields=0 %}
+              {% if user_object.profile_image %}{% firstof completed_fields completed_fields|add:1 %}{% endif %}
+              {% if user_object.email %}{% firstof completed_fields completed_fields|add:1 %}{% endif %}
+              {% if user_object.address %}{% firstof completed_fields completed_fields|add:1 %}{% endif %}
+              {% if user_object.phone_number %}{% firstof completed_fields completed_fields|add:1 %}{% endif %}
+              {% if user_object.date_of_birth %}{% firstof completed_fields completed_fields|add:1 %}{% endif %}
+              {% if user_object.about %}{% firstof completed_fields completed_fields|add:1 %}{% endif %}
+              {% if user_object.baptism_date %}{% firstof completed_fields completed_fields|add:1 %}{% endif %}
+              {% if user_object.cpf %}{% firstof completed_fields completed_fields|add:1 %}{% endif %}
+              {% widthratio completed_fields total_fields 100 as percentage %}
+              <div class="progress" style="height: 8px;">
+                <div class="progress-bar" role="progressbar" style="width: {{ percentage }}%" aria-valuenow="{{ percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+              </div>
+              <small class="text-muted">{{ completed_fields }}/{{ total_fields }} campos preenchidos ({{ percentage }}%)</small>
+            {% endwith %}
+          </div>
+
+          <!-- User Information -->
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="p-3 bg-light rounded-3 h-100 info-card">
+                <h6 class="text-muted mb-2"><i class="bi bi-envelope-fill me-2"></i>Email</h6>
+                <p class="mb-0 fw-semibold">{{ user_object.email }}</p>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="p-3 bg-light rounded-3 h-100 info-card">
+                <h6 class="text-muted mb-2"><i class="bi bi-house-fill me-2"></i>Endereço</h6>
+                <p class="mb-0 fw-semibold">{{ user_object.address|default:"Não informado" }}</p>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="p-3 bg-light rounded-3 h-100 info-card">
+                <h6 class="text-muted mb-2"><i class="bi bi-telephone-fill me-2"></i>Telefone</h6>
+                <p class="mb-0 fw-semibold">
+                  {{ user_object.phone_number|default:"Não informado" }}
+                  {% if user_object.is_whatsapp %}
+                    <i class="bi bi-whatsapp text-success ms-2" title="WhatsApp"></i>
+                  {% endif %}
+                </p>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="p-3 bg-light rounded-3 h-100 info-card">
+                <h6 class="text-muted mb-2"><i class="bi bi-calendar-event-fill me-2"></i>Data de Nascimento</h6>
+                <p class="mb-0 fw-semibold">{{ user_object.date_of_birth|date:"d/m/Y"|default:"Não informado" }}</p>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="p-3 bg-light rounded-3 h-100 info-card">
+                <h6 class="text-muted mb-2"><i class="bi bi-calendar-check-fill me-2"></i>Data de Batismo</h6>
+                <p class="mb-0 fw-semibold">{{ user_object.baptism_date|date:"d/m/Y"|default:"Não informado" }}</p>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="p-3 bg-light rounded-3 h-100 info-card">
+                <h6 class="text-muted mb-2"><i class="bi bi-person-vcard-fill me-2"></i>CPF</h6>
+                <p class="mb-0 fw-semibold">{{ user_object.cpf|default:"Não informado" }}</p>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="p-3 bg-light rounded-3 h-100 info-card">
+                <h6 class="text-muted mb-2"><i class="bi bi-calendar-plus-fill me-2"></i>Membro desde</h6>
+                <p class="mb-0 fw-semibold">{{ user_object.date_joined|date:"d/m/Y" }}</p>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="p-3 bg-light rounded-3 h-100 info-card">
+                <h6 class="text-muted mb-2"><i class="bi bi-clock-fill me-2"></i>Último acesso</h6>
+                <p class="mb-0 fw-semibold">{{ user_object.last_login|date:"d/m/Y H:i"|default:"Nunca" }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Marriage Information -->
+          {% if user_object.married_to or user_object.date_of_marriage %}
+          <div class="mt-4">
+            <div class="p-3 bg-light rounded-3">
+              <h6 class="text-muted mb-2"><i class="bi bi-heart-fill me-2"></i>Estado Civil</h6>
+              <div class="row">
+                {% if user_object.married_to %}
+                <div class="col-md-6">
+                  <p class="mb-1"><strong>Cônjuge:</strong> {{ user_object.married_to.first_name }} {{ user_object.married_to.last_name }}</p>
+                </div>
+                {% endif %}
+                {% if user_object.date_of_marriage %}
+                <div class="col-md-6">
+                  <p class="mb-1"><strong>Data do Casamento:</strong> {{ user_object.date_of_marriage|date:"d/m/Y" }}</p>
+                </div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          {% endif %}
+
+          <!-- About Section -->
+          {% if user_object.about %}
+          <div class="mt-4">
+            <div class="p-3 bg-light rounded-3">
+              <h6 class="text-muted mb-2"><i class="bi bi-info-circle-fill me-2"></i>Sobre</h6>
+              <p class="mb-0">{{ user_object.about }}</p>
+            </div>
+          </div>
+          {% endif %}
+
+          <!-- User Type -->
+          <div class="mt-4">
+            <div class="p-3 bg-light rounded-3">
+              <h6 class="text-muted mb-2"><i class="bi bi-person-badge-fill me-2"></i>Tipo de Usuário</h6>
+              <span class="badge
+                {% if user_object.type == 'REGULAR' %}bg-primary
+                {% elif user_object.type == 'STAFF' %}bg-success
+                {% elif user_object.type == 'CONGREGATED' %}bg-info
+                {% elif user_object.type == 'SIMPLE_USER' %}bg-secondary
+                {% else %}bg-dark{% endif %} fs-6 px-3 py-2 badge-custom">
+                <i class="bi bi-tag-fill me-1"></i>{{ user_object.get_type_display }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Roles Section -->
+          <div class="mt-4">
+            <div class="p-3 bg-light rounded-3">
+              <h6 class="text-muted mb-2"><i class="bi bi-person-badge-fill me-2"></i>Funções</h6>
+              <div class="d-flex flex-wrap gap-2">
+                {% if user_object.is_pastor %}
+                  <span class="badge bg-primary fs-6 px-3 py-2 badge-custom"><i class="bi bi-star-fill me-1"></i>Pastor</span>
+                {% endif %}
+                {% if user_object.is_secretary %}
+                  <span class="badge bg-info fs-6 px-3 py-2 badge-custom"><i class="bi bi-file-earmark-text-fill me-1"></i>Secretário</span>
+                {% endif %}
+                {% if user_object.is_treasurer %}
+                  <span class="badge bg-warning fs-6 px-3 py-2 badge-custom"><i class="bi bi-cash-coin me-1"></i>Tesoureiro</span>
+                {% endif %}
+                {% if not user_object.is_pastor and not user_object.is_secretary and not user_object.is_treasurer %}
+                  <span class="badge bg-secondary fs-6 px-3 py-2 badge-custom">Membro</span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="text-center mt-4">
+            <a href="{% url 'users:user-profile-update' user_object.id %}" class="btn btn-primary btn-lg me-2 btn-custom">
+              <i class="bi bi-pencil-square me-2"></i>Atualizar Cadastro
+            </a>
+            <a href="{% url 'users:change-user-password' %}" class="btn btn-outline-secondary btn-lg btn-custom">
+              <i class="bi bi-key-fill me-2"></i>Alterar Senha
+            </a>
+          </div>
         </div>
       </div>
     </div>
