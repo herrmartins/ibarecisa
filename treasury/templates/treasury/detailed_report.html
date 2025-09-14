@@ -1,21 +1,16 @@
 {% extends 'core/base.html' %} {% load index %} {% load static%} {% block content %}
 
-<div class="container text-center">
-  <p class="fs-3 fw-light">{{church_info.name}}</p>
-  <p class="fs-3 fw-light">Relatório detalhado de {{month}}/{{year}}</p>
-  <p class="fs-6 fw-light">Saldo anterior: {{balance}}</p>
-  <div class="container py-2">
-    <a
-      href="{% url 'treasury:export-pdf-monthly-report' month year %}"
-      class="btn btn-primary"
-      >Gerar PDF</a
-    >
+<div class="container py-3 text-center">
+  <p class="fs-3 fw-light mb-0">{{church_info.name}}</p>
+  <p class="fs-5 fw-light">Relatório detalhado de {{month}}/{{year}}</p>
+  <p class="text-muted">Saldo anterior: {{balance}}</p>
+  <div class="py-2 d-flex gap-2 justify-content-center flex-wrap">
+    <a href="{% url 'treasury:export-pdf-monthly-report' month year %}" class="btn btn-primary pill">Gerar PDF</a>
     {% if ncd and user.is_treasurer %}
-    {% if not is_report %}
-    <a href="{% url 'treasury:gen-report' month year %}" class="btn btn-success"
-      >Gerar Relatório Analítico</a
-    >
-    {% endif %} {% endif %}
+      {% if not is_report %}
+        <a href="{% url 'treasury:gen-report' month year %}" class="btn btn-success pill">Gerar Relatório Analítico</a>
+      {% endif %}
+    {% endif %}
   </div>
 </div>
 
@@ -23,8 +18,8 @@
   <div class="card">
     <div class="card-header">Mês atual:</div>
     <div class="card-body">
-      <div class="container">
-        <table class="table">
+      <div class="table-responsive">
+        <table class="table table-striped align-middle">
           <thead>
             <tr>
               <th scope="col">Data</th>
@@ -40,69 +35,44 @@
               <th scope="row">{{fe.date}}</th>
               <td>{{fe.description}} | {{fe.category}}</td>
               {% if fe.is_positive %}
-              <td>
-                <p class="text-success">{{fe.amount}}</p>
-              </td>
+                <td class="text-success">{{fe.amount}}</td>
               {% else %}
-              <td>
-                <p class="text-danger">{{fe.amount}}</p>
-              </td>
+                <td class="text-danger">{{fe.amount}}</td>
               {% endif %}
-              <td>
-                <p class="text-secondary">
-                  {{ subtotal|index:forloop.counter0 }}
-                </p>
-              </td>
+              <td class="text-secondary">{{ subtotal|index:forloop.counter0 }}</td>
               {% if user.is_treasurer %}
               <td>
-                <div class="container-fluid">
-                  <a
-                    href="{% url 'treasury:transaction-detail' fe.id  %}"
-                    class="link-secondary"
-                    ><img src="{% static 'img/edit-black.svg' %}" alt="Trash"
-                  /></a>
-                  <form
-                    action="{% url 'treasury:transaction-delete' fe.id %}"
-                    method="POST"
-                    class="d-inline"
-                  >
+                <div class="d-flex gap-2">
+                  <a href="{% url 'treasury:transaction-detail' fe.id  %}" class="btn btn-sm btn-outline-secondary pill">
+                    <img src="{% static 'img/edit-black.svg' %}" alt="Edit">
+                  </a>
+                  <form action="{% url 'treasury:transaction-delete' fe.id %}" method="POST" class="d-inline">
                     {% csrf_token %}
-                    <button
-                      type="submit"
-                      class="link-danger"
-                      style="border: none; background: none; cursor: pointer"
-                    >
-                      <img
-                        src="{% static 'img/trash-black.svg' %}"
-                        alt="Trash"
-                      />
+                    <button type="submit" class="btn btn-sm btn-outline-danger pill">
+                      <img src="{% static 'img/trash-black.svg' %}" alt="Trash">
                     </button>
                   </form>
                 </div>
               </td>
               {% endif %}
             </tr>
-
             {% endfor %}
-            <td>
-              <p class="fw-bold my-1">Total:</p>
-            </td>
-            <td></td>
-            <td></td>
-            <td>{{total}}</td>
-            <td></td>
             <tr>
-              <td>
-                <p class="fw-bold my-1">Resultado do Mês:</p>
-                <td></td>
-                <td></td>
-                <td>{{monthly_result}}</td>
-                <td></td>
-              </td>
+              <td class="fw-bold">Total:</td>
+              <td></td>
+              <td></td>
+              <td>{{total}}</td>
+              {% if user.is_treasurer %}<td></td>{% endif %}
+            </tr>
+            <tr>
+              <td class="fw-bold">Resultado do Mês:</td>
+              <td></td>
+              <td></td>
+              <td>{{monthly_result}}</td>
+              {% if user.is_treasurer %}<td></td>{% endif %}
             </tr>
           </tbody>
         </table>
-        <div class="container-fluid"></div>
       </div>
     </div>
   </div>

@@ -1,27 +1,51 @@
 {% extends 'core/base.html' %}
 {% load static%}
 {% block content %}
-
-
-<div class="container text-center">
-    <p class="fs-3 fw-light">Lista de relatórios disponíveis</p>
-    <p class="fw-light">Apenas relatórios a partir do primeiro mês, inserido ao início do uso do sistema.</p>
-</div>
-<div class="container col-10">
-    <div class="row">
-        <div class="col-md-6 text-center">
+<style>
+  .pill { border-radius: 999px; }
+  .stat-card { transition: transform .2s ease, box-shadow .2s ease; border-radius: 16px; }
+  .stat-card:hover { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(0,0,0,.12); }
+</style>
+<div class="container py-3">
+  <div class="text-center mb-3">
+    <p class="fs-3 fw-light">Relatórios Financeiros</p>
+    <p class="text-muted">Relatórios disponíveis a partir do primeiro mês registrado.</p>
+  </div>
+  <div class="row g-3">
+    <div class="col-12 col-lg-6">
+      <div class="card stat-card h-100">
+        <div class="card-body">
+          <h5 class="card-title fw-light">Relatórios Mensais</h5>
+          <div class="list-group list-group-flush">
             {% for r in reports %}
-            {% if not r.is_first_month %}
-            <div class="row"><a href="{% url 'treasury:monthly-transactions' r.month.year r.month.month %}"><p>Relatório de {{r.month.month}}/{{r.month.year}} - {{r.balance}} </p></a></div>
-            {% endif %}
+              {% if not r.is_first_month %}
+                <a class="list-group-item list-group-item-action" href="{% url 'treasury:monthly-transactions' r.month.year r.month.month %}">
+                  Relatório de {{r.month.month}}/{{r.month.year}} - {{r.balance}}
+                </a>
+              {% endif %}
+            {% empty %}
+              <div class="text-muted small">Sem relatórios.</div>
             {% endfor %}
+          </div>
         </div>
-        <div class="col-md-6 text-center">
-            {% for r in analytical_reports %}
-            <div class="row"><a href="{% url 'treasury:analytical-report' r.id %}"><p>Relatório Analítico de {{r.month.month}}/{{r.month.year}} - {{r.balance}} </p></a></div>
-            {% endfor %}
-        </div>
+      </div>
     </div>
+    <div class="col-12 col-lg-6">
+      <div class="card stat-card h-100">
+        <div class="card-body">
+          <h5 class="card-title fw-light">Relatórios Analíticos</h5>
+          <div class="list-group list-group-flush">
+            {% for r in analytical_reports %}
+              <a class="list-group-item list-group-item-action" href="{% url 'treasury:analytical-report' r.id %}">
+                Relatório Analítico de {{r.month.month}}/{{r.month.year}} - {{r.balance}}
+              </a>
+            {% empty %}
+              <div class="text-muted small">Sem relatórios analíticos.</div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
-
 {% endblock %}
