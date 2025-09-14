@@ -7,39 +7,39 @@
     <p class="fs-5 fw-light">Relatório detalhado de {{month}}/{{year}}</p>
   </div>
 
-  <!-- Cards de Estatísticas -->
-  <div class="row g-3 mb-4 justify-content-center">
-    <div class="col-12 col-sm-6 col-lg-3">
+  <div class="row g-3 mb-4 justify-content-center" style="max-width: 1000px; margin: 0 auto;">
+    <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
       <div class="p-3 bg-success text-white rounded text-center fw-bold stat-card">
         <div class="mb-2">Saldo Anterior</div>
         <img width="28" height="28" src="{% static 'img/book-open.svg' %}" alt="" class="mb-2">
         <div class="h4 fw-light">{{balance}}</div>
       </div>
     </div>
-    <div class="col-12 col-sm-6 col-lg-3">
+    <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
       <div class="p-3 bg-primary text-white rounded text-center fw-bold stat-card">
         <div class="mb-2">Saldo Final</div>
         <img width="28" height="28" src="{% static 'img/dollar-sign.svg' %}" alt="" class="mb-2">
         <div class="h4 fw-light">{{total}}</div>
       </div>
     </div>
-    <div class="col-12 col-sm-6 col-lg-3">
+    <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
       <div class="p-3 bg-secondary text-white rounded text-center fw-bold stat-card">
         <div class="mb-2">Resultado Mensal</div>
         <img width="28" height="28" src="{% static 'img/calendar.svg' %}" alt="" class="mb-2">
         <div class="h4 fw-light">{{monthly_result}}</div>
       </div>
     </div>
-    <div class="col-12 col-sm-6 col-lg-3">
+    <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
       <div class="p-3 bg-info text-white rounded text-center fw-bold stat-card">
         <div class="mb-2">Total de Transações</div>
-        <i class="bi bi-receipt mb-2" style="font-size: 28px;"></i>
+        <div class="mb-2" style="height: 28px; display: flex; align-items: center; justify-content: center;">
+          <i class="bi bi-receipt" style="font-size: 28px;"></i>
+        </div>
         <div class="h4 fw-light">{{finance_entries|length}}</div>
       </div>
     </div>
   </div>
 
-  <!-- Navegação e Ações -->
   <div class="ai-hero p-3 mb-4">
     <div class="row justify-content-center align-items-center g-2">
       <div class="col-auto">
@@ -66,7 +66,6 @@
       <h5 class="card-title mb-0">Transações do Mês</h5>
     </div>
     <div class="card-body">
-      <!-- Mobile Card View -->
       <div class="d-md-none">
         {% for fe in finance_entries %}
         <div class="card mb-3 border-left-primary">
@@ -108,7 +107,6 @@
         {% endfor %}
       </div>
 
-      <!-- Desktop Table View -->
       <div class="d-none d-md-block">
         <div class="table-responsive">
           <table class="table table-hover align-middle">
