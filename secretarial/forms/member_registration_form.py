@@ -1,3 +1,5 @@
+import uuid
+
 from django import forms
 from django.core.exceptions import ValidationError
 from users.models import CustomUser
@@ -66,6 +68,8 @@ class MemberRegistrationForm(forms.ModelForm):
 
     def save(self, commit=True):
         user = super().save(commit=False)
+        if not user.email:
+            user.email = f"no-email+{uuid.uuid4().hex}@example.com"
         user.set_unusable_password()
         if commit:
             user.save()

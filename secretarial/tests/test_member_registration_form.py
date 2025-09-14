@@ -1,3 +1,5 @@
+import uuid
+
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from secretarial.forms.member_registration_form import MemberRegistrationForm
@@ -74,4 +76,21 @@ class MemberRegistrationFormTest(TestCase):
         self.assertEqual(user.first_name, 'João')
         self.assertEqual(user.last_name, 'Silva')
         self.assertEqual(user.type, CustomUser.Types.REGULAR)
+        self.assertFalse(user.has_usable_password())
+
+    def test_form_save_generates_fictitious_email_when_none_provided(self):
+        form_data = {
+            'username': 'testuser_no_email',
+            'first_name': 'João',
+            'last_name': 'Silva',
+            'type': CustomUser.Types.REGULAR,
+        }
+        form = MemberRegistrationForm(data=form_data)
+        self.assertTrue(form.is_valid())
+
+        user = form.save()
+        self.assertEqual(user.username, 'testuser_no_email')
+        self.assertTrue(user.email.startswith('no-email+'))
+        self.assertTrue(user.email.endswith('@example.com'))
+        self.assertEqual(len(user.email), len('no-email+') + 32 + len('@example.com'))  # uuid.hex is 32 chars
         self.assertFalse(user.has_usable_password())
