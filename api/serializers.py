@@ -3,6 +3,7 @@ from secretarial.models import (
     MinuteExcerptsModel,
     MinuteTemplateModel,
     MeetingMinuteModel,
+    MinuteProjectModel,
 )
 from treasury.models import TransactionModel, CategoryModel
 from users.models import CustomUser
@@ -32,6 +33,12 @@ class MeetingMinuteModelSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+class MinuteProjectModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MinuteProjectModel
+        fields = "__all__"
+
+
 class CategoryModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = CategoryModel
@@ -49,14 +56,7 @@ class TransactionCatModelSerializer(serializers.ModelSerializer):
 class TransactionModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = TransactionModel
-        fields = '__all__'  # Ensure 'acquittance_doc' is included if '__all__' is not used
-
-    # # If you need custom validation or handling for the uploaded file, add it here
-    # def validate_acquittance_doc(self, value):
-    #     """
-    #     Add any custom validation for your file here, e.g., checking file size, type, etc.
-    #     """
-    #     return value
+        fields = '__all__' 
 
 
 class BalanceSerializer(serializers.Serializer):

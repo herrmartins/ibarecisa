@@ -13,13 +13,14 @@ from .serializers import (
     CustomUserSerializer,
     MeetingMinuteModelSerializer,
     MinuteTemplateModelSerializer,
+    MinuteProjectModelSerializer,
     TransactionModelSerializer,
     TransactionCatModelSerializer,
     BalanceSerializer,
 )
 from users.models import CustomUser
 from secretarial.models import MinuteExcerptsModel
-from secretarial.models import MeetingMinuteModel, MinuteTemplateModel
+from secretarial.models import MeetingMinuteModel, MinuteTemplateModel, MinuteProjectModel
 
 from treasury.models import TransactionModel
 
@@ -157,6 +158,17 @@ def unifiedSearch(request):
             | Q(last_name__icontains=search_criterion),
         )
         serialized_data = CustomUserSerializer(queryset, many=True)
+
+    elif search_category == "projects":
+        queryset = MinuteProjectModel.objects.filter(
+            body__icontains=search_criterion)
+        serialized_data = MinuteProjectModelSerializer(queryset, many=True)
+
+        for data in serialized_data.data:
+            president_id = data.get("president")
+            if president_id:
+                president = get_object_or_404(CustomUser, pk=president_id)
+                data["president"] = f"{president.first_name} {president.last_name}"
 
     else:
         return Response(

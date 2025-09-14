@@ -5,6 +5,7 @@ const categoryDisplayNames = {
 	templates: "Modelos de Atas",
 	users: "Usuários",
 	members: "Membros",
+	projects: "Projetos de Ata",
 };
 
 const searchForm = document.getElementById("search-form");
@@ -90,6 +91,17 @@ searchForm.addEventListener("submit", (event) => {
 						} else if (searchCategory === "templates") {
 							displayFields = item.title;
 							listItem.appendChild(document.createTextNode(displayFields));
+						} else if (searchCategory === "projects") {
+							displayFields = `Presidente: ${item.president} | Data: ${item.meeting_date}`;
+
+							const link = document.createElement("a");
+							link.textContent = "Ver Projeto";
+							link.href = `/secretarial/meeting/projects/edit/${item.id}/`;
+
+							listItem.appendChild(
+								document.createTextNode(displayFields + " "),
+							);
+							listItem.appendChild(link);
 						} else if (
 							searchCategory === "users" ||
 							searchCategory === "members"
