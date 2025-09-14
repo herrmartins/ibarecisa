@@ -31,13 +31,55 @@ async function addTransaction(event) {
 
 
         } else {
-            console.error("Erro ao adicionar a transação:", result.errors);
-            alert(`Error adding transaction: ${JSON.stringify(result.errors)}`);
+            let errorMessage = "";
+
+            if (result.errors.__all__) {
+                errorMessage = result.errors.__all__;
+            } else {
+                const fieldErrors = [];
+                for (const [field, messages] of Object.entries(result.errors)) {
+                    fieldErrors.push(`${field}: ${messages.join(", ")}`);
+                }
+                errorMessage = fieldErrors.join("; ");
+            }
+
+            const errorDiv = document.getElementById('transactionError');
+            const errorSpan = document.getElementById('errorMessage');
+            errorSpan.textContent = errorMessage;
+            errorDiv.style.display = 'block';
+
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 5000);
         }
     } catch (error) {
-        console.error("An error occurred:", error);
-        alert("An error occurred. Please try again.");
+        const errorDiv = document.getElementById('transactionError');
+        const errorSpan = document.getElementById('errorMessage');
+        errorSpan.textContent = "Erro inesperado. Tente novamente.";
+        errorDiv.style.display = 'block';
+
+        setTimeout(() => {
+            errorDiv.style.display = 'none';
+        }, 5000);
     }
 }
+
+function hideError() {
+    const errorDiv = document.getElementById('transactionError');
+    if (errorDiv) {
+        errorDiv.style.display = 'none';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('transaction_form');
+    if (form) {
+        const inputs = form.querySelectorAll('input, select, textarea');
+        inputs.forEach(input => {
+            input.addEventListener('input', hideError);
+            input.addEventListener('change', hideError);
+        });
+    }
+});
 
 window.addTransaction = addTransaction;

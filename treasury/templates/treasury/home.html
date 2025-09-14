@@ -78,6 +78,9 @@
             <h5 class="card-title mb-0">Adicionar Transação</h5>
           </div>
           <div class="card-body">
+            <div id="transactionError" class="alert alert-danger" style="display: none;" role="alert">
+              <strong>Erro:</strong> <span id="errorMessage"></span>
+            </div>
             {% include 'treasury/transaction_form_chunck.html' with show_title=False %}
           </div>
         </div>
@@ -111,7 +114,7 @@
   </div>
 </div>
 <script type="module" src="{% static 'js/load_transactions.js' %}"></script>
-<script type="module" src="{% static 'js/add_transaction.js' %}"></script>
+<script type="module" src="{% static 'js/add_transaction.js' %}?v={{ request.META.HTTP_DATE|default:'20240914' }}"></script>
 <script type="module" src="{% static 'js/get_transactions.js' %}"></script>
 <script type="module" src="{% static 'js/navigation.js' %}"></script>
 {% endblock %}
