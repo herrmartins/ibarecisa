@@ -7,9 +7,8 @@ const categoryDisplayNames = {
 	members: "Membros",
 };
 
-document.addEventListener("DOMContentLoaded", () => {
-	const searchForm = document.getElementById("search-form");
-	searchForm.addEventListener("submit", (event) => {
+const searchForm = document.getElementById("search-form");
+searchForm.addEventListener("submit", (event) => {
 		event.preventDefault();
 
 		const searchCriterion = document.getElementById("searched").value;
@@ -35,7 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
 				return response.json();
 			})
 			.then((data) => {
-				const resultsContainer = document.getElementById("search_result");
+				const resultsContainer = document.getElementById("search-results");
 				resultsContainer.innerHTML = "";
 
 				const container = document.createElement("div");
@@ -114,5 +113,4 @@ document.addEventListener("DOMContentLoaded", () => {
 			.catch((error) => {
 				console.error("Error:", error);
 			});
-	});
 });

@@ -38,52 +38,72 @@
     </div>
   </div>
 
-  <div class="ai-hero mb-4">
-    <div class="ai-card">
-      <form id="search-form" class="mb-3">
-        <div class="row g-2 align-items-stretch">
-          <div class="col-12 col-md-8">
-            <div class="form-floating h-100">
-              <input type="text" id="searched" class="form-control h-100" placeholder="Digite o critério de busca..." />
-              <label for="searched" class="form-label">Escreva o(s) critério(s) da busca</label>
+  <!-- Search and AI Form Section -->
+  <div class="row justify-content-center mb-5">
+    <div class="col-12 col-lg-8 col-xl-7">
+      <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+          <!-- Search Form -->
+          <form id="search-form" class="mb-4">
+            <div class="row g-2 align-items-end">
+              <div class="col-12 col-md-4">
+                <label for="searched" class="form-label">Buscar por</label>
+                <input type="text" id="searched" class="form-control" placeholder="Digite o critério de busca..." />
+              </div>
+              <div class="col-12 col-md-4">
+                <label for="search-type" class="form-label">em</label>
+                <select id="search-type" class="form-select">
+                  <option value="minutes">em atas</option>
+                  <option value="templates">em modelos de atas</option>
+                  <option value="members">em membros</option>
+                </select>
+              </div>
+              <div class="col-12 col-md-4 d-grid">
+                <button type="submit" class="btn btn-dark">Buscar</button>
+              </div>
             </div>
-          </div>
-          <div class="col-6 col-md-3">
-            <select class="form-select h-100">
-              <option>em atas</option>
-              <option>em modelos de atas</option>
-              <option>em pautas das atas</option>
-            </select>
-          </div>
-          <div class="col-6 col-md-1 d-grid">
-            <button type="submit" class="btn btn-dark pill">Buscar</button>
-          </div>
-        </div>
-      </form>
-      <div id="search-results" class="d-flex flex-column gap-2"></div>
+          </form>
+          
+          <div id="search-results" class="mb-3"></div>
 
-      {% if user.is_secretary %}
-      <hr class="my-3"/>
-      <form method="POST">
-        {% csrf_token %}
-        <div class="mb-3">
-          <label class="form-label text-muted">Modelo de Ata (opcional)</label>
-          <select class="form-select" name="template" id="template">
-            <option value="">Nenhum</option>
-            {% for template in templates %}
-            <option value="{{ template.pk }}">{{ template.title }}</option>
-            {% endfor %}
-          </select>
+          {% if user.is_secretary %}
+          <hr class="my-4"/>
+          
+          <!-- AI Generation Form -->
+          <form method="POST">
+            {% csrf_token %}
+            <div class="mb-3">
+              <label class="form-label text-muted fw-medium">Modelo de Ata (opcional)</label>
+              <select class="form-select" name="template" id="template">
+                <option value="">Nenhum</option>
+                {% for template in templates %}
+                <option value="{{ template.pk }}">{{ template.title }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            
+            <div class="mb-4">
+              <label class="form-label text-muted fw-medium">Prompt para IA</label>
+              <textarea class="form-control" id="prompt" name="prompt"
+                        placeholder="Descreva a reunião para gerar a ata com IA..."
+                        rows="4" style="resize: vertical;"></textarea>
+            </div>
+            
+            <div class="d-flex flex-wrap gap-2 justify-content-start">
+              <button type="submit" class="btn btn-primary px-4">
+                <i class="bi bi-stars me-1"></i> Gerar Ata com IA
+              </button>
+              <a href="{% url 'secretarial:new-minute-view' %}" class="btn btn-outline-secondary px-4">
+                <i class="bi bi-file-earmark-plus me-1"></i> Nova Ata em Branco
+              </a>
+              <a href="{% url 'secretarial:list-templates' %}" class="btn btn-outline-dark px-4">
+                <i class="bi bi-layers me-1"></i> Ver Modelos
+              </a>
+            </div>
+          </form>
+          {% endif %}
         </div>
-        <label class="form-label text-muted">Prompt para IA</label>
-        <textarea class="form-control ai-textarea" id="prompt" name="prompt" placeholder="Descreva a reunião para gerar a ata com IA..."></textarea>
-        <div class="ai-actions">
-          <button type="submit" class="btn btn-primary pill"><i class="bi bi-stars me-1"></i> Gerar Ata com IA</button>
-          <a href="{% url 'secretarial:new-minute-view' %}" class="btn btn-outline-secondary pill"><i class="bi bi-file-earmark-plus me-1"></i> Nova Ata em Branco</a>
-          <a href="{% url 'secretarial:list-templates' %}" class="btn btn-outline-dark pill"><i class="bi bi-layers me-1"></i> Ver Modelos</a>
-        </div>
-      </form>
-      {% endif %}
+      </div>
     </div>
   </div>
 
