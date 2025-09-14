@@ -4,13 +4,15 @@
 <link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}" />
 <div class="col-12">
   <div class="d-flex justify-content-center">
-    <div class="col-2 p-3 mx-2 my-3 bg-success text-white rounded text-center fw-bold">Membros<br><img
-        src="{% static 'img/smile.svg' %}"><br>
-      <p class="h2 mt-2 fw-light">{{number_of_members}}</p>
+    <div class="col-2 p-2 mx-2 my-3 bg-success text-white rounded text-center fw-bold stat-card">
+      <div class="mb-1">Membros</div>
+      <img width="24" height="24" src="{% static 'img/smile.svg' %}" alt="" class="mb-1">
+      <div class="h6 fw-light">{{number_of_members}}</div>
     </div>
-    <div class="col-2 p-3 mx-2 my-3 bg-primary text-white rounded text-center fw-bold">Congregados<br><img
-        src="{% static 'img/user-plus.svg' %}"><br>
-      <p class="h2 mt-2 fw-light">{{number_of_visitors}}</p>
+    <div class="col-2 p-2 mx-2 my-3 bg-primary text-white rounded text-center fw-bold stat-card">
+      <div class="mb-1">Congregados</div>
+      <img width="24" height="24" src="{% static 'img/user-plus.svg' %}" alt="" class="mb-1">
+      <div class="h6 fw-light">{{number_of_visitors}}</div>
     </div>
   </div>
 </div>

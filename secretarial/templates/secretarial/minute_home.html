@@ -1,48 +1,5 @@
 {% extends 'core/base.html' %} {% block content %}
 {% load static %}
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-<style>
-  .ai-hero {
-    min-height: 60vh;
-    display: grid;
-    place-items: center;
-    background: radial-gradient(1000px 600px at 10% -10%, rgba(99, 102, 241, 0.15), transparent),
-                radial-gradient(800px 500px at 110% 10%, rgba(16, 185, 129, 0.12), transparent),
-                linear-gradient(180deg, rgba(2,0,36,0) 0%, rgba(2,0,36,0.03) 100%);
-    border-radius: 24px;
-  }
-  .ai-card {
-    width: 100%;
-    max-width: 900px;
-    background: rgba(255,255,255,0.9);
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(0,0,0,0.06);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-    border-radius: 20px;
-    padding: 1rem;
-  }
-  .ai-textarea {
-    border-radius: 16px !important;
-    padding: 1.25rem 1.25rem 3.5rem 1.25rem;
-    font-size: 1.15rem;
-    min-height: 180px;
-  }
-  .ai-actions {
-    display: flex;
-    gap: .5rem;
-    position: relative;
-    margin-top: .75rem;
-    flex-wrap: wrap;
-  }
-  .pill {
-    border-radius: 999px;
-  }
-  .stat-card {
-    transition: transform .2s ease, box-shadow .2s ease;
-  }
-  .stat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.12); }
-</style>
 
 <div class="container py-4">
   <div class="text-center my-3">
@@ -52,31 +9,31 @@
 
   <div class="row g-3 justify-content-center mb-4">
     <div class="col-6 col-md-3">
-      <div class="p-3 stat-card bg-success text-white rounded text-center fw-bold">
-        Atas Registradas<br>
-        <a class="d-inline-block mt-2" href="{% url 'secretarial:list-minutes' %}"><img width="28" height="28" src="{% static 'img/archive.svg' %}"></a>
-        <p class="h2 mt-2 fw-light mb-0">{{number_of_minutes}}</p>
+      <div class="p-2 stat-card bg-success text-white rounded text-center fw-bold">
+        <div class="mb-1">Atas Registradas</div>
+        <a class="d-inline-block mb-1" href="{% url 'secretarial:list-minutes' %}"><img width="24" height="24" src="{% static 'img/archive.svg' %}" alt=""></a>
+        <div class="h6 fw-light">{{number_of_minutes}}</div>
       </div>
     </div>
     <div class="col-6 col-md-3">
-      <div class="p-3 stat-card bg-primary text-white rounded text-center fw-bold">
-        Modelos de Atas<br>
-        <a class="d-inline-block mt-2" href="{% url 'secretarial:list-templates' %}"><img width="28" height="28" src="{% static 'img/file-text.svg' %}"></a>
-        <p class="h2 mt-2 fw-light mb-0">{{number_of_templates}}</p>
+      <div class="p-2 stat-card bg-primary text-white rounded text-center fw-bold">
+        <div class="mb-1">Modelos de Atas</div>
+        <a class="d-inline-block mb-1" href="{% url 'secretarial:list-templates' %}"><img width="24" height="24" src="{% static 'img/file-text.svg' %}" alt=""></a>
+        <div class="h6 fw-light">{{number_of_templates}}</div>
       </div>
     </div>
     <div class="col-6 col-md-3">
-      <div class="p-3 stat-card bg-info text-white rounded text-center fw-bold">
-        Trechos de Atas<br>
-        <a class="d-inline-block mt-2" href="{% url 'secretarial:list-excerpts' %}"><img width="28" height="28" src="{% static 'img/file-minus.svg' %}"></a>
-        <p class="h2 mt-2 fw-light mb-0">{{number_of_excerpts}}</p>
+      <div class="p-2 stat-card bg-info text-white rounded text-center fw-bold">
+        <div class="mb-1">Trechos de Atas</div>
+        <a class="d-inline-block mb-1" href="{% url 'secretarial:list-excerpts' %}"><img width="24" height="24" src="{% static 'img/file-minus.svg' %}" alt=""></a>
+        <div class="h6 fw-light">{{number_of_excerpts}}</div>
       </div>
     </div>
     <div class="col-6 col-md-3">
-      <div class="p-3 stat-card bg-warning text-white rounded text-center fw-bold">
-        Projetos de Ata<br>
-        <a class="d-inline-block mt-2" href="{% url 'secretarial:list-minutes-projects' %}"><img width="28" height="28" src="{% static 'img/edit.svg' %}"></a>
-        <p class="h2 mt-2 fw-light mb-0">{{number_of_projects}}</p>
+      <div class="p-2 stat-card bg-warning text-white rounded text-center fw-bold">
+        <div class="mb-1">Projetos de Ata</div>
+        <a class="d-inline-block mb-1" href="{% url 'secretarial:list-minutes-projects' %}"><img width="24" height="24" src="{% static 'img/edit.svg' %}" alt=""></a>
+        <div class="h6 fw-light">{{number_of_projects}}</div>
       </div>
     </div>
   </div>
