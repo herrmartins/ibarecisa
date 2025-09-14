@@ -4,8 +4,6 @@
 .stat-card {
   transition: transform .2s ease, box-shadow .2s ease;
   border-radius: 10px;
-  height: 110px;
-  width: 140px !important;
   display: flex;
   flex-direction: column;
   align-items: center;

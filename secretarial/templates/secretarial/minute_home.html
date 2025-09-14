@@ -7,33 +7,33 @@
     <p class="text-muted">Gere atas com suporte de IA, pesquise conteúdos e gerencie modelos e trechos.</p>
   </div>
 
-  <div class="row g-3 justify-content-center mb-4">
-    <div class="col-6 col-md-3">
-      <div class="p-2 stat-card bg-success text-white rounded text-center fw-bold">
-        <div class="mb-1">Atas Registradas</div>
-        <a class="d-inline-block mb-1" href="{% url 'secretarial:list-minutes' %}"><img width="24" height="24" src="{% static 'img/archive.svg' %}" alt=""></a>
-        <div class="h6 fw-light">{{number_of_minutes}}</div>
+  <div class="row g-3 mb-4 justify-content-center" style="max-width: 1200px; margin: 0 auto;">
+    <div class="col-12 col-sm-6 col-lg-4 col-xl-2">
+      <div class="p-3 stat-card bg-success text-white rounded text-center fw-bold">
+        <div class="mb-2">Atas Registradas</div>
+        <a class="d-inline-block mb-2" href="{% url 'secretarial:list-minutes' %}"><img width="28" height="28" src="{% static 'img/archive.svg' %}" alt=""></a>
+        <div class="h5 fw-light">{{number_of_minutes}}</div>
       </div>
     </div>
-    <div class="col-6 col-md-3">
-      <div class="p-2 stat-card bg-primary text-white rounded text-center fw-bold">
-        <div class="mb-1">Modelos de Atas</div>
-        <a class="d-inline-block mb-1" href="{% url 'secretarial:list-templates' %}"><img width="24" height="24" src="{% static 'img/file-text.svg' %}" alt=""></a>
-        <div class="h6 fw-light">{{number_of_templates}}</div>
+    <div class="col-12 col-sm-6 col-lg-4 col-xl-2">
+      <div class="p-3 stat-card bg-primary text-white rounded text-center fw-bold">
+        <div class="mb-2">Modelos de Atas</div>
+        <a class="d-inline-block mb-2" href="{% url 'secretarial:list-templates' %}"><img width="28" height="28" src="{% static 'img/file-text.svg' %}" alt=""></a>
+        <div class="h5 fw-light">{{number_of_templates}}</div>
       </div>
     </div>
-    <div class="col-6 col-md-3">
-      <div class="p-2 stat-card bg-info text-white rounded text-center fw-bold">
-        <div class="mb-1">Trechos de Atas</div>
-        <a class="d-inline-block mb-1" href="{% url 'secretarial:list-excerpts' %}"><img width="24" height="24" src="{% static 'img/file-minus.svg' %}" alt=""></a>
-        <div class="h6 fw-light">{{number_of_excerpts}}</div>
+    <div class="col-12 col-sm-6 col-lg-4 col-xl-2">
+      <div class="p-3 stat-card bg-info text-white rounded text-center fw-bold">
+        <div class="mb-2">Trechos de Atas</div>
+        <a class="d-inline-block mb-2" href="{% url 'secretarial:list-excerpts' %}"><img width="28" height="28" src="{% static 'img/file-minus.svg' %}" alt=""></a>
+        <div class="h5 fw-light">{{number_of_excerpts}}</div>
       </div>
     </div>
-    <div class="col-6 col-md-3">
-      <div class="p-2 stat-card bg-warning text-white rounded text-center fw-bold">
-        <div class="mb-1">Projetos de Ata</div>
-        <a class="d-inline-block mb-1" href="{% url 'secretarial:list-minutes-projects' %}"><img width="24" height="24" src="{% static 'img/edit.svg' %}" alt=""></a>
-        <div class="h6 fw-light">{{number_of_projects}}</div>
+    <div class="col-12 col-sm-6 col-lg-4 col-xl-2">
+      <div class="p-3 stat-card bg-warning text-white rounded text-center fw-bold">
+        <div class="mb-2">Projetos de Ata</div>
+        <a class="d-inline-block mb-2" href="{% url 'secretarial:list-minutes-projects' %}"><img width="28" height="28" src="{% static 'img/edit.svg' %}" alt=""></a>
+        <div class="h5 fw-light">{{number_of_projects}}</div>
       </div>
     </div>
   </div>
@@ -109,11 +109,13 @@
   </div>
 
   {% if user.is_secretary %}
-  <div class="row g-3">
-    <div class="col-12 col-lg-6">
-      <div class="card h-100">
+  <div class="row g-4 justify-content-center" style="max-width: 1200px; margin: 0 auto;">
+    <div class="col-12 col-md-4">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title mb-0">Lista de atas</h5>
+        </div>
         <div class="card-body">
-          <h5 class="card-title fw-light">Lista de atas</h5>
           <div class="list-group list-group-flush">
             {% if meeting_minutes %}
               {% for mm in meeting_minutes %}
@@ -126,10 +128,12 @@
         </div>
       </div>
     </div>
-    <div class="col-12 col-lg-6">
-      <div class="card h-100">
+    <div class="col-12 col-md-4">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title mb-0">Ações rápidas</h5>
+        </div>
         <div class="card-body">
-          <h5 class="card-title fw-light">Ações rápidas</h5>
           <div class="d-flex flex-wrap gap-2">
             <a href="{% url 'secretarial:list-excerpts' %}" class="btn btn-outline-primary pill">Trechos</a>
             <a href="{% url 'secretarial:list-templates' %}" class="btn btn-outline-primary pill">Modelos</a>
