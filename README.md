@@ -9,7 +9,7 @@
   Tools               |  Version
 ----------------------| --------
 Python                | 3
-Django                | 4.2
+Django                | 5.2
 Venv                  | 3
 Pip                   | 24
 
