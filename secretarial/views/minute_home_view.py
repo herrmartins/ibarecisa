@@ -28,14 +28,23 @@ class MinuteHomeView(PermissionRequiredMixin, TemplateView):
         context["number_of_minutes"] = minutes.count()
         context["minutes"] = minutes
         context["number_of_templates"] = MinuteTemplateModel.objects.count()
+        context["templates"] = MinuteTemplateModel.objects.all()
 
         return context
 
     def post(self, request, *args, **kwargs):
         prompt = request.POST.get('prompt', '').strip()
+        template_id = request.POST.get('template', '').strip()
         if not prompt:
             messages.error(request, 'Por favor, forneça uma descrição para a ata.')
             return redirect('secretarial:minute-home')
+
+        if template_id:
+            try:
+                template = MinuteTemplateModel.objects.get(pk=template_id)
+                prompt = f"Use este modelo como base: {template.body}\n\n{prompt}"
+            except MinuteTemplateModel.DoesNotExist:
+                pass  # Ignore if template not found
 
         body = generate_minute_body(prompt)
         if body.startswith('Erro') or body.startswith('Chave'):
