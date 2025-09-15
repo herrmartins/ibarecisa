@@ -2,6 +2,7 @@
 export function addCommentToHTML(comment) {
     const commentCard = document.createElement('div');
     commentCard.className = 'card ml-2 my-2 p-2 card-no-border';
+    commentCard.setAttribute('data-comment-id', comment.id);
 
     const replyButton = `<button class="btn btn-sm btn-outline-primary reply-btn" data-comment-id="${comment.id}">Responder</button>`;
     commentCard.innerHTML = `
