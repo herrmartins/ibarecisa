@@ -91,12 +91,14 @@ function toggleReplyForm(commentId) {
 		replyForm.remove();
 	} else {
 		replyForm = document.createElement('div');
-		replyForm.className = 'reply-form mt-2';
+		replyForm.className = 'reply-form mt-3 p-3 bg-light rounded-3 border';
 		const postId = commentCard.closest('[id^="comments-"]').id.split('-')[1];
 		replyForm.innerHTML = `
-			<div class="d-flex">
-				<textarea class="form-control" id="reply-${commentId}" rows="2" placeholder="Sua resposta..."></textarea>
-				<button class="btn btn-primary ms-2 submit-reply" data-comment-id="${commentId}" data-post-id="${postId}">Enviar</button>
+			<div class="d-flex gap-2">
+				<textarea class="form-control flex-grow-1" id="reply-${commentId}" rows="2" placeholder="Digite sua resposta..."></textarea>
+				<button class="btn btn-primary px-3 submit-reply align-self-start" data-comment-id="${commentId}" data-post-id="${postId}">
+					<i class="bi bi-send me-1"></i>Enviar
+				</button>
 			</div>
 		`;
 		commentCard.appendChild(replyForm);
@@ -141,21 +143,25 @@ function postReply(authorId, postId, parentId, content) {
 function addReplyToDOM(reply, parentId) {
 	const parentCard = document.querySelector(`[data-comment-id="${parentId}"]`);
 	const replyCard = document.createElement('div');
-	replyCard.className = 'card ml-3 my-2 p-2 card-no-border';
+	replyCard.className = 'card ml-3 my-3 p-3 card-no-border shadow-sm';
 	replyCard.setAttribute('data-comment-id', reply.id);
-	const replyButton = `<button class="btn btn-sm btn-outline-primary reply-btn" data-comment-id="${reply.id}">Responder</button>`;
+	const replyButton = `<button class="btn btn-sm btn-outline-primary reply-btn me-2" data-comment-id="${reply.id}"><i class="bi bi-reply me-1"></i>Responder</button>`;
 	replyCard.innerHTML = `
-		<div class="card-body">
-			<p class="card-text">${reply.content}</p>
-			<div class="d-flex justify-content-between">
+		<div class="card-body p-0">
+			<p class="card-text mb-3">${reply.content}</p>
+			<div class="d-flex justify-content-between align-items-center">
 				<div class="d-flex flex-row align-items-center">
-					${reply.user_photo ? `<img src="${reply.user_photo}" alt="avatar" width="25" height="25" />` : ''}
-					<p class="small mb-0 ms-2">${reply.author_name}</p>
+					${reply.user_photo ? `<img src="${reply.user_photo}" alt="avatar" width="32" height="32" class="me-2" />` : '<div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;"><i class="bi bi-person"></i></div>'}
+					<div>
+						<p class="small mb-0 fw-semibold">${reply.author_name}</p>
+						<p class="small text-muted mb-0">${reply.created || 'Agora'}</p>
+					</div>
 				</div>
 				<div class="d-flex flex-row align-items-center">
 					${replyButton}
-					<p class="small text-muted mb-0 ms-2">Like</p>
-					<i class="bi bi-hand-thumbs-up" style="margin-top: -0.16rem;"></i>
+					<button class="btn btn-sm btn-outline-secondary me-2 like-btn" data-comment-id="${reply.id}">
+						<i class="bi bi-hand-thumbs-up me-1"></i><span class="like-count">${reply.likes_count || 0}</span>
+					</button>
 				</div>
 			</div>
 		</div>
