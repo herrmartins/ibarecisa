@@ -135,6 +135,9 @@
         </div>
         <div class="card-body">
           <div class="d-flex flex-wrap gap-2">
+            <a href="{% url 'secretarial:pdf-import' %}" class="btn btn-outline-success pill">
+              <i class="bi bi-file-earmark-pdf me-1"></i>Importar PDF
+            </a>
             <a href="{% url 'secretarial:list-excerpts' %}" class="btn btn-outline-primary pill">Trechos</a>
             <a href="{% url 'secretarial:list-templates' %}" class="btn btn-outline-primary pill">Modelos</a>
             <a href="{% url 'secretarial:list-minutes-projects' %}" class="btn btn-outline-primary pill">Projetos</a>

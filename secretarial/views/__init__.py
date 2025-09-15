@@ -28,3 +28,4 @@ from .minute_file_upload_view import MinuteFileUploadView
 from .minute_project_edit_view import MinuteProjectEditView
 from .send_password_email_view import SendPasswordEmailView
 from .member_registration_view import MemberRegistrationView
+from .pdf_import_view import PDFImportView

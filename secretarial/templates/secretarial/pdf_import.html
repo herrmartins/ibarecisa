@@ -1,0 +1,86 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-12 col-lg-8 col-xl-6">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-primary text-white">
+          <h5 class="card-title mb-0">
+            <i class="bi bi-file-earmark-pdf me-2"></i>
+            Importar PDF com OCR
+          </h5>
+        </div>
+        <div class="card-body p-4">
+          <div class="alert alert-info" role="alert">
+            <i class="bi bi-info-circle me-2"></i>
+            <strong>Como funciona:</strong> Faça upload de um arquivo PDF e nossa IA extrairá automaticamente o texto usando OCR avançado. O texto será usado para criar uma nova ata que você poderá editar.
+          </div>
+
+          <form method="POST" enctype="multipart/form-data" id="pdf-upload-form">
+            {% csrf_token %}
+
+            <div class="mb-4">
+              <label for="{{ form.pdf_file.id_for_label }}" class="form-label fw-medium">
+                Arquivo PDF <span class="text-danger">*</span>
+              </label>
+              <input type="file" name="pdf_file" accept=".pdf" class="form-control" id="pdf_file" required>
+              <div class="form-text">
+                Máximo: 10MB. Apenas arquivos PDF são aceitos.
+              </div>
+              {% if form.pdf_file.errors %}
+                <div class="text-danger small mt-1">
+                  {% for error in form.pdf_file.errors %}
+                    {{ error }}
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+
+            <div class="d-flex gap-2 justify-content-end">
+              <a href="{% url 'secretarial:minute-home' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i>
+                Voltar
+              </a>
+              <button type="submit" class="btn btn-primary" id="submit-btn">
+                <i class="bi bi-upload me-1"></i>
+                Processar PDF
+              </button>
+            </div>
+          </form>
+
+          <!-- Loading overlay -->
+          <div id="loading-overlay" class="d-none position-absolute top-0 start-0 w-100 h-100 bg-white bg-opacity-75 d-flex align-items-center justify-content-center" style="z-index: 10;">
+            <div class="text-center">
+              <div class="spinner-border text-primary mb-3" role="status">
+                <span class="visually-hidden">Processando...</span>
+              </div>
+              <h5>Processando PDF...</h5>
+              <p class="text-muted">Aguarde enquanto extraímos o texto do documento.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById('pdf-upload-form').addEventListener('submit', function(e) {
+    const submitBtn = document.getElementById('submit-btn');
+    const loadingOverlay = document.getElementById('loading-overlay');
+
+    // Show loading state
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Processando...';
+    loadingOverlay.classList.remove('d-none');
+});
+</script>
+
+<style>
+.position-absolute {
+    position: absolute !important;
+}
+</style>
+{% endblock %}

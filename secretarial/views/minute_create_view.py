@@ -1,7 +1,8 @@
 from django.views.generic import CreateView
+from django.core.files.base import ContentFile
 from secretarial.forms import MinuteModelForm
 from secretarial.models import (
-    MinuteProjectModel, MeetingMinuteModel, MinuteExcerptsModel)
+    MinuteProjectModel, MeetingMinuteModel, MinuteExcerptsModel, MinuteFileModel)
 from django.contrib.auth.mixins import PermissionRequiredMixin
 
 
@@ -27,6 +28,41 @@ class MinuteCreateView(PermissionRequiredMixin, CreateView):
             initial["body"] = minute_data.body
             initial["agenda"] = minute_data.meeting_agenda.all()
         return initial """
+
+    def form_valid(self, form):
+        """
+        Salva a ata e verifica se há um PDF para anexar.
+        """
+        # Salvar a ata primeiro
+        response = super().form_valid(form)
+
+        # Verificar se há um PDF na sessão para anexar
+        pdf_attachment = self.request.session.get('pdf_attachment')
+        if pdf_attachment:
+            try:
+                # Decodificar o conteúdo base64 de volta para bytes
+                import base64
+                pdf_content = base64.b64decode(pdf_attachment['content'])
+                # Criar o arquivo a partir do conteúdo armazenado
+                pdf_file = ContentFile(pdf_content, name=pdf_attachment['name'])
+
+                # Criar o anexo
+                MinuteFileModel.objects.create(
+                    minute=self.object,
+                    file=pdf_file,
+                    description=f"PDF importado - {pdf_attachment['name']}"
+                )
+
+                # Limpar a sessão
+                del self.request.session['pdf_attachment']
+                if 'pdf_project_id' in self.request.session:
+                    del self.request.session['pdf_project_id']
+
+            except Exception as e:
+                # Log do erro, mas não falhar a criação da ata
+                print(f"Erro ao anexar PDF: {e}")
+
+        return response
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

@@ -228,6 +228,7 @@ CAPTCHA_FONT_SIZE = 40
 CAPTCHA_TEST_MODE = True
 
 MISTRAL_API_KEY = config("MISTRAL_API_KEY", default="")
+MISTRAL_MODEL = config("MISTRAL_MODEL", default="mistral-small-latest")
 
 if not DEBUG:
     sentry_sdk.init(

@@ -8,3 +8,4 @@ from .excerpt_model_form import MinuteExcerptsModelForm
 from .qualify_user_form import UserQualifyingForm
 from .agenda_form import MinuteAgendaModelForm
 from .minute_file_form import MinuteFileModelForm
+from .pdf_import_form import PDFImportForm
