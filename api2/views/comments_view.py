@@ -11,7 +11,7 @@ class CommentListAPIView(generics.ListAPIView):
         post_id = self.kwargs['post_id']
         if post_id:
             queryset = Comment.objects.filter(
-                post=post_id).order_by("-created")
+                post=post_id).order_by("created")
         else:
             queryset = Comment.objects.none()
         return queryset

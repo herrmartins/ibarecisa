@@ -36,7 +36,7 @@
                     {% endfor %}</small>
                 <i class="bi bi-chat-left-dots" data-post-id="{{ post.id }}"></i>
             </div>
-            <div class="comments hidden" id="comments-{{ post.id }}">
+            <div class="comments hidden comments-container" id="comments-{{ post.id }}">
 
             </div>
 
@@ -99,5 +99,7 @@
 </div>
 <script type="module" src="{% static 'js/comment_fetch.js' %}"></script>
 <script type="module" src="{% static 'js/post_comment.js' %}"></script>
+<script type="module" src="{% static 'js/get_cookie.js' %}"></script>
+<script type="module" src="{% static 'js/add_comment_to_html.js' %}"></script>
 
 {% endblock %}

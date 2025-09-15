@@ -4,57 +4,39 @@ import { addCommentToHTML } from "./add_comment_to_html.js";
 document
 	.getElementById("posts-container")
 	.addEventListener("click", (event) => {
-		if (event.target.classList.contains("submit-reply")) {
-			const commentId = event.target.getAttribute("data-comment-id");
-			const authorId = document
-				.getElementById("user-info")
-				.getAttribute("comment-author-id");
-			const postId = event.target.getAttribute("data-post-id");
-			const replyElem = document.getElementById(`reply-${commentId}`);
-			const replyContent = replyElem ? replyElem.value : "";
-			postReply(authorId, postId, commentId, replyContent);
-			if (replyElem) replyElem.value = "";
-			return;
-		}
-
-		if (event.target.classList.contains("reply-btn")) {
-			const commentId = event.target.getAttribute("data-comment-id");
-			toggleReplyForm(commentId);
-			return;
-		}
-
 		if (
 			event.target.tagName === "BUTTON" &&
-			event.target.hasAttribute("data-post-id") &&
-			event.target.id &&
-			event.target.id.startsWith("sendComment-")
+			event.target.hasAttribute("data-post-id")
 		) {
 			const authorId = document
 				.getElementById("user-info")
 				.getAttribute("comment-author-id");
 			const postId = event.target.getAttribute("data-post-id");
-			const commentElem = document.getElementById(`comment-${postId}`);
-			if (!commentElem) {
-				console.warn(`Comment textarea for post ${postId} not found`);
-				return;
-			}
-			const commentValue = commentElem.value;
-			postComment(authorId, postId, commentValue);
-			commentElem.value = "";
-			return;
+			const commentContent = document.getElementById(`comment-${postId}`);
+			postComment(authorId, postId, commentContent.value);
+			commentContent.value = "";
+		} else if (
+			event.target.classList.contains("reply-btn")
+		) {
+			const commentId = event.target.getAttribute("data-comment-id");
+			toggleReplyForm(commentId);
+		} else if (
+			event.target.classList.contains("submit-reply")
+		) {
+			const commentId = event.target.getAttribute("data-comment-id");
+			const authorId = document
+				.getElementById("user-info")
+				.getAttribute("comment-author-id");
+			const postId = event.target.getAttribute("data-post-id");
+			const replyContent = document.getElementById(`reply-${commentId}`).value;
+			postReply(authorId, postId, commentId, replyContent);
+			document.getElementById(`reply-${commentId}`).value = "";
 		}
 	});
 
 function postComment(authorId, postId, commentContent) {
 	if (typeof postId === "undefined") {
 		console.error("postId is undefined");
-		return;
-	}
-
-	const content = (commentContent || "").trim();
-	if (!content) {
-		console.warn("Not sending empty comment");
-		alert("O comentário não pode ficar vazio.");
 		return;
 	}
 
@@ -66,7 +48,9 @@ function postComment(authorId, postId, commentContent) {
 			"X-CSRFToken": csrftoken,
 		},
 		body: JSON.stringify({
-			content: content
+			author: authorId,
+			content: commentContent,
+			post: postId,
 		}),
 	})
 		.then((response) =>
@@ -104,13 +88,6 @@ function toggleReplyForm(commentId) {
 }
 
 function postReply(authorId, postId, parentId, content) {
-	const replyContent = (content || "").trim();
-	if (!replyContent) {
-		console.warn("Not sending empty reply");
-		alert("A resposta não pode ficar vazia.");
-		return;
-	}
-
 	const csrftoken = getCookie("csrftoken");
 	fetch(`/api2/comments/add/${postId}`, {
 		method: "POST",
@@ -119,8 +96,10 @@ function postReply(authorId, postId, parentId, content) {
 			"X-CSRFToken": csrftoken,
 		},
 		body: JSON.stringify({
-			content: replyContent,
-			parent: parentId
+			author: authorId,
+			content: content,
+			post: postId,
+			parent: parentId,
 		}),
 	})
 		.then((response) =>

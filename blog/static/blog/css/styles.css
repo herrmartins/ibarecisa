@@ -1,0 +1,50 @@
+.card-no-border {
+    border: 0;
+}
+
+.card-left-margin {
+    margin-left: 10px;
+}
+
+.card-text {
+    font-size: 14px;
+}
+
+.card-subtitle {
+    font-size: 12px;
+}
+.hidden {
+    display: none;
+}
+
+/* Smooth transitions for comments */
+.card {
+    transition: all 0.3s ease;
+}
+
+.comments-container {
+    transition: max-height 0.5s ease;
+}
+
+/* Nested comment styling */
+.ml-3 {
+    margin-left: 1rem;
+}
+
+.ml-6 {
+    margin-left: 2rem;
+}
+
+.ml-9 {
+    margin-left: 3rem;
+}
+
+/* Reply form styling */
+.reply-form {
+    margin-top: 0.5rem;
+}
+
+.reply-form textarea {
+    resize: vertical;
+    min-height: 60px;
+}

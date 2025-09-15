@@ -27,6 +27,7 @@ export function addCommentToHTML(comment) {
     const commentsContainer = document.getElementById(`comments-${comment.post}`);
     if (commentsContainer) {
         commentsContainer.appendChild(commentCard);
+
         commentsContainer.classList.remove('hidden');
     }
 }

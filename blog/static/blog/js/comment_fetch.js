@@ -48,13 +48,11 @@ function buildCommentTree(comments) {
 	const commentMap = {};
 	const roots = [];
 
-	// Create a map of comments by id
 	comments.forEach(comment => {
 		comment.replies = [];
 		commentMap[comment.id] = comment;
 	});
 
-	// Build the tree
 	comments.forEach(comment => {
 		if (comment.parent) {
 			if (commentMap[comment.parent]) {
