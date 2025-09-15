@@ -40,26 +40,39 @@
 
             </div>
 
-            <div class="card-footer py-3 border-0 hidden" id="form-{{ post.id }}" style="background-color: #f8f9fa;">
-                <div class="d-flex flex-start w-100">
-                    <img class="rounded-circle shadow-1-strong me-3" src="{% if user.profile_image %}
-                  {{ user.profile_image.url }}
-                {% else %}
-                  {% static 'img/user.png' %}
-                {% endif %}" alt="avatar" width="40" height="40" />
-                <p>Faça login para adicionar seu comentário...</p>
-                    {% if user.is_authenticated %}
-                    <div class="form-outline w-100">
-                        <textarea class="form-control" id="comment-{{ post.id }}" rows="4" style="background: #fff;"
-                            required></textarea>
-                        <label class="fw-light" for="commentContent">Seu comentário...</label>
+            <div class="card-footer py-4 border-0 hidden" id="form-{{ post.id }}" style="background: linear-gradient(135deg, rgba(248, 250, 252, 0.95) 0%, rgba(241, 245, 249, 0.95) 100%); backdrop-filter: blur(10px);">
+                <div class="row g-3">
+                    <div class="col-auto">
+                        <img class="rounded-circle shadow-sm" src="{% if user.profile_image %}
+                      {{ user.profile_image.url }}
+                    {% else %}
+                      {% static 'img/user.png' %}
+                    {% endif %}" alt="avatar" width="48" height="48" style="border: 2px solid rgba(59, 130, 246, 0.2);" />
                     </div>
-                    {% endif %}
+                    <div class="col">
+                        {% if not user.is_authenticated %}
+                        <div class="alert alert-info border-0 shadow-sm" style="background: rgba(191, 219, 254, 0.1); color: #1e40af;">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <strong>Faça login</strong> para adicionar seu comentário e participar da discussão.
+                        </div>
+                        {% else %}
+                        <div class="form-floating">
+                            <textarea class="form-control border-0 shadow-sm" id="comment-{{ post.id }}" rows="3" placeholder="Compartilhe seus pensamentos..." style="background: rgba(255, 255, 255, 0.9); border-radius: 12px; resize: vertical;" required></textarea>
+                            <label for="comment-{{ post.id }}" class="text-muted">
+                                <i class="bi bi-chat-dots me-1"></i>Seu comentário...
+                            </label>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <small class="text-muted">
+                                <i class="bi bi-shield-check me-1"></i>Comentários são moderados
+                            </small>
+                            <button type="button" class="btn btn-primary px-4 py-2 rounded-pill" id="sendComment-{{ post.id }}" data-post-id="{{ post.id }}">
+                                <i class="bi bi-send me-1"></i>Postar Comentário
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
                 </div>
-                {% if user.is_authenticated %}
-                <button type="button" class="btn btn-primary btn-sm" id="sendComment-{{ post.id }}"
-                    data-post-id="{{ post.id }}">Postar</button>
-                {% endif %}
             </div>
 
         </div>

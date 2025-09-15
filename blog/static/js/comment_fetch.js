@@ -24,7 +24,6 @@ function loadComments(postId) {
 		fetch(`/api2/comments/${postId}`)
 			.then((response) => response.json())
 			.then((comments) => {
-				console.log("Comentários", comments);
 				if (comments.length > 0) {
 					const commentTree = buildCommentTree(comments);
 					const commentElements = renderCommentTree(commentTree);
@@ -39,7 +38,7 @@ function loadComments(postId) {
 				}
 			})
 			.catch((error) => {
-				console.error("Error fetching comments:", error);
+				// Handle error silently
 			});
 	}
 }
@@ -48,13 +47,11 @@ function buildCommentTree(comments) {
 	const commentMap = {};
 	const roots = [];
 
-	// Create a map of comments by id
 	comments.forEach(comment => {
 		comment.replies = [];
 		commentMap[comment.id] = comment;
 	});
 
-	// Build the tree
 	comments.forEach(comment => {
 		if (comment.parent) {
 			if (commentMap[comment.parent]) {

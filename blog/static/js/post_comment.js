@@ -35,7 +35,6 @@ document
 			const postId = event.target.getAttribute("data-post-id");
 			const commentElem = document.getElementById(`comment-${postId}`);
 			if (!commentElem) {
-				console.warn(`Comment textarea for post ${postId} not found`);
 				return;
 			}
 			const commentValue = commentElem.value;
@@ -47,13 +46,11 @@ document
 
 function postComment(authorId, postId, commentContent) {
 	if (typeof postId === "undefined") {
-		console.error("postId is undefined");
 		return;
 	}
 
 	const content = (commentContent || "").trim();
 	if (!content) {
-		console.warn("Not sending empty comment");
 		alert("O comentário não pode ficar vazio.");
 		return;
 	}
@@ -73,11 +70,10 @@ function postComment(authorId, postId, commentContent) {
 			response.ok ? response.json() : Promise.reject(response),
 		)
 		.then((data) => {
-			console.log("Comment posted:", data);
 			addCommentToHTML(data);
 		})
 		.catch((error) => {
-			console.error("Error posting comment:", error);
+			// Handle error silently
 		});
 }
 
@@ -108,7 +104,6 @@ function toggleReplyForm(commentId) {
 function postReply(authorId, postId, parentId, content) {
 	const replyContent = (content || "").trim();
 	if (!replyContent) {
-		console.warn("Not sending empty reply");
 		alert("A resposta não pode ficar vazia.");
 		return;
 	}
@@ -129,14 +124,13 @@ function postReply(authorId, postId, parentId, content) {
 			response.ok ? response.json() : Promise.reject(response),
 		)
 		.then((data) => {
-			console.log("Reply posted:", data);
 			// Add the reply to the DOM
 			addReplyToDOM(data, parentId);
 			// Hide the reply form
 			toggleReplyForm(parentId);
 		})
 		.catch((error) => {
-			console.error("Error posting reply:", error);
+			// Handle error silently
 		});
 }
 
