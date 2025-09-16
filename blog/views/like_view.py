@@ -22,7 +22,19 @@ def toggle_like(request, post_id):
         post.likes.add(user)
         liked = True
 
+    # Get likers data for responsive UI
+    likers = []
+    for liker in post.likes.all()[:5]:  # Limit to 5 for performance
+        likers.append({
+            'id': liker.id,
+            'first_name': liker.first_name,
+            'last_name': liker.last_name,
+            'profile_image': liker.profile_image.url if liker.profile_image else None
+        })
+
     return JsonResponse({
         'liked': liked,
-        'like_count': post.likes.count()
+        'like_count': post.likes.count(),
+        'likers': likers,
+        'has_more_likers': post.likes.count() > 5
     })

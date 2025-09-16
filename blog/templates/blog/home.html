@@ -34,11 +34,81 @@
                     {% empty %}
                     Não categorizado...
                     {% endfor %}</small>
-                <div class="d-flex align-items-center">
+                <div class="d-flex align-items-center" x-data="{
+                    liked: {% if user in post.likes.all %}true{% else %}false{% endif %},
+                    likeCount: {{ post.likes.count }},
+                    likers: [],
+                    hasMoreLikers: {{ post.likes.count }} > 5,
+                    loading: false,
+                    postId: {{ post.id }},
+                    isAuthenticated: {% if user.is_authenticated %}true{% else %}false{% endif %},
+
+                    init() {
+                        this.likers = [
+                            {% for liker in post.likes.all|slice:":5" %}
+                            {
+                                id: {{ liker.id }},
+                                first_name: '{{ liker.first_name }}',
+                                last_name: '{{ liker.last_name }}',
+                                profile_image: {% if liker.profile_image %}'{{ liker.profile_image.url }}'{% else %}null{% endif %}
+                            }{% if not forloop.last %},{% endif %}
+                            {% endfor %}
+                        ];
+                    },
+
+                    async toggleLike() {
+                        if (!this.isAuthenticated || this.loading) return;
+
+                        this.loading = true;
+                        const csrfToken = this.getCookie('csrftoken');
+                        const likeUrl = `/blog/like/${this.postId}/`;
+
+                        try {
+                            const response = await fetch(likeUrl, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRFToken': csrfToken
+                                }
+                            });
+
+                            if (!response.ok) {
+                                throw new Error(`HTTP error! status: ${response.status}`);
+                            }
+
+                            const data = await response.json();
+
+                            this.liked = data.liked;
+                            this.likeCount = data.like_count;
+                            this.likers = data.likers;
+                            this.hasMoreLikers = data.has_more_likers;
+
+                        } catch (error) {
+                            console.error('Error:', error);
+                        } finally {
+                            this.loading = false;
+                        }
+                    },
+
+                    getCookie(name) {
+                        let cookieValue = null;
+                        if (document.cookie && document.cookie !== '') {
+                            const cookies = document.cookie.split(';');
+                            for (let i = 0; i < cookies.length; i++) {
+                                const cookie = cookies[i].trim();
+                                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                    break;
+                                }
+                            }
+                        }
+                        return cookieValue;
+                    }
+                }">
                     {% if user.is_authenticated %}
-                    <button type="button" class="btn btn-sm btn-outline-success like-btn rounded-pill" id="like-{{ post.id }}" data-post-id="{{ post.id }}" data-like-url="{% url 'blog:toggle-like' post.id %}" style="cursor: pointer;">
-                        <i class="bi bi-heart{% if user in post.likes.all %} fill{% endif %} me-1"></i>
-                        <span class="like-count" id="like-count-{{ post.id }}">{{ post.likes.count }}</span>
+                    <button type="button" class="btn btn-sm btn-outline-success like-btn rounded-pill" @click="toggleLike" :disabled="loading" style="cursor: pointer;">
+                        <i class="bi bi-heart me-1" :class="{ 'fill': liked }"></i>
+                        <span class="like-count" x-text="likeCount"></span>
                     </button>
                     {% else %}
                     <button type="button" class="btn btn-sm btn-outline-success like-btn rounded-pill" disabled style="opacity: 0.6; cursor: not-allowed;">
@@ -46,13 +116,11 @@
                         <span class="like-count">{{ post.likes.count }}</span>
                     </button>
                     {% endif %}
-                    <div class="likers-tooltip" id="likers-{{ post.id }}" style="display: none;">
-                        {% for liker in post.likes.all|slice:":5" %}
-                        <img src="{% if liker.profile_image %}{{ liker.profile_image.url }}{% else %}{% static 'img/user.png' %}{% endif %}" alt="{{ liker.first_name }}" width="24" height="24" class="rounded-circle me-1">
-                        {% endfor %}
-                        {% if post.likes.count > 5 %}
-                        <span>+{{ post.likes.count|add:-5 }}</span>
-                        {% endif %}
+                    <div class="likers-container ms-2" x-show="likers.length > 0" x-transition>
+                        <template x-for="liker in likers.slice(0, 5)" :key="liker.id">
+                            <img :src="liker.profile_image ? liker.profile_image : '/static/img/user.png'" :alt="liker.first_name" width="24" height="24" class="rounded-circle me-1" :title="liker.first_name + ' ' + liker.last_name">
+                        </template>
+                        <span x-show="hasMoreLikers" class="text-muted small" x-text="'+' + (likeCount - 5)"></span>
                     </div>
                 </div>
                 <i class="bi bi-chat-left-dots" data-post-id="{{ post.id }}"></i>
@@ -135,6 +203,5 @@
 <script type="module" src="{% static 'js/post_comment.js' %}"></script>
 <script type="module" src="{% static 'js/get_cookie.js' %}"></script>
 <script type="module" src="{% static 'js/add_comment_to_html.js' %}"></script>
-<script type="module" src="{% static 'blog/js/like.js' %}"></script>
 
 {% endblock %}
