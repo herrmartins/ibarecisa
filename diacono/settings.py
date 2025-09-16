@@ -127,10 +127,14 @@ USE_TZ = True
 if not DEBUG:
     STATIC_ROOT = BASE_DIR / "staticfiles"
     STATICFILES_DIRS = [
+        BASE_DIR / "static",
         BASE_DIR / "blog" / "static",
     ]
 else:
-    STATICFILES_DIRS = [BASE_DIR / "static"]
+    STATICFILES_DIRS = [
+        BASE_DIR / "static",
+        BASE_DIR / "blog" / "static",
+    ]
 
 STATIC_URL = "/static/"
 
