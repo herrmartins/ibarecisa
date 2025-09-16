@@ -115,7 +115,7 @@ function renderCommentTree(comments, depth = 0) {
 		const indentClass = depth > 0 ? `ml-${depth * 3}` : '';
 		const spacingClass = depth > 0 ? 'my-3' : 'mb-3';
 		const replyButton = `<button class="btn btn-sm btn-outline-primary reply-btn me-2" data-comment-id="${comment.id}"><i class="bi bi-reply me-1"></i>Responder</button>`;
-		const editButton = isCurrentUserAuthor(comment) ? `<button class="btn btn-sm btn-outline-warning edit-btn me-2" data-comment-id="${comment.id}"><i class="bi bi-pencil me-1"></i>Editar</button>` : '';
+		const editButton = isCurrentUserAuthor(comment) ? `<button class="btn btn-sm btn-outline-info edit-btn me-2" data-comment-id="${comment.id}"><i class="bi bi-pencil me-1"></i>Editar</button>` : '';
 		const repliesHtml = comment.replies.length > 0 ? renderCommentTree(comment.replies, depth + 1) : '';
 
 		return `
