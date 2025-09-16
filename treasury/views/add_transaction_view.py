@@ -2,6 +2,7 @@ from django.http import JsonResponse
 from django.views import View
 from django.core.exceptions import ValidationError
 from treasury.forms import TransactionForm
+import reversion
 
 
 class AddTransactionView(View):
@@ -9,7 +10,9 @@ class AddTransactionView(View):
         form = TransactionForm(request.POST, request.FILES)
         if form.is_valid():
             try:
-                transaction = form.save()
+                with reversion.create_revision():
+                    reversion.set_user(request.user)
+                    transaction = form.save()
                 month = transaction.date.month
                 year = transaction.date.year
                 return JsonResponse({"success": True, "month": month, "year": year})

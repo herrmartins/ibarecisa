@@ -4,6 +4,7 @@ from secretarial.forms import MinuteModelForm
 from secretarial.models import (
     MinuteProjectModel, MeetingMinuteModel, MinuteExcerptsModel, MinuteFileModel)
 from django.contrib.auth.mixins import PermissionRequiredMixin
+import reversion
 
 
 class MinuteCreateView(PermissionRequiredMixin, CreateView):
@@ -33,8 +34,10 @@ class MinuteCreateView(PermissionRequiredMixin, CreateView):
         """
         Salva a ata e verifica se há um PDF para anexar.
         """
-        # Salvar a ata primeiro
-        response = super().form_valid(form)
+        # Salvar a ata primeiro com controle de versão
+        with reversion.create_revision():
+            reversion.set_user(self.request.user)
+            response = super().form_valid(form)
 
         # Verificar se há um PDF na sessão para anexar
         pdf_attachment = self.request.session.get('pdf_attachment')

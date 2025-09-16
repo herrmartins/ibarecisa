@@ -3,6 +3,7 @@ from django.views.generic import UpdateView
 from treasury.models import TransactionModel
 from treasury.forms import TransactionForm
 from django.contrib.auth.mixins import PermissionRequiredMixin
+import reversion
 
 
 class TransactionUpdateView(PermissionRequiredMixin, UpdateView):
@@ -11,6 +12,11 @@ class TransactionUpdateView(PermissionRequiredMixin, UpdateView):
     form_class = TransactionForm
     template_name = "treasury/transaction_updated.html"
     context_object_name = "transaction"
+
+    def form_valid(self, form):
+        with reversion.create_revision():
+            reversion.set_user(self.request.user)
+            return super().form_valid(form)
 
     def get_success_url(self):
         transaction = self.object
