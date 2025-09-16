@@ -6,4 +6,4 @@ from .category_create_view import CategoryCreateView
 from .post_update_view import PostUpdateView
 from .category_update_view import CategoryUpdateView
 from .category_delete_view import CategoryDeleteView
-from .like_view import toggle_like
+from .like_view import toggle_like, toggle_comment_like

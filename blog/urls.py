@@ -9,6 +9,7 @@ from blog.views import (
     CategoryUpdateView,
     CategoryDeleteView,
     toggle_like,
+    toggle_comment_like,
 )
 
 app_name = "blog"
@@ -31,4 +32,5 @@ urlpatterns = [
         CategoryDeleteView.as_view(), name="delete-category"
     ),
     path("like/<int:post_id>/", toggle_like, name="toggle-like"),
+    path("comment/like/<int:comment_id>/", toggle_comment_like, name="toggle-comment-like"),
 ]
