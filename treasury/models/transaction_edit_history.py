@@ -6,6 +6,8 @@ from treasury.models import TransactionModel
 # Actually it also includes delete...
 
 
+# DEPRECATED: Esta funcionalidade foi substituída por django-reversion
+# Mantido apenas para compatibilidade com dados existentes
 class TransactionEditHistory(BaseModel):
     user = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True)
     transaction = models.ForeignKey(

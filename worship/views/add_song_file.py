@@ -2,6 +2,7 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_POST
 from worship.models import Song, SongFile
+import reversion
 
 @require_POST
 def add_song_file(request):
@@ -19,14 +20,16 @@ def add_song_file(request):
     description = request.POST.get('description', '')
     file_title = request.POST.get('file_title')
     
-    song_file = SongFile(
-        song=song,
-        file=uploaded_file,
-        file_type=file_type,
-        file_title=file_title,
-        description=description
-    )
-    song_file.save()
+    with reversion.create_revision():
+        reversion.set_user(request.user)
+        song_file = SongFile(
+            song=song,
+            file=uploaded_file,
+            file_type=file_type,
+            file_title=file_title,
+            description=description
+        )
+        song_file.save()
 
     return JsonResponse({
         'success': True,

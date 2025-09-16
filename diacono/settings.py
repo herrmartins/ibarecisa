@@ -36,6 +36,8 @@ INSTALLED_APPS = [
     "weasyprint",
     "captcha",
     "corsheaders",
+    "reversion",
+    "reversion_compare",
     "blog.apps.BlogConfig",
     "events.apps.EventsConfig",
     "core.apps.CoreConfig",
@@ -54,6 +56,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "reversion.middleware.RevisionMiddleware",
 ]
 
 ROOT_URLCONF = "diacono.urls"
