@@ -1,4 +1,4 @@
-import { getCookie } from "./get_cookie.js";
+/* getCookie is available globally as window.getCookie */
 
 document.addEventListener('DOMContentLoaded', function() {
     // Event delegation for comment like buttons

@@ -1,11 +1,20 @@
 
-export function addCommentToHTML(comment) {
+function isCurrentUserAuthor(comment) {
+    const userInfo = document.getElementById("user-info");
+    if (!userInfo) return false;
+
+    const currentUserId = userInfo.getAttribute("comment-author-id");
+    return currentUserId && currentUserId !== "null" && comment.author_id == currentUserId;
+}
+
+function addCommentToHTML(comment) {
     const commentCard = document.createElement('div');
-    commentCard.className = 'card ml-2 my-3 p-4 card-no-border shadow-sm animate__animated animate__fadeInUp';
+    commentCard.className = 'card my-3 p-4 card-no-border shadow-sm animate__animated animate__fadeInUp';
     commentCard.setAttribute('data-comment-id', comment.id);
     commentCard.style.animationDelay = '0.1s';
 
     const replyButton = `<button class="btn btn-sm btn-outline-primary reply-btn me-2 rounded-pill" data-comment-id="${comment.id}" data-bs-toggle="tooltip" title="Responder a este comentário"><i class="bi bi-reply-fill me-1"></i>Responder</button>`;
+    const editButton = isCurrentUserAuthor(comment) ? `<button class="btn btn-sm btn-outline-warning edit-btn me-2 rounded-pill" data-comment-id="${comment.id}" data-bs-toggle="tooltip" title="Editar este comentário"><i class="bi bi-pencil me-1"></i>Editar</button>` : '';
     const timeAgo = comment.created ? new Date(comment.created).toLocaleString('pt-BR', {
         year: 'numeric',
         month: 'short',
@@ -32,9 +41,10 @@ export function addCommentToHTML(comment) {
                             <span class="badge bg-light text-muted border">${timeAgo}</span>
                         </small>
                     </div>
-                    <p class="card-text mb-3 lh-base" style="line-height: 1.6;">${comment.content}</p>
+                    <div class="comment-content mb-3 lh-base" style="line-height: 1.6;">${comment.content}</div>
                     <div class="d-flex justify-content-between align-items-center">
                         <div class="d-flex gap-2">
+                            ${editButton}
                             ${replyButton}
                             <button class="btn btn-sm btn-outline-success like-btn rounded-pill" data-comment-id="${comment.id}" data-bs-toggle="tooltip" title="Curtir este comentário">
                                 <i class="bi bi-heart me-1"></i>
@@ -60,4 +70,7 @@ export function addCommentToHTML(comment) {
             return new bootstrap.Tooltip(tooltipTriggerEl);
         });
     }
+    
+    // Make it globally available
+    window.addCommentToHTML = addCommentToHTML;
 }

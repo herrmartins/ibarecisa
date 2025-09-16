@@ -1,5 +1,4 @@
-import { getCookie } from "./get_cookie.js";
-import { addCommentToHTML } from "./add_comment_to_html.js";
+/* getCookie and addCommentToHTML are available globally via window.getCookie and window.addCommentToHTML */
 
 document
 	.getElementById("posts-container")

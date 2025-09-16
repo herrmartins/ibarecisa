@@ -1,2 +1,3 @@
 from .comments_view import CommentListAPIView
 from .add_comment_view import CommentCreateAPIView
+from .update_comment_view import CommentUpdateAPIView

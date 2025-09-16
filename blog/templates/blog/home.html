@@ -3,7 +3,7 @@
 
 {% block content %}
 <div class="container">
-<div id="user-info" comment-author-id="{{ user.id }}"></div>
+<div id="user-info" comment-author-id="{% if request.user.is_authenticated %}{{ request.user.id }}{% else %}null{% endif %}"></div>
 <link rel="stylesheet" href="{% static 'blog/css/blog_styles.css' %}">
 <div class="container mt-4" id="posts-container">
     <!-- Post loop -->
@@ -199,9 +199,10 @@
         </nav>
     </div>
 </div>
-<script type="module" src="{% static 'js/comment_fetch.js' %}"></script>
-<script type="module" src="{% static 'js/post_comment.js' %}"></script>
-<script type="module" src="{% static 'js/get_cookie.js' %}"></script>
-<script type="module" src="{% static 'js/add_comment_to_html.js' %}"></script>
+<script src="{% static 'js/get_cookie.js' %}"></script>
+<script src="{% static 'js/comment_fetch.js' %}"></script>
+<script src="{% static 'js/post_comment.js' %}"></script>
+<script src="{% static 'js/add_comment_to_html.js' %}"></script>
+<script src="{% static 'js/comment_edit.js' %}"></script>
 
 {% endblock %}
