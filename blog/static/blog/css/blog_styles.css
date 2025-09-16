@@ -322,7 +322,9 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-.like-btn::before {
+.like-btn:not(.bi)::before {
+    /* decorative overlay used for button-like elements only.
+       Avoid applying to inline icon elements (.bi) which rely on ::before for glyphs. */
     content: '';
     position: absolute;
     top: 0;
@@ -732,4 +734,79 @@
     .btn {
         width: 100%;
     }
+}
+
+/* Like Button and Tooltip Styles */
+.like-btn {
+    color: #6b7280;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.like-btn:hover {
+    color: #ef4444;
+    transform: scale(1.1);
+}
+
+.like-btn.fill {
+    color: #ef4444;
+}
+
+/* Specific styles for like button when applied to icon element */
+.like-btn.bi {
+    padding: 0;
+    border: none;
+    background: none;
+    font-size: 1.1rem;
+    line-height: 1;
+    vertical-align: middle;
+    font-family: "bootstrap-icons" !important;
+}
+
+.like-btn.bi:hover {
+    transform: scale(1.1);
+    color: #ef4444 !important;
+}
+
+.like-btn.bi.fill {
+    color: #ef4444 !important;
+}
+
+.like-btn.bi::before {
+    /* Ensure the icon pseudo-element renders visibly and uses the Bootstrap Icons font.
+       We override layout/opacity rules from the generic like-btn::before overlay. */
+    display: inline-block;
+    position: static;
+    width: auto;
+    height: auto;
+    content: "\f417";
+    font-family: "bootstrap-icons" !important;
+    font-style: normal;
+    font-weight: normal !important;
+    line-height: 1;
+    vertical-align: middle;
+    opacity: 1 !important;
+    font-size: inherit;
+    color: inherit;
+}
+
+.likers-tooltip {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.9);
+    backdrop-filter: blur(10px);
+    border-radius: 8px;
+    padding: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.likers-tooltip img {
+    border: 1px solid rgba(255, 255, 255, 0.3);
 }

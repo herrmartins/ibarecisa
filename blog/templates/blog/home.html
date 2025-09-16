@@ -34,6 +34,27 @@
                     {% empty %}
                     Não categorizado...
                     {% endfor %}</small>
+                <div class="d-flex align-items-center">
+                    {% if user.is_authenticated %}
+                    <button type="button" class="btn btn-sm btn-outline-success like-btn rounded-pill" id="like-{{ post.id }}" data-post-id="{{ post.id }}" data-like-url="{% url 'blog:toggle-like' post.id %}" style="cursor: pointer;">
+                        <i class="bi bi-heart{% if user in post.likes.all %} fill{% endif %} me-1"></i>
+                        <span class="like-count" id="like-count-{{ post.id }}">{{ post.likes.count }}</span>
+                    </button>
+                    {% else %}
+                    <button type="button" class="btn btn-sm btn-outline-success like-btn rounded-pill" disabled style="opacity: 0.6; cursor: not-allowed;">
+                        <i class="bi bi-heart me-1"></i>
+                        <span class="like-count">{{ post.likes.count }}</span>
+                    </button>
+                    {% endif %}
+                    <div class="likers-tooltip" id="likers-{{ post.id }}" style="display: none;">
+                        {% for liker in post.likes.all|slice:":5" %}
+                        <img src="{% if liker.profile_image %}{{ liker.profile_image.url }}{% else %}{% static 'img/user.png' %}{% endif %}" alt="{{ liker.first_name }}" width="24" height="24" class="rounded-circle me-1">
+                        {% endfor %}
+                        {% if post.likes.count > 5 %}
+                        <span>+{{ post.likes.count|add:-5 }}</span>
+                        {% endif %}
+                    </div>
+                </div>
                 <i class="bi bi-chat-left-dots" data-post-id="{{ post.id }}"></i>
             </div>
             <div class="comments hidden comments-container" id="comments-{{ post.id }}">
@@ -114,5 +135,6 @@
 <script type="module" src="{% static 'js/post_comment.js' %}"></script>
 <script type="module" src="{% static 'js/get_cookie.js' %}"></script>
 <script type="module" src="{% static 'js/add_comment_to_html.js' %}"></script>
+<script type="module" src="{% static 'blog/js/like.js' %}"></script>
 
 {% endblock %}
