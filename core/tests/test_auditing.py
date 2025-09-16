@@ -182,7 +182,8 @@ class AuditingTests(TestCase):
             reversion.set_user(self.user)
             venue = Venue.objects.create(
                 name="Local de teste",
-                address="Endereço do local"
+                address="Endereço do local",
+                capacity=100
             )
 
         revisions = Revision.objects.filter(user=self.user)
@@ -244,7 +245,10 @@ class AuditingTests(TestCase):
         with reversion.create_revision():
             reversion.set_user(self.user)
             project = MinuteProjectModel.objects.create(
-                title="Projeto de ata de teste",
+                president=self.user,
+                secretary=self.user,
+                meeting_date=datetime.date(2024, 1, 1),
+                number_of_attendees="10",
                 body="Corpo do projeto"
             )
 
