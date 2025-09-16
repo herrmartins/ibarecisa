@@ -263,11 +263,35 @@ class AuditingTests(TestCase):
         self.assertIsNotNone(version)
         self.assertEqual(str(version.object_id), str(project.pk))
 
+    def test_custom_user_auditing_on_create(self):
+        """Testa se uma revisão é criada quando um usuário é criado"""
+        with reversion.create_revision():
+            reversion.set_user(self.user)
+            custom_user = User.objects.create_user(
+                username='test_user_audit',
+                email='test_audit@example.com',
+                password='testpass123',
+                first_name='João',
+                last_name='Silva'
+            )
+
+        revisions = Revision.objects.filter(user=self.user)
+        self.assertTrue(revisions.exists())
+
+        revision = revisions.last()
+        versions = Version.objects.filter(revision=revision)
+        self.assertTrue(versions.exists())
+
+        version = versions.first()
+        self.assertIsNotNone(version)
+        self.assertEqual(str(version.object_id), str(custom_user.pk))
+
     def test_new_models_compare_version_admin_functionality(self):
         """Testa se os novos modelos usam CompareVersionAdmin"""
         from events.admin import EventAdmin, VenueAdmin, EventCategoryAdmin
         from worship.admin import SongAdmin, SongFileAdmin, ComposerAdmin, HymnalAdmin
         from secretarial.admin import MinuteProjectAdmin
+        from users.admin import CustomUserAdmin
         from reversion_compare.admin import CompareVersionAdmin
 
         # Verifica se as classes admin herdam de CompareVersionAdmin
@@ -279,3 +303,4 @@ class AuditingTests(TestCase):
         self.assertTrue(issubclass(ComposerAdmin, CompareVersionAdmin))
         self.assertTrue(issubclass(HymnalAdmin, CompareVersionAdmin))
         self.assertTrue(issubclass(MinuteProjectAdmin, CompareVersionAdmin))
+        self.assertTrue(issubclass(CustomUserAdmin, CompareVersionAdmin))
