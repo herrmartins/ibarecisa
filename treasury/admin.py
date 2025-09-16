@@ -10,6 +10,9 @@ from treasury.models import (
 import reversion
 from reversion_compare.admin import CompareVersionAdmin
 
+# Register models for versioning
+reversion.register(TransactionModel)
+
 admin.site.register(TransactionEditHistory)
 admin.site.register(CategoryModel)
 admin.site.register(MonthlyBalance)

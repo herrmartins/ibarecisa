@@ -4,6 +4,7 @@ from django.contrib import messages
 from secretarial.models import MinuteProjectModel
 from secretarial.forms import MinuteProjectEditForm
 from django.contrib.auth.mixins import PermissionRequiredMixin
+import reversion
 
 
 class MinuteProjectEditView(PermissionRequiredMixin, UpdateView):
@@ -14,5 +15,7 @@ class MinuteProjectEditView(PermissionRequiredMixin, UpdateView):
     success_url = reverse_lazy('secretarial:list-minutes-projects')
 
     def form_valid(self, form):
-        messages.success(self.request, 'Projeto de ata atualizado com sucesso!')
-        return super().form_valid(form)
+        with reversion.create_revision():
+            reversion.set_user(self.request.user)
+            messages.success(self.request, 'Projeto de ata atualizado com sucesso!')
+            return super().form_valid(form)

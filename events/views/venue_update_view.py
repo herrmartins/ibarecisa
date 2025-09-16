@@ -5,6 +5,7 @@ from django.urls import reverse_lazy
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib import messages
 from django.contrib.messages.views import SuccessMessageMixin
+import reversion
 
 
 class VenueUpdateView(PermissionRequiredMixin, SuccessMessageMixin, UpdateView):
@@ -13,7 +14,12 @@ class VenueUpdateView(PermissionRequiredMixin, SuccessMessageMixin, UpdateView):
     form_class = VenueForm
     template_name = 'events/venue_form.html'
     success_url = reverse_lazy('events:venues-list')
-    success_message = "Local de eventos criado com sucesso..."
+    success_message = "Local de eventos alterado com sucesso..."
+
+    def form_valid(self, form):
+        with reversion.create_revision():
+            reversion.set_user(self.request.user)
+            return super().form_valid(form)
 
     def form_invalid(self, form):
         messages.error(self.request, "Erro no formulário...")

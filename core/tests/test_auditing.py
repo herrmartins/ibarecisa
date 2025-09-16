@@ -1,8 +1,10 @@
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from reversion.models import Revision, Version
-from secretarial.models import MeetingMinuteModel
+from secretarial.models import MeetingMinuteModel, MinuteProjectModel
 from treasury.models import TransactionModel, MonthlyBalance
+from events.models import Event, Venue, EventCategory
+from worship.models import Song, SongFile, Composer, Hymnal, SongTheme
 import reversion
 import datetime
 from decimal import Decimal
@@ -143,3 +145,133 @@ class AuditingTests(TestCase):
         self.assertEqual(data2['description'], "Descrição modificada")
         self.assertEqual(data1['amount'], Decimal('100.00'))
         self.assertEqual(data2['amount'], Decimal('150.00'))
+
+    def test_event_auditing_on_create(self):
+        """Testa se uma revisão é criada quando um evento é criado"""
+        # Criar venue necessário
+        venue = Venue.objects.create(
+            name="Local de teste",
+            address="Endereço do local",
+            capacity=100
+        )
+
+        with reversion.create_revision():
+            reversion.set_user(self.user)
+            event = Event.objects.create(
+                user=self.user,
+                title="Evento de teste",
+                description="Descrição do evento",
+                start_date=datetime.datetime(2024, 6, 1, 10, 0),
+                location=venue
+            )
+
+        revisions = Revision.objects.filter(user=self.user)
+        self.assertTrue(revisions.exists())
+
+        revision = revisions.last()
+        versions = Version.objects.filter(revision=revision)
+        self.assertTrue(versions.exists())
+
+        version = versions.first()
+        self.assertIsNotNone(version)
+        self.assertEqual(str(version.object_id), str(event.pk))
+
+    def test_venue_auditing_on_create(self):
+        """Testa se uma revisão é criada quando um local é criado"""
+        with reversion.create_revision():
+            reversion.set_user(self.user)
+            venue = Venue.objects.create(
+                name="Local de teste",
+                address="Endereço do local"
+            )
+
+        revisions = Revision.objects.filter(user=self.user)
+        self.assertTrue(revisions.exists())
+
+        revision = revisions.last()
+        versions = Version.objects.filter(revision=revision)
+        self.assertTrue(versions.exists())
+
+        version = versions.first()
+        self.assertIsNotNone(version)
+        self.assertEqual(str(version.object_id), str(venue.pk))
+
+    def test_event_category_auditing_on_create(self):
+        """Testa se uma revisão é criada quando uma categoria de evento é criada"""
+        with reversion.create_revision():
+            reversion.set_user(self.user)
+            category = EventCategory.objects.create(
+                name="Categoria de teste",
+                description="Descrição da categoria"
+            )
+
+        revisions = Revision.objects.filter(user=self.user)
+        self.assertTrue(revisions.exists())
+
+        revision = revisions.last()
+        versions = Version.objects.filter(revision=revision)
+        self.assertTrue(versions.exists())
+
+        version = versions.first()
+        self.assertIsNotNone(version)
+        self.assertEqual(str(version.object_id), str(category.pk))
+
+    def test_song_auditing_on_create(self):
+        """Testa se uma revisão é criada quando uma música é criada"""
+        composer = Composer.objects.create(name="Compositor de teste")
+
+        with reversion.create_revision():
+            reversion.set_user(self.user)
+            song = Song.objects.create(
+                title="Música de teste",
+                artist=composer,
+                lyrics="Letra da música"
+            )
+
+        revisions = Revision.objects.filter(user=self.user)
+        self.assertTrue(revisions.exists())
+
+        revision = revisions.last()
+        versions = Version.objects.filter(revision=revision)
+        self.assertTrue(versions.exists())
+
+        version = versions.first()
+        self.assertIsNotNone(version)
+        self.assertEqual(str(version.object_id), str(song.pk))
+
+    def test_minute_project_auditing_on_create(self):
+        """Testa se uma revisão é criada quando um projeto de ata é criado"""
+        with reversion.create_revision():
+            reversion.set_user(self.user)
+            project = MinuteProjectModel.objects.create(
+                title="Projeto de ata de teste",
+                body="Corpo do projeto"
+            )
+
+        revisions = Revision.objects.filter(user=self.user)
+        self.assertTrue(revisions.exists())
+
+        revision = revisions.last()
+        versions = Version.objects.filter(revision=revision)
+        self.assertTrue(versions.exists())
+
+        version = versions.first()
+        self.assertIsNotNone(version)
+        self.assertEqual(str(version.object_id), str(project.pk))
+
+    def test_new_models_compare_version_admin_functionality(self):
+        """Testa se os novos modelos usam CompareVersionAdmin"""
+        from events.admin import EventAdmin, VenueAdmin, EventCategoryAdmin
+        from worship.admin import SongAdmin, SongFileAdmin, ComposerAdmin, HymnalAdmin
+        from secretarial.admin import MinuteProjectAdmin
+        from reversion_compare.admin import CompareVersionAdmin
+
+        # Verifica se as classes admin herdam de CompareVersionAdmin
+        self.assertTrue(issubclass(EventAdmin, CompareVersionAdmin))
+        self.assertTrue(issubclass(VenueAdmin, CompareVersionAdmin))
+        self.assertTrue(issubclass(EventCategoryAdmin, CompareVersionAdmin))
+        self.assertTrue(issubclass(SongAdmin, CompareVersionAdmin))
+        self.assertTrue(issubclass(SongFileAdmin, CompareVersionAdmin))
+        self.assertTrue(issubclass(ComposerAdmin, CompareVersionAdmin))
+        self.assertTrue(issubclass(HymnalAdmin, CompareVersionAdmin))
+        self.assertTrue(issubclass(MinuteProjectAdmin, CompareVersionAdmin))

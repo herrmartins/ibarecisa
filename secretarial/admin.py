@@ -8,10 +8,18 @@ from secretarial.models import (
 import reversion
 from reversion_compare.admin import CompareVersionAdmin
 
+# Register models for versioning
+reversion.register(MinuteProjectModel)
+reversion.register(MeetingMinuteModel)
+
 admin.site.register(MeetingAgendaModel)
 admin.site.register(MinuteTemplateModel)
 admin.site.register(MinuteExcerptsModel)
-admin.site.register(MinuteProjectModel)
+
+
+@admin.register(MinuteProjectModel)
+class MinuteProjectAdmin(CompareVersionAdmin):
+    pass
 
 
 @admin.register(MeetingMinuteModel)

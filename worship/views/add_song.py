@@ -2,6 +2,7 @@ from django.http import JsonResponse
 from django.views import View
 import json
 from worship.models import Song, Composer, SongTheme
+import reversion
 
 class SongAddView(View):
     def post(self, request):
@@ -34,16 +35,18 @@ class SongAddView(View):
                 except SongTheme.DoesNotExist:
                     return JsonResponse({"success": False, "error": "Tema não encontrado."}, status=400)
 
-            song = Song.objects.create(
-                title=title,
-                artist=artist,
-                lyrics=lyrics,
-                metrics=metrics,
-                key=key
-            )
+            with reversion.create_revision():
+                reversion.set_user(request.user)
+                song = Song.objects.create(
+                    title=title,
+                    artist=artist,
+                    lyrics=lyrics,
+                    metrics=metrics,
+                    key=key
+                )
 
-            if theme:
-                song.themes.add(theme)
+                if theme:
+                    song.themes.add(theme)
 
             return JsonResponse({"success": True, "song_id": song.id})
 
