@@ -1,10 +1,10 @@
 
-export function addCommentToHTML(comment) {
+function addCommentToHTML(comment) {
     const commentCard = document.createElement('div');
-    commentCard.className = 'card ml-2 my-3 p-4 card-no-border shadow-sm animate__animated animate__fadeInUp';
+    commentCard.className = 'card my-3 p-4 card-no-border shadow-sm animate__animated animate__fadeInUp';
     commentCard.setAttribute('data-comment-id', comment.id);
     commentCard.style.animationDelay = '0.1s';
-
+ 
     const replyButton = `<button class="btn btn-sm btn-outline-primary reply-btn me-2 rounded-pill" data-comment-id="${comment.id}" data-bs-toggle="tooltip" title="Responder a este comentário"><i class="bi bi-reply-fill me-1"></i>Responder</button>`;
     const timeAgo = comment.created ? new Date(comment.created).toLocaleString('pt-BR', {
         year: 'numeric',
@@ -13,7 +13,7 @@ export function addCommentToHTML(comment) {
         hour: '2-digit',
         minute: '2-digit'
     }) : 'Agora mesmo';
-
+ 
     commentCard.innerHTML = `
         <div class="card-body p-0">
             <div class="d-flex mb-3">
@@ -49,15 +49,18 @@ export function addCommentToHTML(comment) {
                 </div>
             </div>
         </div>`;
-
+ 
     const commentsContainer = document.getElementById(`comments-${comment.post}`);
     if (commentsContainer) {
         commentsContainer.appendChild(commentCard);
         commentsContainer.classList.remove('hidden');
-
+ 
         const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
         const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
             return new bootstrap.Tooltip(tooltipTriggerEl);
         });
     }
 }
+ 
+// Expose function globally for non-module loading
+window.addCommentToHTML = addCommentToHTML;

@@ -6,4 +6,6 @@ urlpatterns = [
          views.CommentListAPIView.as_view(), name="comment-filter"),
     path("comments/add/<int:post_id>",
          views.CommentCreateAPIView.as_view(), name="comment-create"),
+    path("comments/update/<int:pk>",
+         views.CommentUpdateAPIView.as_view(), name="comment-update"),
 ]

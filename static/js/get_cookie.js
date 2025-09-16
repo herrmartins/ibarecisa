@@ -1,5 +1,5 @@
 // get_cookie.js
-export function getCookie(name) {
+function getCookie(name) {
   let cookieValue = null;
 
   if (document.cookie && document.cookie !== '') {
@@ -17,3 +17,6 @@ export function getCookie(name) {
 
   return cookieValue;
 }
+
+// Make it globally available (for non-module script loading)
+window.getCookie = getCookie;

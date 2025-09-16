@@ -1,4 +1,14 @@
-import { getCookie } from "./get_cookie.js";
+// comment_fetch.js
+
+function isCurrentUserAuthor(comment) {
+	const userInfo = document.getElementById("user-info");
+	if (!userInfo) return false;
+
+	const currentUserId = userInfo.getAttribute("comment-author-id");
+	// Normalize to strings to avoid type/coercion issues and make check deterministic.
+	if (!currentUserId || currentUserId === "null") return false;
+	return String(comment.author_id) === String(currentUserId);
+}
 
 document
 	.getElementById("posts-container")
@@ -20,27 +30,43 @@ function loadComments(postId) {
 		form.classList.remove("hidden");
 	}
 
-	if (commentsContainer.innerHTML.trim() === "") {
-		fetch(`/api2/comments/${postId}`)
-			.then((response) => response.json())
-			.then((comments) => {
-				if (comments.length > 0) {
-					const commentTree = buildCommentTree(comments);
-					const commentElements = renderCommentTree(commentTree);
-					commentsContainer.innerHTML = commentElements;
-				} else {
-					const noCommentsMsg = document.createElement("p");
-					noCommentsMsg.textContent = "Seja o primeiro a comentar...";
-					commentsContainer.appendChild(noCommentsMsg);
-					setTimeout(() => {
-						noCommentsMsg.style.display = "none";
-					}, 3000);
-				}
-			})
-			.catch((error) => {
-				// Handle error silently
-			});
+	// Debug: log current user id attribute so we can diagnose missing "Editar" buttons
+	try {
+		const userInfo = document.getElementById("user-info");
+		console.debug('[comment_fetch] user-info element:', userInfo);
+		console.debug('[comment_fetch] currentUserId attr:', userInfo ? userInfo.getAttribute('comment-author-id') : null);
+	} catch (e) {
+		console.debug('[comment_fetch] unable to read user-info', e);
 	}
+
+	// Always fetch fresh comments from the API when opening the comments pane.
+	// This ensures the client-side renderer (which adds Edit buttons for the current user)
+	// is used even if the server injected HTML is present.
+	fetch(`/api2/comments/${postId}`)
+		.then((response) => response.json())
+		.then((comments) => {
+			if (comments.length > 0) {
+				const commentTree = buildCommentTree(comments);
+				// Debug: log comments received from API
+				console.debug('[comment_fetch] comments fetched:', comments);
+				const commentElements = renderCommentTree(commentTree);
+				commentsContainer.innerHTML = commentElements;
+				// After injecting, log how many edit buttons exist
+				console.debug('[comment_fetch] edit buttons after render:', document.querySelectorAll('.edit-btn').length);
+			} else {
+				commentsContainer.innerHTML = '';
+				const noCommentsMsg = document.createElement("p");
+				noCommentsMsg.textContent = "Seja o primeiro a comentar...";
+				commentsContainer.appendChild(noCommentsMsg);
+				setTimeout(() => {
+					noCommentsMsg.style.display = "none";
+				}, 3000);
+			}
+		})
+		.catch((error) => {
+			// Handle error silently
+			console.error('Erro ao carregar comentários:', error);
+		});
 }
 
 function buildCommentTree(comments) {
@@ -68,30 +94,37 @@ function buildCommentTree(comments) {
 function renderCommentTree(comments, depth = 0) {
 	return comments.map(comment => {
 		const indentClass = depth > 0 ? `ml-${depth * 3}` : '';
+		const spacingClass = depth > 0 ? 'my-3' : 'mb-3';
 		const replyButton = `<button class="btn btn-sm btn-outline-primary reply-btn me-2" data-comment-id="${comment.id}"><i class="bi bi-reply me-1"></i>Responder</button>`;
+		const editButton = isCurrentUserAuthor(comment) ? `<button class="btn btn-sm btn-outline-warning edit-btn me-2" data-comment-id="${comment.id}"><i class="bi bi-pencil me-1"></i>Editar</button>` : '';
 		const repliesHtml = comment.replies.length > 0 ? renderCommentTree(comment.replies, depth + 1) : '';
 
 		return `
-			<div class="card ${indentClass} my-3 p-3 card-no-border shadow-sm" data-comment-id="${comment.id}">
-				<div class="card-body p-0">
-					<p class="card-text mb-3">${comment.content}</p>
-					<div class="d-flex justify-content-between align-items-center">
-						<div class="d-flex flex-row align-items-center">
-							${comment.user_photo ? `<img src="${comment.user_photo}" alt="avatar" width="32" height="32" class="me-2" />` : '<div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;"><i class="bi bi-person"></i></div>'}
-							<div>
-								<p class="small mb-0 fw-semibold">${comment.author_name}</p>
-								<p class="small text-muted mb-0">${comment.created || 'Agora'}</p>
+			<div class="comment-item ${indentClass} ${spacingClass}" data-comment-id="${comment.id}" data-author-id="${comment.author_id}">
+				<div class="card p-3 card-no-border shadow-sm">
+					<div class="card-body p-0">
+						<div class="comment-content mb-3">${comment.content}</div>
+						<div class="d-flex justify-content-between align-items-center">
+							<div class="d-flex flex-row align-items-center">
+								${comment.user_photo ? `<img src="${comment.user_photo}" alt="avatar" width="32" height="32" class="me-2" />` : '<div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;"><i class="bi bi-person"></i></div>'}
+								<div>
+									<p class="small mb-0 fw-semibold">${comment.author_name}</p>
+									<p class="small text-muted mb-0">${comment.created || 'Agora'}</p>
+								</div>
 							</div>
-						</div>
-						<div class="d-flex flex-row align-items-center">
-							${replyButton}
-							<button class="btn btn-sm btn-outline-secondary me-2 like-btn" data-comment-id="${comment.id}">
-								<i class="bi bi-hand-thumbs-up me-1"></i><span class="like-count">${comment.likes_count || 0}</span>
-							</button>
+							<div class="d-flex flex-row align-items-center">
+								${editButton}
+								${replyButton}
+								<button class="btn btn-sm btn-outline-secondary me-2 like-btn" data-comment-id="${comment.id}">
+									<i class="bi bi-hand-thumbs-up me-1"></i><span class="like-count">${comment.likes_count || 0}</span>
+								</button>
+							</div>
 						</div>
 					</div>
 				</div>
-				${repliesHtml}
+				<div class="replies">
+					${repliesHtml}
+				</div>
 			</div>
 		`;
 	}).join('');

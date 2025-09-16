@@ -63,8 +63,11 @@
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Prevent first-child margin collapse and ensure comments are contained */
 .comments-container {
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    padding-top: 0.75rem;
+    overflow: auto; /* creates a new block formatting context to avoid margin collapse */
 }
 
 /* Ultra Modern Nested Comment Styling */
@@ -699,6 +702,14 @@
     scroll-behavior: smooth;
 }
 
+/* Ensure top-level comments are contained and not visually pushed outside by pseudo-elements/margins */
+.comments-container .comment-list-wrapper {
+    padding-top: 0.75rem;
+}
+.comments-container .comment-item:first-child .card {
+    margin-top: 0 !important;
+}
+
 /* Enhanced Focus States */
 .btn:focus,
 .form-control:focus {
@@ -806,4 +817,62 @@
 
 .likers-tooltip img {
     border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Enhanced Edit Button Styling - matches reply button aesthetic */
+.edit-btn {
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 50%, #0e7490 100%);
+    border: none;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 25px;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    box-shadow:
+        0 4px 15px rgba(6, 182, 212, 0.4),
+        0 2px 4px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.edit-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.edit-btn:hover {
+    background: linear-gradient(135deg, #0891b2 0%, #0e7490 50%, #155e75 100%);
+    transform: translateY(-2px) scale(1.05);
+    box-shadow:
+        0 8px 25px rgba(6, 182, 212, 0.6),
+        0 4px 8px rgba(0, 0, 0, 0.2);
+    color: white;
+}
+
+.edit-btn:hover::before {
+    left: 100%;
+}
+
+.edit-btn:active {
+    transform: translateY(0) scale(0.98);
+    transition: all 0.1s ease;
+}
+
+/* Ensure reply button text is highly visible */
+.reply-btn {
+    color: white !important;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.reply-btn:hover {
+    color: white !important;
 }

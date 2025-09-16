@@ -1,5 +1,4 @@
-import { getCookie } from "./get_cookie.js";
-import { addCommentToHTML } from "./add_comment_to_html.js";
+// post_comment.js
 
 document
 	.getElementById("posts-container")
@@ -134,31 +133,41 @@ function postReply(authorId, postId, parentId, content) {
 		});
 }
 
+function isCurrentUserAuthor(comment) {
+    const userInfo = document.getElementById("user-info");
+    if (!userInfo) return false;
+
+    const currentUserId = userInfo.getAttribute("comment-author-id");
+    return currentUserId && currentUserId !== "null" && comment.author_id == currentUserId;
+}
+
 function addReplyToDOM(reply, parentId) {
-	const parentCard = document.querySelector(`[data-comment-id="${parentId}"]`);
-	const replyCard = document.createElement('div');
-	replyCard.className = 'card ml-3 my-3 p-3 card-no-border shadow-sm';
-	replyCard.setAttribute('data-comment-id', reply.id);
-	const replyButton = `<button class="btn btn-sm btn-outline-primary reply-btn me-2" data-comment-id="${reply.id}"><i class="bi bi-reply me-1"></i>Responder</button>`;
-	replyCard.innerHTML = `
-		<div class="card-body p-0">
-			<p class="card-text mb-3">${reply.content}</p>
-			<div class="d-flex justify-content-between align-items-center">
-				<div class="d-flex flex-row align-items-center">
-					${reply.user_photo ? `<img src="${reply.user_photo}" alt="avatar" width="32" height="32" class="me-2" />` : '<div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;"><i class="bi bi-person"></i></div>'}
-					<div>
-						<p class="small mb-0 fw-semibold">${reply.author_name}</p>
-						<p class="small text-muted mb-0">${reply.created || 'Agora'}</p>
-					</div>
-				</div>
-				<div class="d-flex flex-row align-items-center">
-					${replyButton}
-					<button class="btn btn-sm btn-outline-secondary me-2 like-btn" data-comment-id="${reply.id}">
-						<i class="bi bi-hand-thumbs-up me-1"></i><span class="like-count">${reply.likes_count || 0}</span>
-					</button>
-				</div>
-			</div>
-		</div>
-	`;
-	parentCard.appendChild(replyCard);
+    const parentCard = document.querySelector(`[data-comment-id="${parentId}"]`);
+    const replyCard = document.createElement('div');
+    replyCard.className = 'card ml-3 my-3 p-3 card-no-border shadow-sm';
+    replyCard.setAttribute('data-comment-id', reply.id);
+    const replyButton = `<button class="btn btn-sm btn-outline-primary reply-btn me-2" data-comment-id="${reply.id}"><i class="bi bi-reply me-1"></i>Responder</button>`;
+    const editButton = isCurrentUserAuthor(reply) ? `<button class="btn btn-sm btn-outline-warning edit-btn me-2" data-comment-id="${reply.id}"><i class="bi bi-pencil me-1"></i>Editar</button>` : '';
+    replyCard.innerHTML = `
+        <div class="card-body p-0">
+            <div class="comment-content mb-3">${reply.content}</div>
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex flex-row align-items-center">
+                    ${reply.user_photo ? `<img src="${reply.user_photo}" alt="avatar" width="32" height="32" class="me-2" />` : '<div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;"><i class="bi bi-person"></i></div>'}
+                    <div>
+                        <p class="small mb-0 fw-semibold">${reply.author_name}</p>
+                        <p class="small text-muted mb-0">${reply.created || 'Agora'}</p>
+                    </div>
+                </div>
+                <div class="d-flex flex-row align-items-center">
+                    ${editButton}
+                    ${replyButton}
+                    <button class="btn btn-sm btn-outline-secondary me-2 like-btn" data-comment-id="${reply.id}">
+                        <i class="bi bi-hand-thumbs-up me-1"></i><span class="like-count">${reply.likes_count || 0}</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    parentCard.appendChild(replyCard);
 }
