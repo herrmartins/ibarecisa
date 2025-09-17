@@ -6,6 +6,7 @@ function addCommentToHTML(comment) {
     commentCard.style.animationDelay = '0.1s';
  
     const replyButton = `<button class="btn btn-sm btn-outline-primary reply-btn me-2 rounded-pill" data-comment-id="${comment.id}" data-bs-toggle="tooltip" title="Responder a este comentário"><i class="bi bi-reply-fill me-1"></i>Responder</button>`;
+    const deleteButton = `<button class="btn btn-sm btn-outline-danger delete-btn me-2 rounded-pill" data-comment-id="${comment.id}" data-bs-toggle="tooltip" title="Excluir este comentário"><i class="bi bi-trash me-1"></i>Excluir</button>`;
     const timeAgo = comment.created ? new Date(comment.created).toLocaleString('pt-BR', {
         year: 'numeric',
         month: 'short',
@@ -35,6 +36,7 @@ function addCommentToHTML(comment) {
                     <p class="card-text mb-3 lh-base" style="line-height: 1.6;">${comment.content}</p>
                     <div class="d-flex justify-content-between align-items-center">
                         <div class="d-flex gap-2">
+                            ${deleteButton}
                             ${replyButton}
                             <button class="btn btn-sm btn-outline-success like-btn rounded-pill" data-comment-id="${comment.id}" data-bs-toggle="tooltip" title="Curtir este comentário">
                                 <i class="bi bi-heart me-1"></i>

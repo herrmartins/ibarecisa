@@ -26,9 +26,11 @@
         <li class="nav-item">
           <a class="nav-link mx-2" href="{% url 'events:home' %}">Eventos</a>
         </li>
-        <li class="nav-item">
-          <a class="nav-link mx-2" href="{% url 'worship:home' %}">Música</a>
-        </li>
+        {% if user.is_staff or user.type == "REGULAR" %}
+          <li class="nav-item">
+            <a class="nav-link mx-2" href="{% url 'worship:home' %}">Música</a>
+          </li>
+        {% endif %}
         <li class="nav-item">
             <form method="post" action="{% url 'logout' %}">
                 {% csrf_token %}

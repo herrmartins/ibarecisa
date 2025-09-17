@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "secretarial.apps.SecretarialConfig",
     "treasury.apps.TreasuryConfig",
     "worship.apps.WorshipConfig",
+    "api2",
 ]
 
 MIDDLEWARE = [

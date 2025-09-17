@@ -26,6 +26,17 @@ document
 		}
 	});
 
+// Event listener for delete button
+document
+	.getElementById("posts-container")
+	.addEventListener("click", (event) => {
+		if (event.target.classList.contains("delete-btn") || event.target.closest(".delete-btn")) {
+			const deleteBtn = event.target.classList.contains("delete-btn") ? event.target : event.target.closest(".delete-btn");
+			const commentId = deleteBtn.getAttribute("data-comment-id");
+			deleteComment(commentId);
+		}
+	});
+
 function loadComments(postId) {
 	const commentsContainer = document.getElementById(`comments-${postId}`);
 	const form = document.getElementById(`form-${postId}`);
@@ -40,8 +51,6 @@ function loadComments(postId) {
 	// Debug: log current user id attribute so we can diagnose missing "Editar" buttons
 	try {
 		const userInfo = document.getElementById("user-info");
-		console.debug('[comment_fetch] user-info element:', userInfo);
-		console.debug('[comment_fetch] currentUserId attr:', userInfo ? userInfo.getAttribute('comment-author-id') : null);
 	} catch (e) {
 		console.debug('[comment_fetch] unable to read user-info', e);
 	}
@@ -55,8 +64,6 @@ function loadComments(postId) {
 
 			if (comments.length > 0) {
 				const commentTree = buildCommentTree(comments);
-				// Debug: log comments received from API
-				console.debug('[comment_fetch] comment tree roots:', commentTree.length);
 				const commentElements = renderCommentTree(commentTree);
 				// Insert inside a reliable wrapper to avoid stray text nodes or margin-collapsing issues
 				commentsContainer.innerHTML = '';
@@ -81,6 +88,42 @@ function loadComments(postId) {
 			// Handle error silently but log for diagnostics
 			console.error('[comment_fetch] Erro ao carregar comentários:', error);
 		});
+}
+
+function deleteComment(commentId) {
+	if (!confirm('Tem certeza que deseja excluir este comentário? Esta ação não pode ser desfeita.')) {
+		return;
+	}
+
+	const csrfToken = getCookie('csrftoken');
+	const deleteUrl = `/api2/comments/delete/${commentId}/`;
+
+	fetch(deleteUrl, {
+		method: 'DELETE',
+		credentials: 'same-origin',
+		headers: {
+			'Content-Type': 'application/json',
+			'X-CSRFToken': csrfToken
+		}
+	})
+	.then(response => {
+		if (!response.ok) {
+			throw new Error(`HTTP error! status: ${response.status}`);
+		}
+		return response.json();
+	})
+	.then(data => {
+		// Remove the comment from the DOM
+		const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
+		if (commentElement) {
+			commentElement.remove();
+		}
+		console.log('Comentário excluído com sucesso');
+	})
+	.catch(error => {
+		console.error('Erro ao excluir comentário:', error);
+		alert('Erro ao excluir comentário. Tente novamente.');
+	});
 }
 
 function buildCommentTree(comments) {
@@ -111,6 +154,7 @@ function renderCommentTree(comments, depth = 0) {
 		const spacingClass = depth > 0 ? 'my-3' : 'mb-3';
 		const replyButton = `<button class="btn btn-sm btn-outline-primary reply-btn me-2" data-comment-id="${comment.id}"><i class="bi bi-reply me-1"></i>Responder</button>`;
 		const editButton = isCurrentUserAuthor(comment) ? `<button class="btn btn-sm btn-outline-info edit-btn me-2" data-comment-id="${comment.id}"><i class="bi bi-pencil me-1"></i>Editar</button>` : '';
+		const deleteButton = isCurrentUserAuthor(comment) ? `<button class="btn btn-sm btn-outline-danger delete-btn me-2" data-comment-id="${comment.id}"><i class="bi bi-trash me-1"></i>Excluir</button>` : '';
 		const repliesHtml = comment.replies.length > 0 ? renderCommentTree(comment.replies, depth + 1) : '';
 
 		return `
@@ -128,6 +172,7 @@ function renderCommentTree(comments, depth = 0) {
 							</div>
 							<div class="d-flex flex-row align-items-center">
 								${editButton}
+								${deleteButton}
 								${replyButton}
 								<button class="btn btn-sm btn-outline-secondary me-2 like-btn" data-comment-id="${comment.id}">
 									<i class="bi bi-hand-thumbs-up me-1"></i><span class="like-count">${comment.likes_count || 0}</span>
@@ -142,4 +187,19 @@ function renderCommentTree(comments, depth = 0) {
 			</div>
 		`;
 	}).join('');
+}
+
+function getCookie(name) {
+	let cookieValue = null;
+	if (document.cookie && document.cookie !== '') {
+		const cookies = document.cookie.split(';');
+		for (let i = 0; i < cookies.length; i++) {
+			const cookie = cookies[i].trim();
+			if (cookie.substring(0, name.length + 1) === (name + '=')) {
+				cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+				break;
+			}
+		}
+	}
+	return cookieValue;
 }
