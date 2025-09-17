@@ -4,10 +4,9 @@
 {% block content %}
 <link rel="stylesheet" href="{% static 'css/treasury.css' %}">
 <link rel="stylesheet" href="{% static 'css/financial_charts.css' %}">
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js@10.2.0/public/assets/styles/choices.min.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/choices.js@10.2.0/public/assets/scripts/choices.min.js"></script>
 
 <div class="welcome-section py-5">
   <div class="container">
@@ -23,6 +22,17 @@
     </div>
     <div class="card-body">
       <form method="get" class="row g-3 align-items-end">
+        <!-- Botões de período pré-definidos -->
+        <div class="col-12 mb-3">
+          <div class="btn-group" role="group" aria-label="Botões de período">
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-this-year">Este Ano</button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-last-year">Ano Passado</button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-last-6-months">Últimos 6 Meses</button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-last-3-months">Últimos 3 Meses</button>
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-last-month">Último Mês</button>
+          </div>
+        </div>
+
         <div class="col-md-3">
           <label for="start_date" class="form-label">Data Inicial</label>
           <input type="date" class="form-control" id="start_date" name="start_date"
@@ -35,7 +45,7 @@
         </div>
         <div class="col-md-4">
           <label for="categories" class="form-label">Linhas de Categoria</label>
-          <select multiple class="form-select" id="categories" name="categories" style="width: 100%;">
+          <select multiple class="form-select" id="categories" name="categories" style="min-height: 120px;">
             {% for category in available_categories %}
             <option value="{{ category }}" {% if category in selected_categories %}selected{% endif %}>
               {{ category }}
@@ -299,23 +309,89 @@
   // Atualizar estatísticas ao carregar a página
   updateStatistics();
 
-  // Inicializar Select2 para o select de categorias
-  $(document).ready(function() {
-    $('#categories').select2({
-      placeholder: 'Selecione categorias...',
-      allowClear: true,
-      closeOnSelect: false,
-      maximumSelectionLength: 10,
-      theme: 'bootstrap-5',
-      width: '100%',
-      language: {
-        noResults: function() {
-          return "Nenhuma categoria encontrada";
-        },
-        maximumSelected: function(e) {
-          return "Você pode selecionar no máximo " + e.maximum + " categorias";
-        }
+  // Inicializar Choices.js para o select de categorias
+  document.addEventListener('DOMContentLoaded', function() {
+    const categoriesSelect = document.getElementById('categories');
+    const choices = new Choices(categoriesSelect, {
+      removeItemButton: true,
+      placeholder: true,
+      placeholderValue: 'Selecione categorias...',
+      searchPlaceholderValue: 'Buscar categorias...',
+      noResultsText: 'Nenhuma categoria encontrada',
+      noChoicesText: 'Nenhuma categoria disponível',
+      itemSelectText: 'Pressione Enter para selecionar',
+      maxItemCount: 10,
+      searchEnabled: true,
+      searchChoices: true,
+      shouldSort: false,
+      allowHTML: true,
+      classNames: {
+        containerOuter: 'choices',
+        containerInner: 'choices__inner',
+        input: 'choices__input',
+        inputCloned: 'choices__input--cloned',
+        list: 'choices__list',
+        listItems: 'choices__list--multiple',
+        listSingle: 'choices__list--single',
+        listDropdown: 'choices__list--dropdown',
+        item: 'choices__item',
+        itemSelectable: 'choices__item--selectable',
+        itemDisabled: 'choices__item--disabled',
+        itemChoice: 'choices__item--choice',
+        placeholder: 'choices__placeholder',
+        group: 'choices__group',
+        groupHeading: 'choices__heading',
+        button: 'choices__button',
+        activeState: 'is-active',
+        focusState: 'is-focused',
+        openState: 'is-open',
+        disabledState: 'is-disabled',
+        highlightedState: 'is-highlighted',
+        selectedState: 'is-selected',
+        flippedState: 'is-flipped'
       }
+    });
+
+    // Funções para definir datas dos botões
+    function setDateRange(startDate, endDate) {
+      document.getElementById('start_date').value = startDate.toISOString().split('T')[0];
+      document.getElementById('end_date').value = endDate.toISOString().split('T')[0];
+    }
+
+    // Event listeners para os botões de período
+    document.getElementById('btn-this-year').addEventListener('click', function() {
+      const now = new Date();
+      const start = new Date(now.getFullYear(), 0, 1);
+      const end = new Date(now.getFullYear(), 11, 31);
+      setDateRange(start, end);
+    });
+
+    document.getElementById('btn-last-year').addEventListener('click', function() {
+      const now = new Date();
+      const start = new Date(now.getFullYear() - 1, 0, 1);
+      const end = new Date(now.getFullYear() - 1, 11, 31);
+      setDateRange(start, end);
+    });
+
+    document.getElementById('btn-last-6-months').addEventListener('click', function() {
+      const now = new Date();
+      const start = new Date(now.getFullYear(), now.getMonth() - 6, 1);
+      const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      setDateRange(start, end);
+    });
+
+    document.getElementById('btn-last-3-months').addEventListener('click', function() {
+      const now = new Date();
+      const start = new Date(now.getFullYear(), now.getMonth() - 3, 1);
+      const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      setDateRange(start, end);
+    });
+
+    document.getElementById('btn-last-month').addEventListener('click', function() {
+      const now = new Date();
+      const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const end = new Date(now.getFullYear(), now.getMonth(), 0);
+      setDateRange(start, end);
     });
   });
 
