@@ -3,13 +3,15 @@
 
 {% block content %}
 <link rel="stylesheet" href="{% static 'css/treasury.css' %}">
+<link rel="stylesheet" href="{% static 'css/financial_charts.css' %}">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<div class="container py-3">
-  <div class="text-center mb-4">
-    <p class="fs-3 fw-light mb-0">Gráficos Financeiros</p>
-    <p class="text-muted">Visualização gráfica dos dados financeiros</p>
-  </div>
+<div class="welcome-section py-5">
+  <div class="container">
+    <div class="text-center mb-5">
+      <h1 class="display-4 fw-bold text-primary mb-4">Gráficos Financeiros</h1>
+      <p class="lead text-muted mb-4">Visualização gráfica dos dados financeiros</p>
+    </div>
 
   <!-- Filtro de Período -->
   <div class="card mb-4">
@@ -45,25 +47,25 @@
         <div class="card-body">
           <div class="row g-3 justify-content-center">
             <div class="col-12 col-sm-6 col-md-3">
-              <div class="p-3 bg-success text-white rounded text-center">
+              <div class="p-3 bg-success text-white rounded text-center stat-card">
                 <div class="mb-2">Total Receitas</div>
                 <div class="h5 fw-light" id="totalRevenue">R$ 0,00</div>
               </div>
             </div>
             <div class="col-12 col-sm-6 col-md-3">
-              <div class="p-3 bg-danger text-white rounded text-center">
+              <div class="p-3 bg-danger text-white rounded text-center stat-card">
                 <div class="mb-2">Total Despesas</div>
                 <div class="h5 fw-light" id="totalExpense">R$ 0,00</div>
               </div>
             </div>
             <div class="col-12 col-sm-6 col-md-3">
-              <div class="p-3 bg-primary text-white rounded text-center">
+              <div class="p-3 bg-primary text-white rounded text-center stat-card">
                 <div class="mb-2">Saldo Final</div>
                 <div class="h5 fw-light" id="finalBalance">R$ 0,00</div>
               </div>
             </div>
             <div class="col-12 col-sm-6 col-md-3">
-              <div class="p-3 bg-info text-white rounded text-center">
+              <div class="p-3 bg-info text-white rounded text-center stat-card">
                 <div class="mb-2">Variação</div>
                 <div class="h5 fw-light" id="balanceVariation">0%</div>
               </div>
@@ -78,7 +80,7 @@
   <div class="row g-4">
     <!-- Gráfico de Linhas: Receitas vs Despesas vs Saldo -->
     <div class="col-12">
-      <div class="card">
+      <div class="card chart-container">
         <div class="card-header">
           <h5 class="card-title mb-0">Evolução Financeira Mensal</h5>
         </div>
@@ -90,7 +92,7 @@
 
     <!-- Gráficos de Distribuição por Categoria -->
     <div class="col-md-6">
-      <div class="card">
+      <div class="card chart-container">
         <div class="card-header">
           <h5 class="card-title mb-0">Distribuição de Receitas por Categoria</h5>
         </div>
@@ -101,7 +103,7 @@
     </div>
 
     <div class="col-md-6">
-      <div class="card">
+      <div class="card chart-container">
         <div class="card-header">
           <h5 class="card-title mb-0">Distribuição de Despesas por Categoria</h5>
         </div>
@@ -247,5 +249,8 @@
   // Atualizar estatísticas ao carregar a página
   updateStatistics();
 </script>
+
+  </div>
+</div>
 
 {% endblock %}
