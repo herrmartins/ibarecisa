@@ -65,7 +65,6 @@ document.addEventListener('alpine:init', () => {
         try {
           const response = await fetch('/worship/composers/');
           const data = await response.json();
-          console.log('Fetched composers:', data);
           this.artists = data.results;
         } catch (error) {
           console.error('Error fetching artists:', error);
@@ -76,7 +75,6 @@ document.addEventListener('alpine:init', () => {
         try {
           const response = await fetch('/worship/themes/');
           const data = await response.json();
-          console.log('Fetched themes:', data);
           this.themes = data.results;
         } catch (error) {
           console.error('Error fetching themes:', error);
@@ -87,7 +85,6 @@ document.addEventListener('alpine:init', () => {
         try {
           const response = await fetch('/worship/hymnals/');
           const data = await response.json();
-          console.log('Fetched hymnals:', data);
           this.hymnals = data.results;
         } catch (error) {
           console.error('Error fetching hymnals:', error);

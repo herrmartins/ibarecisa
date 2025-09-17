@@ -1,0 +1,54 @@
+{% extends 'core/base.html' %}
+{% block content %}
+<div class="container">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card">
+        <div class="card-body text-center">
+          {% if user.is_authenticated %}
+            {% if user.is_approved %}
+              <h1 class="card-title mb-4">Bem-vindo de volta!</h1>
+              <div class="alert alert-success" role="alert">
+                <h4 class="alert-heading">Acesso liberado</h4>
+                <p>Seu acesso à comunidade foi aprovado. Você pode navegar normalmente.</p>
+              </div>
+              <div class="mt-4">
+                <a href="{% url 'core:home' %}" class="btn btn-primary">Ir para a página inicial</a>
+                <form method="post" action="{% url 'logout' %}" style="display: inline;">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-secondary">Sair</button>
+                </form>
+              </div>
+            {% else %}
+              <h1 class="card-title mb-4">Bem-vindo à nossa comunidade!</h1>
+              <div class="alert alert-info" role="alert">
+                <h4 class="alert-heading">Acesso em análise</h4>
+                <p>Para ter acesso à nossa comunidade, escreva para <strong>jusrafaelmartins@gmail.com</strong></p>
+                <hr>
+                <p class="mb-0">O secretário irá avaliar seu cadastro e liberar o acesso em breve.</p>
+              </div>
+              <div class="mt-4">
+                <form method="post" action="{% url 'logout' %}">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-secondary">Sair</button>
+                </form>
+              </div>
+            {% endif %}
+          {% else %}
+            <h1 class="card-title mb-4">Página de Boas-vindas</h1>
+            <div class="alert alert-warning" role="alert">
+              <h4 class="alert-heading">Acesso restrito</h4>
+              <p>Esta página é destinada a usuários cadastrados aguardando aprovação.</p>
+              <p>Para acessar, faça login ou registre-se.</p>
+            </div>
+            <div class="mt-4">
+              <a href="{% url 'login' %}" class="btn btn-primary">Fazer login</a>
+              <a href="{% url 'users:register' %}" class="btn btn-secondary">Registrar-se</a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

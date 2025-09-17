@@ -52,8 +52,6 @@ function loadComments(postId) {
 	fetch(`/api2/comments/${postId}`)
 		.then((response) => response.json())
 		.then((comments) => {
-			console.debug('[comment_fetch] comments fetched (count):', Array.isArray(comments) ? comments.length : 'unknown');
-			console.debug('[comment_fetch] raw comments sample:', (Array.isArray(comments) && comments.length>0) ? comments.slice(0,3) : comments);
 
 			if (comments.length > 0) {
 				const commentTree = buildCommentTree(comments);
@@ -68,10 +66,7 @@ function loadComments(postId) {
 				commentsContainer.appendChild(wrapper);
 				commentsContainer.classList.remove('hidden');
 
-				// After injecting, log how many edit buttons exist and author ids rendered
-				console.debug('[comment_fetch] edit buttons after render:', document.querySelectorAll('.edit-btn').length);
 				const authorIds = Array.from(document.querySelectorAll('.comment-item')).map(e => e.getAttribute('data-author-id'));
-				console.debug('[comment_fetch] rendered comment author-ids:', authorIds);
 			} else {
 				commentsContainer.innerHTML = '';
 				const noCommentsMsg = document.createElement("p");

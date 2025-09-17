@@ -3,6 +3,7 @@ from users.models import CustomUser
 from secretarial.forms import UpdateUserRoleModelForm
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from secretarial.forms import UserQualifyingForm
+from secretarial.forms import UserApprovalForm
 
 
 class UserDetailQualifyingView(PermissionRequiredMixin, UpdateView):
@@ -26,7 +27,9 @@ class UserDetailQualifyingView(PermissionRequiredMixin, UpdateView):
             "is_pastor": user.is_pastor,
             "is_secretary": user.is_secretary,
             "is_treasurer": user.is_treasurer,
+            "is_approved": user.is_approved,
         }
         context["form_q"] = UserQualifyingForm(initial=initial_data)
+        context["approval_form"] = UserApprovalForm(instance=user)
 
         return context
