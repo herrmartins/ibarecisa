@@ -103,24 +103,22 @@
                    <i class="fas fa-clock"></i> Gerado em: {{ insights_generated_at|date:"d/m/Y H:i" }}
                  </div>
                {% endif %}
+               <!-- Texto bruto dos insights: colocado em textarea escondida para preservar quebras e evitar problemas de escape -->
+               <textarea id="insightsRaw" style="display:none;" aria-hidden="true">{{ ai_insights|default:'' }}</textarea>
                <div id="insightsContent">
-                {% if ai_insights %}
-                  <div class="alert alert-info">
-                    {{ ai_insights|linebreaks }}
-                  </div>
-                {% else %}
-                  <div class="text-center text-muted">
-                    <p>Clique em "Gerar Novamente" para obter insights baseados nos dados filtrados.</p>
-                  </div>
-                {% endif %}
-              </div>
-              <div id="insightsLoading" class="text-center" style="display: none;">
-                <div class="spinner-border text-primary" role="status">
-                  <span class="visually-hidden">Gerando insights...</span>
-                </div>
-                <p class="mt-2">Gerando insights com IA...</p>
-              </div>
-            </div>
+                 {% if not ai_insights %}
+                   <div class="text-center text-muted">
+                     <p>Clique em "Gerar Novamente" para obter insights baseados nos dados filtrados.</p>
+                   </div>
+                 {% endif %}
+               </div>
+               <div id="insightsLoading" class="text-center" style="display: none;">
+                 <div class="spinner-border text-primary" role="status">
+                   <span class="visually-hidden">Gerando insights...</span>
+                 </div>
+                 <p class="mt-2">Gerando insights com IA...</p>
+               </div>
+             </div>
           </div>
         </div>
       </div>
@@ -311,6 +309,111 @@
     }).format(value);
   }
 
+// Funções utilitárias de escape e conversão Markdown → HTML (seguros)
+function escapeHtml(unsafe) {
+  if (unsafe === undefined || unsafe === null) return '';
+  return String(unsafe)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+// Conversor simples e seguro de markdown para HTML (suporta headings, linhas horizontais, listas e blocos de código)
+function markdownToHtml(text) {
+ if (!text) return '';
+ // Escape inicial para evitar injeção
+ let safe = escapeHtml(text);
+
+ // Extrair blocos de código fenced ``` ``` e substituí-los por placeholders temporários
+ const codeBlocks = [];
+ safe = safe.replace(/```[a-zA-Z0-9_-]*\n([\s\S]*?)```/gm, function(_, code) {
+   const placeholder = `@@CODEBLOCK${codeBlocks.length}@@`;
+   codeBlocks.push('<pre><code>' + escapeHtml(code) + '</code></pre>');
+   return placeholder;
+ });
+
+ // Linhas horizontais (---, ___, ***)
+ safe = safe.replace(/^\s*(?:-{3,}|_{3,}|\*{3,})\s*$/gm, '<hr>');
+
+ // Headings (Níveis 1..6)
+ safe = safe.replace(/^######\s+(.*)$/gm, '<h6>$1</h6>');
+ safe = safe.replace(/^#####\s+(.*)$/gm, '<h5>$1</h5>');
+ safe = safe.replace(/^####\s+(.*)$/gm, '<h4>$1</h4>');
+ safe = safe.replace(/^###\s+(.*)$/gm, '<h3>$1</h3>');
+ safe = safe.replace(/^##\s+(.*)$/gm, '<h2>$1</h2>');
+ safe = safe.replace(/^#\s+(.*)$/gm, '<h1>$1</h1>');
+
+ // Listas não ordenadas: agrupa blocos iniciados por - ou *
+ safe = safe.replace(/(^\s*(?:[-*]\s+.*\n?){1,})/gm, function(block) {
+   if (/^</.test(block.trim())) return block; // não processar se já for HTML
+   const items = block.trim().split(/\n/).map(l => l.replace(/^\s*[-*]\s+/, '').trim());
+   return '<ul>' + items.map(i => '<li>' + i + '</li>').join('') + '</ul>';
+ });
+
+ // Listas ordenadas: agrupa blocos iniciados por números "1. "
+ safe = safe.replace(/(^\s*(?:\d+\.\s+.*\n?){1,})/gm, function(block) {
+   if (/^</.test(block.trim())) return block;
+   const items = block.trim().split(/\n/).map(l => l.replace(/^\s*\d+\.\s+/, '').trim());
+   return '<ol>' + items.map(i => '<li>' + i + '</li>').join('') + '</ol>';
+ });
+
+ // Inline formatting (código inline, negrito, itálico, underline)
+ safe = safe.replace(/`([^`]+)`/g, '<code>$1</code>');
+ safe = safe.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+ safe = safe.replace(/(^|[^*])\*(?!\s)([^*].*?[^*])\*(?=[^*]|$)/g, function(_, pre, inner) { return pre + '<em>' + inner + '</em>'; });
+ safe = safe.replace(/__(.*?)__/g, '<u>$1</u>');
+
+ // Agrupar parágrafos: dividir por duas ou mais quebras de linha,
+ // preservando blocos block-level já convertidos
+ const chunks = safe.split(/\n{2,}/g);
+ const rendered = chunks.map(chunk => {
+   const t = chunk.trim();
+   if (!t) return '';
+   if (/^<(h[1-6]|ul|ol|pre|hr|blockquote)/i.test(t)) return t;
+   return '<p>' + t.replace(/\n/g, '<br>') + '</p>';
+ });
+
+ safe = rendered.join('\n');
+
+ // Restaurar blocos de código placeholders
+ safe = safe.replace(/@@CODEBLOCK(\d+)@@/g, function(_, idx) {
+   return codeBlocks[parseInt(idx, 10)] || '';
+ });
+
+ return safe;
+}
+
+// Renderiza o texto de insights (raw) de forma segura no container
+function renderInsightsText(rawText) {
+  const container = document.getElementById('insightsContent');
+  if (!container) return;
+  container.innerHTML = '';
+  if (!rawText || !rawText.trim()) {
+    container.innerHTML = '<div class="text-center text-muted"><p>Clique em \"Gerar Novamente\" para obter insights baseados nos dados filtrados.</p></div>';
+    return;
+  }
+  const alert = document.createElement('div');
+  alert.className = 'alert alert-info';
+  alert.innerHTML = markdownToHtml(rawText);
+  container.appendChild(alert);
+}
+
+// Mensagem de diagnóstico no console se a querystring contiver diagnose=1
+try {
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('diagnose') === '1') {
+    console.debug('[diagnose] Análise: diagnose=1 ativo — diagnósticos serão impressos no console.');
+    // Também imprimimos o estado inicial de alguns elementos para facilitar diagnóstico local
+    console.debug('[diagnose] cookies:', document.cookie);
+    console.debug('[diagnose] start_date value:', document.getElementById('start_date')?.value);
+    console.debug('[diagnose] end_date value:', document.getElementById('end_date')?.value);
+  }
+} catch (e) {
+  // não bloquear página caso haja erro no console
+  console.debug('Erro ao inicializar diagnóstico:', e);
+}
   // Inicializar Choices.js para o select de categorias
   document.addEventListener('DOMContentLoaded', function() {
     const categoriesSelect = document.getElementById('categories');
@@ -326,6 +429,7 @@
       searchEnabled: true,
       searchChoices: true,
       shouldSort: false,
+      allowHTML: true,
       classNames: {
         containerOuter: 'choices',
         containerInner: 'choices__inner',
@@ -360,7 +464,7 @@
     const statCards = document.querySelectorAll('.stat-card .h5');
     statCards.forEach(card => {
       const text = card.textContent;
-      if (text.includes('R$')) {
+      if (text && text.includes('R$')) {
         const value = parseFloat(text.replace('R$', '').replace(',', '.').trim());
         if (!isNaN(value)) {
           card.textContent = formatCurrency(value).replace('R$', 'R$ ');
@@ -372,12 +476,12 @@
     const categoryAmounts = document.querySelectorAll('[id^="category-amount-"]');
     categoryAmounts.forEach(element => {
       const text = element.textContent;
-      if (text.includes('R$')) {
+      if (text && text.includes('R$')) {
         const value = parseFloat(text.replace('R$', '').replace(/\./g, '').replace(',', '.').trim());
         if (!isNaN(value)) {
           element.textContent = formatCurrency(value).replace('R$', 'R$ ');
         }
-      } else {
+      } else if (text) {
         // Se não tem R$, tenta formatar como número puro
         const value = parseFloat(text.replace(/\./g, '').replace(',', '.').trim());
         if (!isNaN(value)) {
@@ -390,14 +494,16 @@
     const transactionAmounts = document.querySelectorAll('td.text-end span');
     transactionAmounts.forEach(span => {
       const text = span.textContent;
-      const isPositive = text.includes('+');
-      const isNegative = text.includes('-');
-      const valueText = text.replace(/[+-]R\$\s*/, '').replace(/\./g, '').replace(',', '.').trim();
-      const value = parseFloat(valueText);
+      if (text) {
+        const isPositive = text.includes('+');
+        const isNegative = text.includes('-');
+        const valueText = text.replace(/[+-]R\$\s*/, '').replace(/\./g, '').replace(',', '.').trim();
+        const value = parseFloat(valueText);
 
-      if (!isNaN(value)) {
-        const formattedValue = formatCurrency(value).replace('R$', 'R$ ');
-        span.innerHTML = `${isPositive ? '+' : isNegative ? '-' : ''}${formattedValue}`;
+        if (!isNaN(value)) {
+          const formattedValue = formatCurrency(value).replace('R$', 'R$ ');
+          span.innerHTML = `${isPositive ? '+' : isNegative ? '-' : ''}${formattedValue}`;
+        }
       }
     });
   });
@@ -564,12 +670,12 @@
     }
   });
 
-  // Função para gerar insights de IA
+  // Função para gerar insights de IA (AJAX) — envia cookies de sessão e usa renderização segura
   document.getElementById('generateInsightsBtn').addEventListener('click', function() {
     const form = document.querySelector('form');
     const formData = new FormData(form);
     const params = new URLSearchParams();
-
+  
     for (let [key, value] of formData.entries()) {
       if (key === 'categories') {
         params.append(key, value);
@@ -577,44 +683,72 @@
         params.set(key, value);
       }
     }
+    // Garantir que sempre enviamos data inicial/final (alguns navegadores/form edits podem omitir)
+    const startInput = document.getElementById('start_date');
+    const endInput = document.getElementById('end_date');
+    const startVal = startInput ? startInput.value : formData.get('start_date');
+    const endVal = endInput ? endInput.value : formData.get('end_date');
+    if (startVal) params.set('start_date', startVal);
+    if (endVal) params.set('end_date', endVal);
     params.set('action', 'generate_insights');
-
+  
     document.getElementById('insightsContent').style.display = 'none';
     document.getElementById('insightsLoading').style.display = 'block';
-
+  
     fetch(window.location.pathname + '?' + params.toString(), {
       method: 'GET',
+      // Enviar cookies de sessão para que Django reconheça o usuário
+      credentials: 'same-origin',
       headers: {
+        // Sinalizar que é uma requisição AJAX para o backend
         'X-Requested-With': 'XMLHttpRequest'
       }
     })
-    .then(response => response.json())
-    .then(data => {
-      // Criar elemento div para inserir o conteúdo de forma segura
-      const contentDiv = document.createElement('div');
-      contentDiv.className = 'alert alert-info';
-
-      // Dividir o texto em linhas e criar parágrafos
-      const lines = data.insights.split('\n');
-      lines.forEach(line => {
-        if (line.trim()) {
-          const p = document.createElement('p');
-          p.className = 'mb-2';
-          p.textContent = line.trim();
-          contentDiv.appendChild(p);
+    .then(response => {
+      if (!response.ok) {
+        if (response.status === 403) {
+          throw new Error('Acesso negado. Você não tem permissão para gerar insights.');
+        } else if (response.status === 401) {
+          throw new Error('Sessão expirada. Faça login novamente.');
+        } else {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
-      });
-
-      document.getElementById('insightsContent').innerHTML = '';
-      document.getElementById('insightsContent').appendChild(contentDiv);
-      document.getElementById('insightsContent').style.display = 'block';
+      }
+      return response.text();
+    })
+    .then(text => {
+      // Detectar HTML de login/erro retornado (pagina de login ou outro erro do servidor)
+      if (text.trim().startsWith('<!DOCTYPE') || text.trim().startsWith('<html')) {
+        throw new Error('Sessão expirada ou acesso negado. Recarregue a página e faça login novamente.');
+      }
+      // Tentar parsear JSON
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (e) {
+        throw new Error('Resposta inválida do servidor.');
+      }
+      // Renderizar insights usando a função de renderização segura (markdown -> HTML)
+      renderInsightsText(data.insights || data);
       document.getElementById('insightsLoading').style.display = 'none';
+      document.getElementById('insightsContent').style.display = 'block';
     })
     .catch(error => {
       console.error('Erro:', error);
+      let errorMessage = 'Erro ao gerar insights. Tente novamente.';
+  
+      if (error.message.includes('HTTP')) {
+        errorMessage = `Erro de conexão (${error.message}). Verifique sua conexão e tente novamente.`;
+      } else if (error.message.includes('JSON')) {
+        errorMessage = 'Erro ao processar resposta do servidor. Tente recarregar a página.';
+      } else if (error.message.toLowerCase().includes('sessão') || error.message.toLowerCase().includes('login')) {
+        errorMessage = 'Sessão expirada ou inválida. Recarregue a página e faça login novamente.';
+      }
+  
       document.getElementById('insightsContent').innerHTML = `
         <div class="alert alert-danger">
-          Erro ao gerar insights. Tente novamente.
+          <strong>Erro:</strong> ${escapeHtml(errorMessage)}
+          <br><small>Detalhes: ${escapeHtml(error.message)}</small>
         </div>
       `;
       document.getElementById('insightsContent').style.display = 'block';
@@ -622,5 +756,18 @@
     });
   });
 </script>
-
+<script>
+  // Inicializa a renderização dos insights persistidos (se houver)
+  document.addEventListener('DOMContentLoaded', function() {
+    try {
+      const raw = document.getElementById('insightsRaw');
+      if (raw && raw.value && raw.value.trim()) {
+        renderInsightsText(raw.value);
+      }
+    } catch (e) {
+      // Não bloquear a página por erro de renderização; apenas log para desenvolvimento
+      console.debug('Erro ao renderizar insights iniciais:', e);
+    }
+  });
+</script>
 {% endblock %}

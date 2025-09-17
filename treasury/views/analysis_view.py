@@ -12,6 +12,7 @@ import json
 import requests
 from django.conf import settings
 import hashlib
+import logging
 
 
 class FinancialAnalysisView(PermissionRequiredMixin, TemplateView):
@@ -144,6 +145,20 @@ class FinancialAnalysisView(PermissionRequiredMixin, TemplateView):
         # Distribuição por categoria
         category_data = self.get_category_distribution(transactions)
 
+        # Garantir que não há valores None nos dados
+        def clean_data(data):
+            if isinstance(data, list):
+                return [clean_data(item) for item in data]
+            elif isinstance(data, dict):
+                return {k: clean_data(v) for k, v in data.items()}
+            elif data is None:
+                return 0  # Substituir None por 0
+            else:
+                return data
+
+        monthly_data = clean_data(monthly_data)
+        category_data = clean_data(category_data)
+
         return {
             'monthly_data_json': json.dumps(monthly_data),
             'category_data_json': json.dumps(category_data),
@@ -270,8 +285,9 @@ class FinancialAnalysisView(PermissionRequiredMixin, TemplateView):
         expense_summary = format_category_list(top_expense_categories, total_expenses, "Despesas")
 
         prompt = f"""
-        Analise os seguintes dados financeiros do período de {start_date} a {end_date} como um servo de Deus responsável pelos recursos da igreja:
+        Analise os seguintes dados financeiros do período de {start_date} a {end_date} como um analista financeiro cristão responsável pelos recursos da igreja:
 
+        DADOS FINANCEIROS:
         - Total de Receitas: R$ {total_revenue:.2f}
         - Total de Despesas: R$ {total_expenses:.2f}
         - Saldo Líquido: R$ {net_balance:.2f}
@@ -279,14 +295,21 @@ class FinancialAnalysisView(PermissionRequiredMixin, TemplateView):
         - {revenue_summary}
         - {expense_summary}
 
-        Forneça insights espirituais e práticos em português, focando em:
-        1. Fidelidade no uso dos recursos de Deus (1 Coríntios 4:2)
-        2. Gratidão pelas bênçãos recebidas (Filipenses 4:19)
-        3. Sabedoria na administração (Provérbios 24:3-4)
-        4. Oração pela provisão divina (Mateus 6:11)
-        5. Testemunho através da integridade financeira
+        Forneça uma análise equilibrada em português contendo:
 
-        Incentive a dependência em Deus em vez de preocupações materiais, citando versículos bíblicos relevantes. Seja encorajador e espiritual, limite a resposta a 400 palavras.
+        1. ANÁLISE ECONÔMICA: Identifique tendências importantes, eficiência financeira, distribuição de gastos e pontos de atenção nos dados.
+
+        2. RECOMENDAÇÕES PRÁTICAS: Sugira ações concretas para melhorar a gestão financeira da igreja.
+
+        3. PERSPECTIVA ESPIRITUAL: Relacione os dados financeiros com princípios bíblicos, citando versículos relevantes como:
+           - 1 Coríntios 4:2 (fidelidade nos recursos de Deus)
+           - Provérbios 24:3-4 (sabedoria na administração)
+           - Mateus 6:19-21 (tesouros no céu)
+           - Filipenses 4:19 (Deus supre todas as necessidades)
+
+        4. ENCORAJAMENTO: Incentive a dependência em Deus e a gratidão pelas bênçãos recebidas.
+
+        Seja objetivo nos aspectos técnicos e encorajador na orientação espiritual. Limite a resposta a 500 palavras.
         """
 
         try:
@@ -310,9 +333,56 @@ class FinancialAnalysisView(PermissionRequiredMixin, TemplateView):
         except Exception as e:
             return f"Erro ao gerar insights de IA: {str(e)}"
 
-    def get(self, request, *args, **kwargs):
-        # Se for uma requisição AJAX para insights de AI
-        if request.headers.get('x-requested-with') == 'XMLHttpRequest' and request.GET.get('action') == 'generate_insights':
+    def dispatch(self, request, *args, **kwargs):
+        """
+        Tratamento direto de requisições AJAX de geração de insights para garantir
+        que retornemos JSON (evitando redirecionamentos HTML do PermissionRequiredMixin).
+        Inclui rota de diagnóstico temporária `diagnose=1` para retornar informações
+        úteis na depuração (não expõe dados sensíveis).
+        """
+        logger = logging.getLogger(__name__)
+        action = request.GET.get('action')
+        # Log básico para diagnóstico
+        try:
+            logger.debug("dispatch start: action=%s, user=%s, is_authenticated=%s",
+                         action, getattr(request.user, 'username', None), request.user.is_authenticated)
+        except Exception:
+            pass
+
+        # Rota de diagnóstico temporária (ativa apenas quando solicitada)
+        if action == 'generate_insights' and request.GET.get('diagnose') == '1':
+            # Preparar objeto de diagnóstico para o front-end (não incluir valores sensíveis)
+            diag = {
+                'is_authenticated': bool(request.user and request.user.is_authenticated),
+                'username': getattr(request.user, 'username', None),
+                'has_permission': request.user.has_perm(self.permission_required) if getattr(request.user, 'is_authenticated', False) else False,
+                'headers': {
+                    'x_requested_with': request.META.get('HTTP_X_REQUESTED_WITH'),
+                    'content_type': request.META.get('CONTENT_TYPE'),
+                },
+                'cookies_present': list(request.COOKIES.keys()),
+                'session_key': request.session.session_key if hasattr(request, 'session') else None,
+                'get_params': {k: v for k, v in request.GET.items()},
+            }
+            logger.info("AJAX-insights diagnostic requested by user=%s", getattr(request.user, 'username', None))
+            return JsonResponse({'diagnostic': diag})
+
+        # Tratar internamente a geração de insights e retornar JSON para AJAX
+        if action == 'generate_insights':
+            # Autenticação e permissão
+            if not request.user.is_authenticated:
+                logger.warning("AJAX-insights unauthenticated request detected.")
+                return JsonResponse({
+                    'error': 'Sessão expirada ou acesso negado. Recarregue a página e faça login novamente.'
+                }, status=401)
+
+            if not request.user.has_perm(self.permission_required):
+                logger.warning("AJAX-insights permission denied for user=%s", getattr(request.user, 'username', None))
+                return JsonResponse({
+                    'error': 'Você não tem permissão para acessar esta funcionalidade.'
+                }, status=403)
+
+            # Extrair parâmetros e gerar insights diretamente aqui
             start_date = request.GET.get('start_date')
             end_date = request.GET.get('end_date')
             categories = request.GET.getlist('categories')
@@ -320,11 +390,70 @@ class FinancialAnalysisView(PermissionRequiredMixin, TemplateView):
             min_amount = request.GET.get('min_amount')
             max_amount = request.GET.get('max_amount')
 
-            if start_date and end_date:
+            # Se datas ausentes, padronizar para últimos 12 meses (mesma lógica do get_context_data)
+            if not start_date or not end_date:
+                end_date = timezone.now().date()
+                start_date = end_date - relativedelta(months=12)
+
+            try:
                 transactions = self.get_filtered_transactions(
                     start_date, end_date, categories, transaction_type, min_amount, max_amount
                 )
                 insights = self.get_ai_insights(transactions, start_date, end_date)
                 return JsonResponse({'insights': insights})
+            except Exception as e:
+                logger.exception("Erro ao gerar insights via AJAX: %s", e)
+                return JsonResponse({
+                    'error': f'Erro ao processar insights: {str(e)}'
+                }, status=500)
+
+        # Fluxo normal para requests não-AJAX
+        return super().dispatch(request, *args, **kwargs)
+    
+    
+    def get(self, request, *args, **kwargs):
+        """
+        Tratamento de GET para geração de insights via AJAX.
+        Unifica o comportamento com `dispatch` para garantir que quando
+        `action=generate_insights` sempre retornemos JSON (mesmo que faltem
+        parâmetros de data) e não a página HTML.
+        """
+        action = request.GET.get('action')
+        if action == 'generate_insights':
+            # Autenticação e permissão
+            if not request.user.is_authenticated:
+                return JsonResponse({
+                    'error': 'Sessão expirada ou acesso negado. Recarregue a página e faça login novamente.'
+                }, status=401)
+
+            if not request.user.has_perm(self.permission_required):
+                return JsonResponse({
+                    'error': 'Você não tem permissão para acessar esta funcionalidade.'
+                }, status=403)
+
+            # Extrair parâmetros (usar valores padrão se ausentes)
+            start_date = request.GET.get('start_date')
+            end_date = request.GET.get('end_date')
+            categories = request.GET.getlist('categories')
+            transaction_type = request.GET.get('type')
+            min_amount = request.GET.get('min_amount')
+            max_amount = request.GET.get('max_amount')
+
+            if not start_date or not end_date:
+                end_date = timezone.now().date()
+                start_date = end_date - relativedelta(months=12)
+
+            try:
+                transactions = self.get_filtered_transactions(
+                    start_date, end_date, categories, transaction_type, min_amount, max_amount
+                )
+                insights = self.get_ai_insights(transactions, start_date, end_date)
+                return JsonResponse({'insights': insights})
+            except Exception as e:
+                logger = logging.getLogger(__name__)
+                logger.exception("Erro ao processar insights via GET: %s", e)
+                return JsonResponse({
+                    'error': f'Erro ao processar insights: {str(e)}'
+                }, status=500)
 
         return super().get(request, *args, **kwargs)
