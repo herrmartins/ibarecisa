@@ -57,6 +57,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "reversion.middleware.RevisionMiddleware",
+    "core.middleware.ApprovalMiddleware",
 ]
 
 ROOT_URLCONF = "diacono.urls"

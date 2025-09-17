@@ -45,6 +45,7 @@ class CustomUser(AbstractUser):
     is_pastor = models.BooleanField(blank=True, default=False)
     is_secretary = models.BooleanField(blank=True, default=False)
     is_treasurer = models.BooleanField(blank=True, default=False)
+    is_approved = models.BooleanField(blank=True, default=False)
 
     def save(self, *args, **kwargs):
         try:
@@ -119,6 +120,7 @@ def set_initial_user_type(sender, instance, created, **kwargs):
         instance.type = CustomUser.Types.STAFF
 
     if instance.is_superuser:
+        instance.is_approved = True
         return
     else:
         if instance.type in [

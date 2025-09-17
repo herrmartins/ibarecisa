@@ -5,7 +5,7 @@ from .update_user_role_form import UpdateUserRoleModelForm
 from .minute_model_form import MinuteModelForm
 from .minute_template_model_form import MinuteTemplateModelForm
 from .excerpt_model_form import MinuteExcerptsModelForm
-from .qualify_user_form import UserQualifyingForm
+from .qualify_user_form import UserQualifyingForm, UserApprovalForm
 from .agenda_form import MinuteAgendaModelForm
 from .minute_file_form import MinuteFileModelForm
 from .pdf_import_form import PDFImportForm

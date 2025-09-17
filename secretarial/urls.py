@@ -31,6 +31,7 @@ from secretarial.views import (
     SendPasswordEmailView,
     MemberRegistrationView,
     PDFImportView,
+    WelcomeView,
 )
 
 
@@ -116,4 +117,5 @@ urlpatterns = [
     path("meeting/agenda/create", AgendaCreateView.as_view(), name="agenda-create"),
     path("meeting/pdf-import", PDFImportView.as_view(), name="pdf-import"),
     path("editor", NewMinutesEditorView.as_view(), name="new-minutes-editor"),
+    path("welcome", WelcomeView.as_view(), name="welcome"),
 ]

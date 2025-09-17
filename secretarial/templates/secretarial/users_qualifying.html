@@ -57,6 +57,11 @@
               <a href="{% url 'secretarial:user-qualify' m.id %}" class="btn btn-sm btn-outline-primary" title="Editar">
                 <i class="fas fa-edit"></i>
               </a>
+              {% if m.is_approved %}
+              <span class="badge bg-success">Aprovado</span>
+              {% else %}
+              <span class="badge bg-warning">Pendente</span>
+              {% endif %}
               {% if m.email and not m.has_usable_password %}
               <form method="post" action="{% url 'secretarial:send-password-email' m.id %}" style="display: inline;">
                 {% csrf_token %}

@@ -33,8 +33,6 @@ function loadComments(postId) {
 	// Debug: log current user id attribute so we can diagnose missing "Editar" buttons
 	try {
 		const userInfo = document.getElementById("user-info");
-		console.debug('[comment_fetch] user-info element:', userInfo);
-		console.debug('[comment_fetch] currentUserId attr:', userInfo ? userInfo.getAttribute('comment-author-id') : null);
 	} catch (e) {
 		console.debug('[comment_fetch] unable to read user-info', e);
 	}
@@ -47,12 +45,8 @@ function loadComments(postId) {
 		.then((comments) => {
 			if (comments.length > 0) {
 				const commentTree = buildCommentTree(comments);
-				// Debug: log comments received from API
-				console.debug('[comment_fetch] comments fetched:', comments);
 				const commentElements = renderCommentTree(commentTree);
 				commentsContainer.innerHTML = commentElements;
-				// After injecting, log how many edit buttons exist
-				console.debug('[comment_fetch] edit buttons after render:', document.querySelectorAll('.edit-btn').length);
 			} else {
 				commentsContainer.innerHTML = '';
 				const noCommentsMsg = document.createElement("p");
