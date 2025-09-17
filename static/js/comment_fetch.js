@@ -113,12 +113,10 @@ function deleteComment(commentId) {
 		return response.json();
 	})
 	.then(data => {
-		// Remove the comment from the DOM
 		const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
 		if (commentElement) {
 			commentElement.remove();
 		}
-		console.log('Comentário excluído com sucesso');
 	})
 	.catch(error => {
 		console.error('Erro ao excluir comentário:', error);
@@ -154,7 +152,7 @@ function renderCommentTree(comments, depth = 0) {
 		const spacingClass = depth > 0 ? 'my-3' : 'mb-3';
 		const replyButton = `<button class="btn btn-sm btn-outline-primary reply-btn me-2" data-comment-id="${comment.id}"><i class="bi bi-reply me-1"></i>Responder</button>`;
 		const editButton = isCurrentUserAuthor(comment) ? `<button class="btn btn-sm btn-outline-info edit-btn me-2" data-comment-id="${comment.id}"><i class="bi bi-pencil me-1"></i>Editar</button>` : '';
-		const deleteButton = isCurrentUserAuthor(comment) ? `<button class="btn btn-sm btn-outline-danger delete-btn me-2" data-comment-id="${comment.id}"><i class="bi bi-trash me-1"></i>Excluir</button>` : '';
+		const deleteButton = isCurrentUserAuthor(comment) ? `<button class="btn btn-sm btn-outline-danger delete-btn me-2 rounded-pill" data-comment-id="${comment.id}" data-bs-toggle="tooltip" title="Excluir este comentário"><i class="bi bi-trash me-1"></i>Excluir</button>` : '';
 		const repliesHtml = comment.replies.length > 0 ? renderCommentTree(comment.replies, depth + 1) : '';
 
 		return `

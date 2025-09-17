@@ -55,8 +55,9 @@ function postComment(authorId, postId, commentContent) {
 	}
 
 	const csrftoken = getCookie("csrftoken");
-	fetch(`/api2/comments/add/${postId}`, {
+	fetch(`/api2/comments/add/${postId}/`, {
 		method: "POST",
+		credentials: 'same-origin',
 		headers: {
 			"Content-Type": "application/json",
 			"X-CSRFToken": csrftoken,
@@ -72,7 +73,12 @@ function postComment(authorId, postId, commentContent) {
 			addCommentToHTML(data);
 		})
 		.catch((error) => {
-			// Handle error silently
+			console.error('[postComment] Erro ao postar comentário:', error);
+			// If the rejected value is a Response, try to log its body for diagnostics
+			if (error && typeof error.text === 'function') {
+				error.text().then(txt => console.error('[postComment] response text:', txt)).catch(() => {});
+			}
+			alert('Erro ao enviar comentário. Tente novamente.');
 		});
 }
 
@@ -108,8 +114,9 @@ function postReply(authorId, postId, parentId, content) {
 	}
 
 	const csrftoken = getCookie("csrftoken");
-	fetch(`/api2/comments/add/${postId}`, {
+	fetch(`/api2/comments/add/${postId}/`, {
 		method: "POST",
+		credentials: 'same-origin',
 		headers: {
 			"Content-Type": "application/json",
 			"X-CSRFToken": csrftoken,
@@ -129,7 +136,11 @@ function postReply(authorId, postId, parentId, content) {
 			toggleReplyForm(parentId);
 		})
 		.catch((error) => {
-			// Handle error silently
+			console.error('[postReply] Erro ao postar resposta:', error);
+			if (error && typeof error.text === 'function') {
+				error.text().then(txt => console.error('[postReply] response text:', txt)).catch(() => {});
+			}
+			alert('Erro ao enviar resposta. Tente novamente.');
 		});
 }
 
