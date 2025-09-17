@@ -62,8 +62,14 @@ class FinancialAnalysisView(PermissionRequiredMixin, TemplateView):
         # Lista de todas as categorias disponíveis
         context['available_categories'] = self.get_available_categories()
 
-        # Insights de AI (persistentes)
-        context['ai_insights'] = self.get_ai_insights(transactions, start_date, end_date)
+        # Insights de AI: mostrar o último gerado, ou gerar se nenhum existir
+        cached_data = cache.get("last_ai_insights")
+        if cached_data:
+            context['ai_insights'] = cached_data['insights']
+            context['insights_generated_at'] = cached_data['generated_at']
+        else:
+            # Nenhum insight ainda: gerar automaticamente
+            context['ai_insights'] = self.get_ai_insights(transactions, start_date, end_date)
 
         # Transações paginadas para exibição na lista
         page = self.request.GET.get('page', 1)
@@ -214,15 +220,23 @@ class FinancialAnalysisView(PermissionRequiredMixin, TemplateView):
         cache_key = f"financial_ai_insights_{data_hash}"
 
         # Verificar cache
-        cached_insights = cache.get(cache_key)
-        if cached_insights:
-            return cached_insights
+        cached_data = cache.get(cache_key)
+        if cached_data:
+            return cached_data['insights']
 
         # Gerar novos insights se não estiver em cache
         insights = self._generate_ai_insights(transactions, start_date, end_date)
 
-        # Cache por 24 horas
-        cache.set(cache_key, insights, 60*60*24)
+        # Preparar dados para cache com timestamp
+        insights_data = {
+            'insights': insights,
+            'generated_at': timezone.now()
+        }
+
+        # Cache indefinidamente até o usuário solicitar nova geração
+        cache.set(cache_key, insights_data, None)
+        # Também salvar como último insight gerado
+        cache.set("last_ai_insights", insights_data, None)
 
         return insights
 
@@ -399,6 +413,10 @@ class FinancialAnalysisView(PermissionRequiredMixin, TemplateView):
                 transactions = self.get_filtered_transactions(
                     start_date, end_date, categories, transaction_type, min_amount, max_amount
                 )
+                # Limpar cache antes de gerar novos insights
+                data_hash = self._generate_data_hash(transactions, start_date, end_date)
+                cache_key = f"financial_ai_insights_{data_hash}"
+                cache.delete(cache_key)
                 insights = self.get_ai_insights(transactions, start_date, end_date)
                 return JsonResponse({'insights': insights})
             except Exception as e:
@@ -447,6 +465,10 @@ class FinancialAnalysisView(PermissionRequiredMixin, TemplateView):
                 transactions = self.get_filtered_transactions(
                     start_date, end_date, categories, transaction_type, min_amount, max_amount
                 )
+                # Limpar cache antes de gerar novos insights
+                data_hash = self._generate_data_hash(transactions, start_date, end_date)
+                cache_key = f"financial_ai_insights_{data_hash}"
+                cache.delete(cache_key)
                 insights = self.get_ai_insights(transactions, start_date, end_date)
                 return JsonResponse({'insights': insights})
             except Exception as e:
