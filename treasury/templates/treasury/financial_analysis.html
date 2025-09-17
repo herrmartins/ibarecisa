@@ -97,13 +97,13 @@
                 <i class="fas fa-brain"></i> Gerar Novamente
               </button>
             </div>
-            <div class="card-body">
-              {% if ai_insights %}
-                <div class="mb-2 text-muted small">
-                  <i class="fas fa-clock"></i> Gerado em: {{ insights_generated_at|date:"d/m/Y H:i" }}
-                </div>
-              {% endif %}
-              <div id="insightsContent">
+            <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+               {% if ai_insights %}
+                 <div class="mb-2 text-muted small">
+                   <i class="fas fa-clock"></i> Gerado em: {{ insights_generated_at|date:"d/m/Y H:i" }}
+                 </div>
+               {% endif %}
+               <div id="insightsContent">
                 {% if ai_insights %}
                   <div class="alert alert-info">
                     {{ ai_insights|linebreaks }}
