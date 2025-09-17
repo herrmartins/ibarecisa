@@ -4,7 +4,10 @@
 {% block content %}
 <link rel="stylesheet" href="{% static 'css/treasury.css' %}">
 <link rel="stylesheet" href="{% static 'css/financial_charts.css' %}">
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <div class="welcome-section py-5">
   <div class="container">
@@ -13,25 +16,36 @@
       <p class="lead text-muted mb-4">Visualização gráfica dos dados financeiros</p>
     </div>
 
-  <!-- Filtro de Período -->
+  <!-- Filtros -->
   <div class="card mb-4">
     <div class="card-header">
-      <h5 class="card-title mb-0">Filtro de Período</h5>
+      <h5 class="card-title mb-0">Filtros</h5>
     </div>
     <div class="card-body">
       <form method="get" class="row g-3 align-items-end">
-        <div class="col-md-4">
+        <div class="col-md-3">
           <label for="start_date" class="form-label">Data Inicial</label>
           <input type="date" class="form-control" id="start_date" name="start_date"
                  value="{{ start_date }}" required>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
           <label for="end_date" class="form-label">Data Final</label>
           <input type="date" class="form-control" id="end_date" name="end_date"
                  value="{{ end_date }}" required>
         </div>
         <div class="col-md-4">
-          <button type="submit" class="btn btn-primary w-100">Aplicar Filtro</button>
+          <label for="categories" class="form-label">Linhas de Categoria</label>
+          <select multiple class="form-select" id="categories" name="categories" style="width: 100%;">
+            {% for category in available_categories %}
+            <option value="{{ category }}" {% if category in selected_categories %}selected{% endif %}>
+              {{ category }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">&nbsp;</label>
+          <button type="submit" class="btn btn-primary w-100">Aplicar Filtros</button>
         </div>
       </form>
     </div>
@@ -83,9 +97,10 @@
       <div class="card chart-container">
         <div class="card-header">
           <h5 class="card-title mb-0">Evolução Financeira Mensal</h5>
+          <small class="text-muted">Receitas, Despesas, Saldo e Categorias Selecionadas</small>
         </div>
         <div class="card-body">
-          <canvas id="monthlyChart" width="400" height="200"></canvas>
+          <canvas id="monthlyChart" width="400" height="300"></canvas>
         </div>
       </div>
     </div>
@@ -97,7 +112,7 @@
           <h5 class="card-title mb-0">Distribuição de Receitas por Categoria</h5>
         </div>
         <div class="card-body">
-          <canvas id="revenueCategoryChart" width="400" height="400"></canvas>
+          <canvas id="revenueCategoryChart" width="400" height="300"></canvas>
         </div>
       </div>
     </div>
@@ -108,7 +123,7 @@
           <h5 class="card-title mb-0">Distribuição de Despesas por Categoria</h5>
         </div>
         <div class="card-body">
-          <canvas id="expenseCategoryChart" width="400" height="400"></canvas>
+          <canvas id="expenseCategoryChart" width="400" height="300"></canvas>
         </div>
       </div>
     </div>
@@ -116,12 +131,60 @@
 </div>
 
 <script>
+  // Cores para as categorias (paleta expandida)
+  const categoryColors = [
+    'rgb(255, 99, 132)',   // Vermelho
+    'rgb(54, 162, 235)',   // Azul
+    'rgb(255, 205, 86)',   // Amarelo
+    'rgb(75, 192, 192)',   // Verde água
+    'rgb(153, 102, 255)',  // Roxo
+    'rgb(255, 159, 64)',   // Laranja
+    'rgb(199, 199, 199)',  // Cinza
+    'rgb(83, 102, 255)',   // Azul escuro
+    'rgb(255, 99, 255)',   // Magenta
+    'rgb(99, 255, 132)',   // Verde claro
+    'rgb(255, 193, 7)',    // Dourado
+    'rgb(220, 53, 69)',    // Vermelho escuro
+    'rgb(23, 162, 184)',   // Azul turquesa
+    'rgb(108, 117, 125)',  // Cinza escuro
+    'rgb(52, 58, 64)'      // Cinza muito escuro
+  ];
+
   // Dados dos gráficos passados pela view
   const monthlyData = {{ monthly_data_json|safe }};
+  const categoryData = {{ category_data_json|safe }};
   const revenueCategoryData = {{ revenue_category_data_json|safe }};
   const expenseCategoryData = {{ expense_category_data_json|safe }};
 
-  // Configuração do gráfico de linhas
+  // Função para criar datasets das categorias
+  function createCategoryDatasets() {
+    const datasets = [];
+
+    if (categoryData.length > 0) {
+      // Obter todas as categorias únicas dos dados
+      const categories = Object.keys(categoryData[0]).filter(key => key !== 'month');
+
+      categories.forEach((category, index) => {
+        const colorIndex = index % categoryColors.length;
+        const color = categoryColors[colorIndex];
+
+        datasets.push({
+          label: category,
+          data: categoryData.map(item => item[category] || 0),
+          borderColor: color,
+          backgroundColor: color.replace('rgb', 'rgba').replace(')', ', 0.1)'),
+          tension: 0.1,
+          borderWidth: 2,
+          pointRadius: 4,
+          pointHoverRadius: 6
+        });
+      });
+    }
+
+    return datasets;
+  }
+
+  // Configuração do gráfico de linhas principal
   const ctxMonthly = document.getElementById('monthlyChart').getContext('2d');
   const monthlyChart = new Chart(ctxMonthly, {
     type: 'line',
@@ -132,40 +195,128 @@
         data: monthlyData.map(item => item.revenue),
         borderColor: 'rgb(40, 167, 69)',
         backgroundColor: 'rgba(40, 167, 69, 0.1)',
-        tension: 0.1
+        tension: 0.1,
+        borderWidth: 3,
+        pointRadius: 5,
+        pointHoverRadius: 7
       }, {
         label: 'Despesas',
         data: monthlyData.map(item => item.expense),
         borderColor: 'rgb(220, 53, 69)',
         backgroundColor: 'rgba(220, 53, 69, 0.1)',
-        tension: 0.1
+        tension: 0.1,
+        borderWidth: 3,
+        pointRadius: 5,
+        pointHoverRadius: 7
       }, {
         label: 'Saldo',
         data: monthlyData.map(item => item.balance),
         borderColor: 'rgb(0, 123, 255)',
         backgroundColor: 'rgba(0, 123, 255, 0.1)',
-        tension: 0.1
-      }]
+        tension: 0.1,
+        borderWidth: 3,
+        pointRadius: 5,
+        pointHoverRadius: 7
+      }, ...createCategoryDatasets()]
     },
     options: {
       responsive: true,
+      maintainAspectRatio: false,
       plugins: {
         title: {
           display: true,
-          text: 'Receitas, Despesas e Saldo Mensal'
+          text: 'Evolução Financeira Mensal',
+          font: {
+            size: 16,
+            weight: 'bold'
+          }
+        },
+        legend: {
+          position: 'bottom',
+          labels: {
+            usePointStyle: true,
+            padding: 20
+          }
+        },
+        tooltip: {
+          mode: 'index',
+          intersect: false,
+          callbacks: {
+            label: function(context) {
+              let label = context.dataset.label || '';
+              if (label) {
+                label += ': ';
+              }
+              label += 'R$ ' + context.parsed.y.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+              return label;
+            }
+          }
         }
       },
       scales: {
+        x: {
+          display: true,
+          title: {
+            display: true,
+            text: 'Mês/Ano'
+          }
+        },
         y: {
           beginAtZero: true,
+          title: {
+            display: true,
+            text: 'Valor (R$)'
+          },
           ticks: {
             callback: function(value) {
               return 'R$ ' + value.toLocaleString('pt-BR', {minimumFractionDigits: 2});
             }
           }
         }
+      },
+      interaction: {
+        mode: 'nearest',
+        axis: 'x',
+        intersect: false
       }
     }
+  });
+
+  // Calcular estatísticas do período
+  function updateStatistics() {
+    const totalRevenue = monthlyData.reduce((sum, item) => sum + item.revenue, 0);
+    const totalExpense = monthlyData.reduce((sum, item) => sum + item.expense, 0);
+    const finalBalance = monthlyData.length > 0 ? monthlyData[monthlyData.length - 1].balance : 0;
+    const initialBalance = monthlyData.length > 0 ? monthlyData[0].balance - monthlyData[0].revenue + monthlyData[0].expense : 0;
+    const variation = initialBalance !== 0 ? ((finalBalance - initialBalance) / Math.abs(initialBalance)) * 100 : 0;
+
+    document.getElementById('totalRevenue').textContent = 'R$ ' + totalRevenue.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+    document.getElementById('totalExpense').textContent = 'R$ ' + totalExpense.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+    document.getElementById('finalBalance').textContent = 'R$ ' + finalBalance.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+    document.getElementById('balanceVariation').textContent = variation.toFixed(1) + '%';
+  }
+
+  // Atualizar estatísticas ao carregar a página
+  updateStatistics();
+
+  // Inicializar Select2 para o select de categorias
+  $(document).ready(function() {
+    $('#categories').select2({
+      placeholder: 'Selecione categorias...',
+      allowClear: true,
+      closeOnSelect: false,
+      maximumSelectionLength: 10,
+      theme: 'bootstrap-5',
+      width: '100%',
+      language: {
+        noResults: function() {
+          return "Nenhuma categoria encontrada";
+        },
+        maximumSelected: function(e) {
+          return "Você pode selecionar no máximo " + e.maximum + " categorias";
+        }
+      }
+    });
   });
 
   // Configuração do gráfico de pizza - Receitas
@@ -192,9 +343,25 @@
     },
     options: {
       responsive: true,
+      maintainAspectRatio: false,
       plugins: {
         legend: {
-          position: 'bottom'
+          position: 'bottom',
+          labels: {
+            padding: 15
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              let label = context.label || '';
+              if (label) {
+                label += ': ';
+              }
+              label += 'R$ ' + context.parsed.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+              return label;
+            }
+          }
         }
       }
     }
@@ -224,30 +391,29 @@
     },
     options: {
       responsive: true,
+      maintainAspectRatio: false,
       plugins: {
         legend: {
-          position: 'bottom'
+          position: 'bottom',
+          labels: {
+            padding: 15
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              let label = context.label || '';
+              if (label) {
+                label += ': ';
+              }
+              label += 'R$ ' + context.parsed.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+              return label;
+            }
+          }
         }
       }
     }
   });
-
-  // Calcular estatísticas do período
-  function updateStatistics() {
-    const totalRevenue = monthlyData.reduce((sum, item) => sum + item.revenue, 0);
-    const totalExpense = monthlyData.reduce((sum, item) => sum + item.expense, 0);
-    const finalBalance = monthlyData.length > 0 ? monthlyData[monthlyData.length - 1].balance : 0;
-    const initialBalance = monthlyData.length > 0 ? monthlyData[0].balance - monthlyData[0].revenue + monthlyData[0].expense : 0;
-    const variation = initialBalance !== 0 ? ((finalBalance - initialBalance) / Math.abs(initialBalance)) * 100 : 0;
-
-    document.getElementById('totalRevenue').textContent = 'R$ ' + totalRevenue.toLocaleString('pt-BR', {minimumFractionDigits: 2});
-    document.getElementById('totalExpense').textContent = 'R$ ' + totalExpense.toLocaleString('pt-BR', {minimumFractionDigits: 2});
-    document.getElementById('finalBalance').textContent = 'R$ ' + finalBalance.toLocaleString('pt-BR', {minimumFractionDigits: 2});
-    document.getElementById('balanceVariation').textContent = variation.toFixed(1) + '%';
-  }
-
-  // Atualizar estatísticas ao carregar a página
-  updateStatistics();
 </script>
 
   </div>
