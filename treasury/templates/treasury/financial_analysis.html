@@ -27,6 +27,19 @@
             </div>
             <div class="card-body">
               <form method="get">
+                <!-- Botões de período pré-definidos -->
+                <div class="row g-2 mb-3">
+                  <div class="col-12">
+                    <div class="btn-group" role="group" aria-label="Botões de período">
+                      <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-this-year">Este Ano</button>
+                      <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-last-year">Ano Passado</button>
+                      <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-last-6-months">Últimos 6 Meses</button>
+                      <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-last-3-months">Últimos 3 Meses</button>
+                      <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-last-month">Último Mês</button>
+                    </div>
+                  </div>
+                </div>
+
                 <!-- Primeira linha: Campos principais -->
                 <div class="row g-2 mb-3">
                   <div class="col-6">
@@ -455,6 +468,48 @@ try {
         selectedState: 'is-selected',
         flippedState: 'is-flipped'
       }
+    });
+
+    // Funções para definir datas dos botões
+    function setDateRange(startDate, endDate) {
+      document.getElementById('start_date').value = startDate.toISOString().split('T')[0];
+      document.getElementById('end_date').value = endDate.toISOString().split('T')[0];
+    }
+
+    // Event listeners para os botões de período
+    document.getElementById('btn-this-year').addEventListener('click', function() {
+      const now = new Date();
+      const start = new Date(now.getFullYear(), 0, 1);
+      const end = new Date(now.getFullYear(), 11, 31);
+      setDateRange(start, end);
+    });
+
+    document.getElementById('btn-last-year').addEventListener('click', function() {
+      const now = new Date();
+      const start = new Date(now.getFullYear() - 1, 0, 1);
+      const end = new Date(now.getFullYear() - 1, 11, 31);
+      setDateRange(start, end);
+    });
+
+    document.getElementById('btn-last-6-months').addEventListener('click', function() {
+      const now = new Date();
+      const start = new Date(now.getFullYear(), now.getMonth() - 6, 1);
+      const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      setDateRange(start, end);
+    });
+
+    document.getElementById('btn-last-3-months').addEventListener('click', function() {
+      const now = new Date();
+      const start = new Date(now.getFullYear(), now.getMonth() - 3, 1);
+      const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      setDateRange(start, end);
+    });
+
+    document.getElementById('btn-last-month').addEventListener('click', function() {
+      const now = new Date();
+      const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const end = new Date(now.getFullYear(), now.getMonth(), 0);
+      setDateRange(start, end);
     });
   });
 
