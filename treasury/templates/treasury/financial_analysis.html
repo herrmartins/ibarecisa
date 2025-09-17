@@ -15,73 +15,122 @@
       <p class="lead text-muted mb-4">Análise avançada e insights inteligentes dos dados financeiros</p>
     </div>
 
-  <!-- Filtros Avançados -->
-  <div class="card mb-4">
-    <div class="card-header">
-      <h5 class="card-title mb-0">Filtros Avançados</h5>
-    </div>
-    <div class="card-body">
-      <form method="get">
-        <!-- Primeira linha: Campos principais -->
-        <div class="row g-2 mb-3">
-          <div class="col-lg-2 col-md-6 col-sm-12">
-            <label for="start_date" class="form-label">Data Inicial</label>
-            <input type="date" class="form-control" id="start_date" name="start_date"
-                   value="{{ start_date }}" required>
-          </div>
-          <div class="col-lg-2 col-md-6 col-sm-12">
-            <label for="end_date" class="form-label">Data Final</label>
-            <input type="date" class="form-control" id="end_date" name="end_date"
-                   value="{{ end_date }}" required>
-          </div>
-          <div class="col-lg-2 col-md-4 col-sm-6">
-            <label for="type" class="form-label">Tipo</label>
-            <select class="form-select" id="type" name="type">
-              <option value="" {% if not transaction_type %}selected{% endif %}>Todas</option>
-              <option value="positive" {% if transaction_type == 'positive' %}selected{% endif %}>Entradas</option>
-              <option value="negative" {% if transaction_type == 'negative' %}selected{% endif %}>Saídas</option>
-            </select>
-          </div>
-          <div class="col-lg-2 col-md-4 col-sm-6">
-            <label for="min_amount" class="form-label">Valor Mínimo</label>
-            <input type="number" step="0.01" class="form-control" id="min_amount" name="min_amount"
-                   value="{{ min_amount }}" placeholder="0.00">
-          </div>
-          <div class="col-lg-2 col-md-4 col-sm-6">
-            <label for="max_amount" class="form-label">Valor Máximo</label>
-            <input type="number" step="0.01" class="form-control" id="max_amount" name="max_amount"
-                   value="{{ max_amount }}" placeholder="0.00">
+  <!-- Filtros e Insights ocupando toda a largura da página -->
+  <div class="row g-4 mb-4">
+    <div class="col-12">
+      <div class="row g-4">
+        <!-- Filtros Avançados -->
+        <div class="col-lg-6 col-md-12">
+          <div class="card h-100">
+            <div class="card-header">
+              <h5 class="card-title mb-0">Filtros Avançados</h5>
+            </div>
+            <div class="card-body">
+              <form method="get">
+                <!-- Primeira linha: Campos principais -->
+                <div class="row g-2 mb-3">
+                  <div class="col-6">
+                    <label for="start_date" class="form-label">Data Inicial</label>
+                    <input type="date" class="form-control" id="start_date" name="start_date"
+                           value="{{ start_date }}" required>
+                  </div>
+                  <div class="col-6">
+                    <label for="end_date" class="form-label">Data Final</label>
+                    <input type="date" class="form-control" id="end_date" name="end_date"
+                           value="{{ end_date }}" required>
+                  </div>
+                </div>
+
+                <!-- Segunda linha: Tipo e Valores -->
+                <div class="row g-2 mb-3">
+                  <div class="col-4">
+                    <label for="type" class="form-label">Tipo</label>
+                    <select class="form-select" id="type" name="type">
+                      <option value="" {% if not transaction_type %}selected{% endif %}>Todas</option>
+                      <option value="positive" {% if transaction_type == 'positive' %}selected{% endif %}>Entradas</option>
+                      <option value="negative" {% if transaction_type == 'negative' %}selected{% endif %}>Saídas</option>
+                    </select>
+                  </div>
+                  <div class="col-4">
+                    <label for="min_amount" class="form-label">Valor Mínimo</label>
+                    <input type="number" step="0.01" class="form-control" id="min_amount" name="min_amount"
+                           value="{{ min_amount }}" placeholder="0.00">
+                  </div>
+                  <div class="col-4">
+                    <label for="max_amount" class="form-label">Valor Máximo</label>
+                    <input type="number" step="0.01" class="form-control" id="max_amount" name="max_amount"
+                           value="{{ max_amount }}" placeholder="0.00">
+                  </div>
+                </div>
+
+                <!-- Terceira linha: Select de categorias -->
+                <div class="row g-2 mb-3">
+                  <div class="col-12">
+                    <label for="categories" class="form-label">Categorias</label>
+                    <select multiple class="form-select" id="categories" name="categories" style="min-height: 120px;">
+                      {% for category in available_categories %}
+                      <option value="{{ category }}" {% if category in selected_categories %}selected{% endif %}>
+                        {{ category }}
+                      </option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Quarta linha: Botão Aplicar -->
+                <div class="row g-2">
+                  <div class="col-12 text-center">
+                    <button type="submit" class="btn btn-primary px-5">Aplicar Filtros</button>
+                  </div>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
 
-        <!-- Segunda linha: Select de categorias ocupando toda largura -->
-        <div class="row g-2 mb-3">
-          <div class="col-12">
-            <label for="categories" class="form-label">Categorias</label>
-            <select multiple class="form-select" id="categories" name="categories" style="min-height: 120px;">
-              {% for category in available_categories %}
-              <option value="{{ category }}" {% if category in selected_categories %}selected{% endif %}>
-                {{ category }}
-              </option>
-              {% endfor %}
-            </select>
+        <!-- Insights de AI -->
+        <div class="col-lg-6 col-md-12">
+          <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <h5 class="card-title mb-0">Insights de IA</h5>
+              <button id="generateInsightsBtn" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-brain"></i> Gerar Novamente
+              </button>
+            </div>
+            <div class="card-body">
+              {% if ai_insights %}
+                <div class="mb-2 text-muted small">
+                  <i class="fas fa-clock"></i> Gerado em: {{ insights_generated_at|date:"d/m/Y H:i" }}
+                </div>
+              {% endif %}
+              <div id="insightsContent">
+                {% if ai_insights %}
+                  <div class="alert alert-info">
+                    {{ ai_insights|linebreaks }}
+                  </div>
+                {% else %}
+                  <div class="text-center text-muted">
+                    <p>Clique em "Gerar Novamente" para obter insights baseados nos dados filtrados.</p>
+                  </div>
+                {% endif %}
+              </div>
+              <div id="insightsLoading" class="text-center" style="display: none;">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">Gerando insights...</span>
+                </div>
+                <p class="mt-2">Gerando insights com IA...</p>
+              </div>
+            </div>
           </div>
         </div>
-
-        <!-- Terceira linha: Botão Aplicar -->
-        <div class="row g-2">
-          <div class="col-12 text-center">
-            <button type="submit" class="btn btn-primary px-5">Aplicar Filtros</button>
-          </div>
-        </div>
-      </form>
+      </div>
     </div>
   </div>
 
-  <!-- Estatísticas Resumo -->
-  <div class="row g-3 mb-4">
+  <!-- Resumo do Período - Largura Total -->
+  <div class="row g-4">
     <div class="col-12">
-      <div class="card">
+      <div class="card mb-4">
         <div class="card-header">
           <h5 class="card-title mb-0">Resumo do Período</h5>
         </div>
@@ -117,20 +166,102 @@
     </div>
   </div>
 
-  <!-- Top Categorias -->
-  <div class="row g-3 mb-4">
+  <!-- Lista de Transações - Largura Total -->
+  <div class="row g-4">
+    <div class="col-12">
+      <div class="card mb-4">
+        <div class="card-header">
+          <h5 class="card-title mb-0">Transações Filtradas</h5>
+        </div>
+        <div class="card-body p-0">
+          {% if paginated_transactions %}
+            <div class="table-responsive">
+              <table class="table table-hover mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th>Data</th>
+                    <th>Descrição</th>
+                    <th>Categoria</th>
+                    <th class="text-end">Valor</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for transaction in paginated_transactions %}
+                  <tr>
+                    <td>{{ transaction.date|date:"d/m/Y" }}</td>
+                    <td>{{ transaction.description|truncatechars:30 }}</td>
+                    <td>
+                      {% if transaction.category %}
+                        {{ transaction.category.name }}
+                      {% else %}
+                        Sem Categoria
+                      {% endif %}
+                    </td>
+                    <td class="text-end">
+                      <span class="{% if transaction.is_positive %}text-success{% else %}text-danger{% endif %}">
+                        {% if transaction.is_positive %}+{% else %}-{% endif %}R$ {{ transaction.amount|floatformat:2 }}
+                      </span>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Paginação -->
+            {% if paginated_transactions.has_other_pages %}
+            <div class="card-footer">
+              <nav aria-label="Navegação de páginas">
+                <ul class="pagination pagination-sm justify-content-center mb-0">
+                  {% if paginated_transactions.has_previous %}
+                    <li class="page-item">
+                      <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ paginated_transactions.previous_page_number }}">Anterior</a>
+                    </li>
+                  {% endif %}
+
+                  {% for num in paginated_transactions.paginator.page_range %}
+                    {% if paginated_transactions.number == num %}
+                      <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% elif num > paginated_transactions.number|add:'-3' and num < paginated_transactions.number|add:'3' %}
+                      <li class="page-item">
+                        <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ num }}">{{ num }}</a>
+                      </li>
+                    {% endif %}
+                  {% endfor %}
+
+                  {% if paginated_transactions.has_next %}
+                    <li class="page-item">
+                      <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ paginated_transactions.next_page_number }}">Próximo</a>
+                    </li>
+                  {% endif %}
+                </ul>
+              </nav>
+            </div>
+            {% endif %}
+          {% else %}
+            <div class="text-center text-muted p-4">
+              <p>Nenhuma transação encontrada para os filtros aplicados.</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top Categorias - Largura Total -->
+  <div class="row g-4">
     <div class="col-12">
       <div class="card">
         <div class="card-header">
           <h5 class="card-title mb-0">Top 5 Categorias</h5>
         </div>
         <div class="card-body">
-          <div class="row g-3">
+          <div class="row g-3 justify-content-center">
             {% for category, amount in top_categories %}
             <div class="col-12 col-sm-6 col-md-4 col-lg-2">
-              <div class="p-3 bg-secondary text-white rounded text-center">
-                <div class="mb-1 small">{{ category }}</div>
-                <div class="h6 fw-light" id="category-amount-{{ forloop.counter }}">R$ {{ amount|floatformat:2 }}</div>
+              <div class="p-3 bg-secondary text-white rounded text-center stat-card">
+                <div class="mb-2">{{ category|truncatechars:15 }}</div>
+                <div class="h5 fw-light" id="category-amount-{{ forloop.counter }}">R$ {{ amount|floatformat:2 }}</div>
               </div>
             </div>
             {% endfor %}
@@ -140,43 +271,22 @@
     </div>
   </div>
 
-  <!-- Insights de AI -->
-  <div class="row g-3 mb-4">
-    <div class="col-12">
-      <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-          <h5 class="card-title mb-0">Insights de IA</h5>
-          <button id="generateInsightsBtn" class="btn btn-outline-primary btn-sm">
-            <i class="fas fa-brain"></i> Gerar Novamente
-          </button>
+  <!-- Gráficos - Lado a Lado -->
+  <div class="row g-4">
+    <!-- Gráfico de Distribuição por Categoria -->
+    <div class="col-12 col-lg-6">
+      <div class="card chart-container">
+        <div class="card-header">
+          <h5 class="card-title mb-0">Distribuição por Categoria</h5>
         </div>
         <div class="card-body">
-          <div id="insightsContent">
-            {% if ai_insights %}
-              <div class="alert alert-info">
-                {{ ai_insights|linebreaks }}
-              </div>
-            {% else %}
-              <div class="text-center text-muted">
-                <p>Clique em "Gerar Novamente" para obter insights baseados nos dados filtrados.</p>
-              </div>
-            {% endif %}
-          </div>
-          <div id="insightsLoading" class="text-center" style="display: none;">
-            <div class="spinner-border text-primary" role="status">
-              <span class="visually-hidden">Gerando insights...</span>
-            </div>
-            <p class="mt-2">Gerando insights com IA...</p>
-          </div>
+          <canvas id="categoryChart" width="400" height="300"></canvas>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Gráficos -->
-  <div class="row g-4">
     <!-- Gráfico de Linhas: Receitas vs Despesas -->
-    <div class="col-12">
+    <div class="col-12 col-lg-6">
       <div class="card chart-container">
         <div class="card-header">
           <h5 class="card-title mb-0">Evolução Financeira Mensal</h5>
@@ -184,18 +294,6 @@
         </div>
         <div class="card-body">
           <canvas id="monthlyChart" width="400" height="300"></canvas>
-        </div>
-      </div>
-    </div>
-
-    <!-- Gráfico de Distribuição por Categoria -->
-    <div class="col-12">
-      <div class="card chart-container">
-        <div class="card-header">
-          <h5 class="card-title mb-0">Distribuição por Categoria</h5>
-        </div>
-        <div class="card-body">
-          <canvas id="categoryChart" width="400" height="300"></canvas>
         </div>
       </div>
     </div>
@@ -285,6 +383,21 @@
         if (!isNaN(value)) {
           element.textContent = formatCurrency(value).replace('R$', 'R$ ');
         }
+      }
+    });
+
+    // Formatar valores na tabela de transações
+    const transactionAmounts = document.querySelectorAll('td.text-end span');
+    transactionAmounts.forEach(span => {
+      const text = span.textContent;
+      const isPositive = text.includes('+');
+      const isNegative = text.includes('-');
+      const valueText = text.replace(/[+-]R\$\s*/, '').replace(/\./g, '').replace(',', '.').trim();
+      const value = parseFloat(valueText);
+
+      if (!isNaN(value)) {
+        const formattedValue = formatCurrency(value).replace('R$', 'R$ ');
+        span.innerHTML = `${isPositive ? '+' : isNegative ? '-' : ''}${formattedValue}`;
       }
     });
   });

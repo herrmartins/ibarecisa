@@ -7,6 +7,7 @@ from treasury.models import TransactionModel, CategoryModel, MonthlyBalance
 from django.http import JsonResponse
 from django.core.cache import cache
 from secretarial.utils.ai_utils import get_mistral_model_for_task
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 import json
 import requests
 from django.conf import settings
@@ -62,6 +63,22 @@ class FinancialAnalysisView(PermissionRequiredMixin, TemplateView):
 
         # Insights de AI (persistentes)
         context['ai_insights'] = self.get_ai_insights(transactions, start_date, end_date)
+
+        # Transações paginadas para exibição na lista
+        page = self.request.GET.get('page', 1)
+        paginator = Paginator(transactions, 20)  # 20 transações por página
+
+        try:
+            paginated_transactions = paginator.page(page)
+        except PageNotAnInteger:
+            paginated_transactions = paginator.page(1)
+        except EmptyPage:
+            paginated_transactions = paginator.page(paginator.num_pages)
+
+        context['paginated_transactions'] = paginated_transactions
+
+        # Data de geração dos insights
+        context['insights_generated_at'] = timezone.now()
 
         return context
 
