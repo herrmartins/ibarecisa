@@ -1,0 +1,256 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/treasury.css' %}">
+<link rel="stylesheet" href="{% static 'css/financial_charts.css' %}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div class="welcome-section py-5">
+  <div class="container">
+    <div class="text-center mb-5">
+      <h1 class="display-4 fw-bold text-primary mb-4">Gráficos Financeiros</h1>
+      <p class="lead text-muted mb-4">Visualização gráfica dos dados financeiros</p>
+    </div>
+
+  <!-- Filtro de Período -->
+  <div class="card mb-4">
+    <div class="card-header">
+      <h5 class="card-title mb-0">Filtro de Período</h5>
+    </div>
+    <div class="card-body">
+      <form method="get" class="row g-3 align-items-end">
+        <div class="col-md-4">
+          <label for="start_date" class="form-label">Data Inicial</label>
+          <input type="date" class="form-control" id="start_date" name="start_date"
+                 value="{{ start_date }}" required>
+        </div>
+        <div class="col-md-4">
+          <label for="end_date" class="form-label">Data Final</label>
+          <input type="date" class="form-control" id="end_date" name="end_date"
+                 value="{{ end_date }}" required>
+        </div>
+        <div class="col-md-4">
+          <button type="submit" class="btn btn-primary w-100">Aplicar Filtro</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Estatísticas Resumo -->
+  <div class="row g-3 mb-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title mb-0">Resumo do Período</h5>
+        </div>
+        <div class="card-body">
+          <div class="row g-3 justify-content-center">
+            <div class="col-12 col-sm-6 col-md-3">
+              <div class="p-3 bg-success text-white rounded text-center stat-card">
+                <div class="mb-2">Total Receitas</div>
+                <div class="h5 fw-light" id="totalRevenue">R$ 0,00</div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-3">
+              <div class="p-3 bg-danger text-white rounded text-center stat-card">
+                <div class="mb-2">Total Despesas</div>
+                <div class="h5 fw-light" id="totalExpense">R$ 0,00</div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-3">
+              <div class="p-3 bg-primary text-white rounded text-center stat-card">
+                <div class="mb-2">Saldo Final</div>
+                <div class="h5 fw-light" id="finalBalance">R$ 0,00</div>
+              </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-3">
+              <div class="p-3 bg-info text-white rounded text-center stat-card">
+                <div class="mb-2">Variação</div>
+                <div class="h5 fw-light" id="balanceVariation">0%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gráficos -->
+  <div class="row g-4">
+    <!-- Gráfico de Linhas: Receitas vs Despesas vs Saldo -->
+    <div class="col-12">
+      <div class="card chart-container">
+        <div class="card-header">
+          <h5 class="card-title mb-0">Evolução Financeira Mensal</h5>
+        </div>
+        <div class="card-body">
+          <canvas id="monthlyChart" width="400" height="200"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gráficos de Distribuição por Categoria -->
+    <div class="col-md-6">
+      <div class="card chart-container">
+        <div class="card-header">
+          <h5 class="card-title mb-0">Distribuição de Receitas por Categoria</h5>
+        </div>
+        <div class="card-body">
+          <canvas id="revenueCategoryChart" width="400" height="400"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card chart-container">
+        <div class="card-header">
+          <h5 class="card-title mb-0">Distribuição de Despesas por Categoria</h5>
+        </div>
+        <div class="card-body">
+          <canvas id="expenseCategoryChart" width="400" height="400"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Dados dos gráficos passados pela view
+  const monthlyData = {{ monthly_data_json|safe }};
+  const revenueCategoryData = {{ revenue_category_data_json|safe }};
+  const expenseCategoryData = {{ expense_category_data_json|safe }};
+
+  // Configuração do gráfico de linhas
+  const ctxMonthly = document.getElementById('monthlyChart').getContext('2d');
+  const monthlyChart = new Chart(ctxMonthly, {
+    type: 'line',
+    data: {
+      labels: monthlyData.map(item => item.month),
+      datasets: [{
+        label: 'Receitas',
+        data: monthlyData.map(item => item.revenue),
+        borderColor: 'rgb(40, 167, 69)',
+        backgroundColor: 'rgba(40, 167, 69, 0.1)',
+        tension: 0.1
+      }, {
+        label: 'Despesas',
+        data: monthlyData.map(item => item.expense),
+        borderColor: 'rgb(220, 53, 69)',
+        backgroundColor: 'rgba(220, 53, 69, 0.1)',
+        tension: 0.1
+      }, {
+        label: 'Saldo',
+        data: monthlyData.map(item => item.balance),
+        borderColor: 'rgb(0, 123, 255)',
+        backgroundColor: 'rgba(0, 123, 255, 0.1)',
+        tension: 0.1
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        title: {
+          display: true,
+          text: 'Receitas, Despesas e Saldo Mensal'
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: function(value) {
+              return 'R$ ' + value.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // Configuração do gráfico de pizza - Receitas
+  const ctxRevenueCategory = document.getElementById('revenueCategoryChart').getContext('2d');
+  const revenueCategoryChart = new Chart(ctxRevenueCategory, {
+    type: 'doughnut',
+    data: {
+      labels: revenueCategoryData.map(item => item.category),
+      datasets: [{
+        data: revenueCategoryData.map(item => item.total),
+        backgroundColor: [
+          'rgb(40, 167, 69)',
+          'rgb(23, 162, 184)',
+          'rgb(255, 193, 7)',
+          'rgb(108, 117, 125)',
+          'rgb(52, 58, 64)',
+          'rgb(220, 53, 69)',
+          'rgb(0, 123, 255)',
+          'rgb(255, 99, 132)',
+          'rgb(54, 162, 235)',
+          'rgb(255, 205, 86)'
+        ]
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: 'bottom'
+        }
+      }
+    }
+  });
+
+  // Configuração do gráfico de pizza - Despesas
+  const ctxExpenseCategory = document.getElementById('expenseCategoryChart').getContext('2d');
+  const expenseCategoryChart = new Chart(ctxExpenseCategory, {
+    type: 'doughnut',
+    data: {
+      labels: expenseCategoryData.map(item => item.category),
+      datasets: [{
+        data: expenseCategoryData.map(item => item.total),
+        backgroundColor: [
+          'rgb(220, 53, 69)',
+          'rgb(255, 99, 132)',
+          'rgb(255, 159, 64)',
+          'rgb(255, 193, 7)',
+          'rgb(23, 162, 184)',
+          'rgb(40, 167, 69)',
+          'rgb(0, 123, 255)',
+          'rgb(54, 162, 235)',
+          'rgb(255, 205, 86)',
+          'rgb(108, 117, 125)'
+        ]
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: 'bottom'
+        }
+      }
+    }
+  });
+
+  // Calcular estatísticas do período
+  function updateStatistics() {
+    const totalRevenue = monthlyData.reduce((sum, item) => sum + item.revenue, 0);
+    const totalExpense = monthlyData.reduce((sum, item) => sum + item.expense, 0);
+    const finalBalance = monthlyData.length > 0 ? monthlyData[monthlyData.length - 1].balance : 0;
+    const initialBalance = monthlyData.length > 0 ? monthlyData[0].balance - monthlyData[0].revenue + monthlyData[0].expense : 0;
+    const variation = initialBalance !== 0 ? ((finalBalance - initialBalance) / Math.abs(initialBalance)) * 100 : 0;
+
+    document.getElementById('totalRevenue').textContent = 'R$ ' + totalRevenue.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+    document.getElementById('totalExpense').textContent = 'R$ ' + totalExpense.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+    document.getElementById('finalBalance').textContent = 'R$ ' + finalBalance.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+    document.getElementById('balanceVariation').textContent = variation.toFixed(1) + '%';
+  }
+
+  // Atualizar estatísticas ao carregar a página
+  updateStatistics();
+</script>
+
+  </div>
+</div>
+
+{% endblock %}
