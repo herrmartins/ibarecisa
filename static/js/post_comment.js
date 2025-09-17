@@ -149,26 +149,58 @@ function addReplyToDOM(reply, parentId) {
 	const replyCard = document.createElement('div');
 	replyCard.className = 'card ml-3 my-3 p-3 card-no-border shadow-sm';
 	replyCard.setAttribute('data-comment-id', reply.id);
-	const replyButton = `<button class="btn btn-sm btn-outline-primary reply-btn me-2" data-comment-id="${reply.id}"><i class="bi bi-reply me-1"></i>Responder</button>`;
+	const replyButton = `<button class="btn btn-sm btn-outline-primary reply-btn me-2 rounded-pill" data-comment-id="${reply.id}" data-bs-toggle="tooltip" title="Responder a este comentário"><i class="bi bi-reply me-1"></i>Responder</button>`;
+	const deleteButton = `<button class="btn btn-sm btn-outline-danger delete-btn me-2 rounded-pill" data-comment-id="${reply.id}" data-bs-toggle="tooltip" title="Excluir este comentário"><i class="bi bi-trash me-1"></i>Excluir</button>`;
+	const timeAgo = reply.created ? new Date(reply.created).toLocaleString('pt-BR', {
+		year: 'numeric',
+		month: 'short',
+		day: 'numeric',
+		hour: '2-digit',
+		minute: '2-digit'
+	}) : 'Agora mesmo';
+
 	replyCard.innerHTML = `
 		<div class="card-body p-0">
-			<p class="card-text mb-3">${reply.content}</p>
-			<div class="d-flex justify-content-between align-items-center">
-				<div class="d-flex flex-row align-items-center">
-					${reply.user_photo ? `<img src="${reply.user_photo}" alt="avatar" width="32" height="32" class="me-2" />` : '<div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;"><i class="bi bi-person"></i></div>'}
-					<div>
-						<p class="small mb-0 fw-semibold">${reply.author_name}</p>
-						<p class="small text-muted mb-0">${reply.created || 'Agora'}</p>
-					</div>
+			<div class="d-flex mb-3">
+				<div class="flex-shrink-0 me-3">
+					${
+						reply.user_photo
+							? `<img src="${reply.user_photo}" alt="avatar" width="32" height="32" class="rounded-circle border border-2 border-primary shadow-sm" />`
+							: '<div class="bg-gradient text-white rounded-circle d-flex align-items-center justify-content-center border border-2 border-primary shadow-sm" style="width: 32px; height: 32px;"><i class="bi bi-person-fill fs-5"></i></div>'
+					}
 				</div>
-				<div class="d-flex flex-row align-items-center">
-					${replyButton}
-					<button class="btn btn-sm btn-outline-secondary me-2 like-btn" data-comment-id="${reply.id}">
-						<i class="bi bi-hand-thumbs-up me-1"></i><span class="like-count">${reply.likes_count || 0}</span>
-					</button>
+				<div class="flex-grow-1">
+					<div class="d-flex align-items-center mb-2">
+						<h6 class="card-title mb-0 fw-bold text-primary">${reply.author_name}</h6>
+						<small class="text-muted ms-2">
+							<i class="bi bi-clock me-1"></i>
+							<span class="badge bg-light text-muted border">${timeAgo}</span>
+						</small>
+					</div>
+					<p class="card-text mb-3 lh-base" style="line-height: 1.6;">${reply.content}</p>
+					<div class="d-flex justify-content-between align-items-center">
+						<div class="d-flex gap-2">
+							${deleteButton}
+							${replyButton}
+							<button class="btn btn-sm btn-outline-success like-btn rounded-pill" data-comment-id="${reply.id}" data-bs-toggle="tooltip" title="Curtir este comentário">
+								<i class="bi bi-heart me-1"></i>
+								<span class="like-count">${reply.likes_count || 0}</span>
+							</button>
+						</div>
+						<small class="text-muted">
+							<i class="bi bi-chat-dots me-1"></i>
+							<span class="comment-thread-count">0 respostas</span>
+						</small>
+					</div>
 				</div>
 			</div>
 		</div>
 	`;
 	parentCard.appendChild(replyCard);
+
+	// Initialize tooltips for the new buttons
+	const tooltipTriggerList = [].slice.call(replyCard.querySelectorAll('[data-bs-toggle="tooltip"]'));
+	const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+		return new bootstrap.Tooltip(tooltipTriggerEl);
+	});
 }
