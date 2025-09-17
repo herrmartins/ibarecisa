@@ -590,11 +590,23 @@
     })
     .then(response => response.json())
     .then(data => {
-      document.getElementById('insightsContent').innerHTML = `
-        <div class="alert alert-info">
-          ${data.insights.replace(/\n/g, '<br>')}
-        </div>
-      `;
+      // Criar elemento div para inserir o conteúdo de forma segura
+      const contentDiv = document.createElement('div');
+      contentDiv.className = 'alert alert-info';
+
+      // Dividir o texto em linhas e criar parágrafos
+      const lines = data.insights.split('\n');
+      lines.forEach(line => {
+        if (line.trim()) {
+          const p = document.createElement('p');
+          p.className = 'mb-2';
+          p.textContent = line.trim();
+          contentDiv.appendChild(p);
+        }
+      });
+
+      document.getElementById('insightsContent').innerHTML = '';
+      document.getElementById('insightsContent').appendChild(contentDiv);
       document.getElementById('insightsContent').style.display = 'block';
       document.getElementById('insightsLoading').style.display = 'none';
     })

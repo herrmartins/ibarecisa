@@ -270,7 +270,7 @@ class FinancialAnalysisView(PermissionRequiredMixin, TemplateView):
         expense_summary = format_category_list(top_expense_categories, total_expenses, "Despesas")
 
         prompt = f"""
-        Analise os seguintes dados financeiros do período de {start_date} a {end_date}:
+        Analise os seguintes dados financeiros do período de {start_date} a {end_date} como um servo de Deus responsável pelos recursos da igreja:
 
         - Total de Receitas: R$ {total_revenue:.2f}
         - Total de Despesas: R$ {total_expenses:.2f}
@@ -279,13 +279,14 @@ class FinancialAnalysisView(PermissionRequiredMixin, TemplateView):
         - {revenue_summary}
         - {expense_summary}
 
-        Forneça insights financeiros úteis em português, incluindo:
-        1. Análise da saúde financeira
-        2. Tendências identificadas (considere receitas vs despesas separadamente)
-        3. Recomendações práticas
-        4. Pontos de atenção
+        Forneça insights espirituais e práticos em português, focando em:
+        1. Fidelidade no uso dos recursos de Deus (1 Coríntios 4:2)
+        2. Gratidão pelas bênçãos recebidas (Filipenses 4:19)
+        3. Sabedoria na administração (Provérbios 24:3-4)
+        4. Oração pela provisão divina (Mateus 6:11)
+        5. Testemunho através da integridade financeira
 
-        Seja conciso mas informativo, limite a resposta a 300 palavras.
+        Incentive a dependência em Deus em vez de preocupações materiais, citando versículos bíblicos relevantes. Seja encorajador e espiritual, limite a resposta a 400 palavras.
         """
 
         try:
