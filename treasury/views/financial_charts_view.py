@@ -20,9 +20,9 @@ class FinancialChartsView(PermissionRequiredMixin, TemplateView):
         end_date = self.request.GET.get('end_date')
 
         if not start_date or not end_date:
-            # Padrão: últimos 12 meses
+            # Padrão: início do ano até hoje
             end_date = timezone.now().date()
-            start_date = end_date - relativedelta(months=12)
+            start_date = timezone.now().replace(month=1, day=1).date()
 
         context['start_date'] = start_date
         context['end_date'] = end_date
