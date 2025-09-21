@@ -70,28 +70,22 @@
         </div>
         <div class="card-body">
           <div class="row g-3 justify-content-center">
-            <div class="col-12 col-sm-6 col-md-3">
+            <div class="col-12 col-sm-6 col-md-4">
               <div class="p-3 bg-success text-white rounded text-center stat-card">
                 <div class="mb-2">Total Receitas</div>
                 <div class="h5 fw-light" id="totalRevenue">R$ 0,00</div>
               </div>
             </div>
-            <div class="col-12 col-sm-6 col-md-3">
+            <div class="col-12 col-sm-6 col-md-4">
               <div class="p-3 bg-danger text-white rounded text-center stat-card">
                 <div class="mb-2">Total Despesas</div>
                 <div class="h5 fw-light" id="totalExpense">R$ 0,00</div>
               </div>
             </div>
-            <div class="col-12 col-sm-6 col-md-3">
+            <div class="col-12 col-sm-6 col-md-4">
               <div class="p-3 bg-primary text-white rounded text-center stat-card">
                 <div class="mb-2">Saldo Final</div>
                 <div class="h5 fw-light" id="finalBalance">R$ 0,00</div>
-              </div>
-            </div>
-            <div class="col-12 col-sm-6 col-md-3">
-              <div class="p-3 bg-info text-white rounded text-center stat-card">
-                <div class="mb-2">Variação</div>
-                <div class="h5 fw-light" id="balanceVariation">0%</div>
               </div>
             </div>
           </div>
@@ -297,19 +291,14 @@
     const totalRevenue = monthlyData.reduce((sum, item) => sum + item.revenue, 0);
     const totalExpense = monthlyData.reduce((sum, item) => sum + item.expense, 0);
     const finalBalance = monthlyData.length > 0 ? monthlyData[monthlyData.length - 1].balance : 0;
-    const initialBalance = monthlyData.length > 0 ? monthlyData[0].balance - monthlyData[0].revenue + monthlyData[0].expense : 0;
-    const variation = initialBalance !== 0 ? ((finalBalance - initialBalance) / Math.abs(initialBalance)) * 100 : 0;
 
     document.getElementById('totalRevenue').textContent = 'R$ ' + totalRevenue.toLocaleString('pt-BR', {minimumFractionDigits: 2});
     document.getElementById('totalExpense').textContent = 'R$ ' + totalExpense.toLocaleString('pt-BR', {minimumFractionDigits: 2});
     document.getElementById('finalBalance').textContent = 'R$ ' + finalBalance.toLocaleString('pt-BR', {minimumFractionDigits: 2});
-    document.getElementById('balanceVariation').textContent = variation.toFixed(1) + '%';
   }
 
-  // Atualizar estatísticas ao carregar a página
   updateStatistics();
 
-  // Inicializar Choices.js para o select de categorias
   document.addEventListener('DOMContentLoaded', function() {
     const categoriesSelect = document.getElementById('categories');
     const choices = new Choices(categoriesSelect, {
