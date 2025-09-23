@@ -1,0 +1,105 @@
+/* Minute Detail Page Styles */
+
+.minute-detail-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.minute-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.minute-title {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 1rem;
+}
+
+.pdf-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 500;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+
+.pdf-btn:hover {
+    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+    transform: translateY(-1px);
+    color: white;
+    text-decoration: none;
+}
+
+.minute-content-card,
+.attachments-card,
+.upload-card {
+    margin-bottom: 2rem;
+}
+
+.attachments-title,
+.upload-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 1rem;
+}
+
+.attachments-list {
+    list-style: none;
+    padding: 0;
+}
+
+.attachments-list li {
+    padding: 0.75rem;
+    border: 1px solid #e1e5e9;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    background: #f8f9fa;
+    transition: all 0.2s ease;
+}
+
+.attachments-list li:hover {
+    background: #e9ecef;
+    border-color: #667eea;
+}
+
+.attachment-link {
+    color: #333;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    font-weight: 500;
+}
+
+.attachment-link:hover {
+    color: #667eea;
+    text-decoration: none;
+}
+
+.attachment-icon {
+    margin-right: 0.5rem;
+    color: #667eea;
+}
+
+.attachment-date {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-left: auto;
+}
+
+.upload-form .form-label {
+    font-weight: 500;
+    color: #333;
+}
+
+.upload-form .btn {
+    width: 100%;
+}
