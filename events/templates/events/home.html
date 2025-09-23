@@ -1,7 +1,16 @@
-{% extends 'core/base.html' %} {% load static %}{% block content %}
+{% extends 'core/base.html' %}
+{% load static %}
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/events.css' %}">
 
-<div class="container-sm my-4">
-  {% include "events/includes/list_events.html" %}
+<div class="container">
+    <div class="events-header">
+        <h1 class="events-title">Eventos</h1>
+    </div>
+
+    <div class="container-sm">
+        {% include "events/includes/list_events.html" %}
+    </div>
 </div>
 {% endblock %}
 

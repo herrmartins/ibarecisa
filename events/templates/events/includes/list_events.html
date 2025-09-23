@@ -1,49 +1,49 @@
 {% load static %}
 
 <div x-data>
-    <div class="row justify-content-end align-items-end">
-        <div class="col-auto">
-            <div class="form-group">
-                <label for="start_date" class="form-label">Início:</label>
-                <input type="date" class="form-control" id="start_date" name="start_date" x-model="start_date" x-ref="input_start_date" />
+    <div class="filter-section">
+        <div class="row justify-content-center align-items-end">
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="form-group">
+                    <label for="start_date" class="form-label">Data Inicial:</label>
+                    <input type="date" class="form-control" id="start_date" name="start_date" x-model="start_date" x-ref="input_start_date" />
+                </div>
             </div>
-        </div>
 
-        <div class="col-auto">
-            <div class="form-group">
-                <label for="end_date" class="form-label">Fim:</label>
-                <input type="date" class="form-control" id="end_date" name="end_date" x-model="end_date" x-ref="input_end_date" />
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="form-group">
+                    <label for="end_date" class="form-label">Data Final:</label>
+                    <input type="date" class="form-control" id="end_date" name="end_date" x-model="end_date" x-ref="input_end_date" />
+                </div>
             </div>
-        </div>
 
-        <div class="col-auto">
-            <button
-                type="button"
-                class="btn btn-outline-info"
-                x-on:click="$store.allEvents.findByDate($refs.input_start_date._x_model.get(), $refs.input_end_date._x_model.get())"
-            >
-                Ver Mais
-            </button>
+            <div class="col-md-2 col-sm-12 mb-3 text-center">
+                <button
+                    type="button"
+                    class="btn"
+                    x-on:click="$store.allEvents.findByDate($refs.input_start_date._x_model.get(), $refs.input_end_date._x_model.get())"
+                >
+                    <i class="bi bi-search me-2"></i>Buscar
+                </button>
+            </div>
         </div>
     </div>
-
 </div>
 
 <div
     x-data
     id="list-events"
-    class="justify-content-center p-3"
+    class="justify-content-center"
 >
-    <h3>Eventos</h3>
     <div class="row">
         <template x-for="(eventData, index) in $store.allEvents.dataEvents" :key="index">
             <div class="col-sm-6 col-lg-4 mb-4">
-                <div class="card">
+                <div class="card event-card">
                     <div class="card-body">
                         <h5 class="card-title">
-                            <span  x-text="eventData.title"></span>
+                            <span x-text="eventData.title"></span>
                             {% if user.is_secretary or user.is_superuser%}
-                                <a x-bind:href="eventData.url_events_edit_event">
+                                <a x-bind:href="eventData.url_events_edit_event" class="ms-2">
                                     <i class="bi bi-pencil-square"></i>
                                 </a>
                             {% endif %}
@@ -51,15 +51,24 @@
 
                         <p class="card-text" x-text="eventData.descriptions"></p>
                         <ul class="list-group list-group-flush">
-                            <li class="list-group-item">Data: <span x-text="new Date(eventData.start_date ).toLocaleString('pt-BR')"></span></li>
-                            <li class="list-group-item">Fim: <span x-text="new Date(eventData.end_date ).toLocaleString('pt-BR')"></span></li>
-                            <li class="list-group-item">Investimento: R$ <span x-text="eventData.price"></span></li>
-                            <li class="list-group-item">Categoria: <span x-text="eventData.category"></span></li>
+                            <li class="list-group-item">
+                                <strong>Data:</strong> <span x-text="new Date(eventData.start_date).toLocaleString('pt-BR')"></span>
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Fim:</strong> <span x-text="new Date(eventData.end_date).toLocaleString('pt-BR')"></span>
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Investimento:</strong> R$ <span x-text="eventData.price"></span>
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Categoria:</strong> <span x-text="eventData.category"></span>
+                            </li>
                         </ul>
                     </div>
                     <div class="card-footer">
                         <small class="text-muted">
-                            Local: <span x-text="eventData.location"></span>
+                            <i class="bi bi-geo-alt me-1"></i>
+                            <span x-text="eventData.location"></span>
                         </small>
                     </div>
                 </div>
