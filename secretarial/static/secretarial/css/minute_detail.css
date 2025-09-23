@@ -1,0 +1,143 @@
+.minute-detail-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.minute-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 10px;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.minute-title {
+    font-size: 2.5rem;
+    font-weight: 300;
+    margin-bottom: 0.5rem;
+}
+
+.minute-id {
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+
+.minute-content-card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+}
+
+.minute-body {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    padding: 1.5rem;
+}
+
+.attachments-card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+}
+
+.attachments-title {
+    color: #495057;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.attachments-list {
+    list-style: none;
+    padding: 0;
+}
+
+.attachments-list li {
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    align-items: center;
+}
+
+.attachments-list li:last-child {
+    border-bottom: none;
+}
+
+.attachment-link {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+}
+
+.attachment-link:hover {
+    color: #0056b3;
+    text-decoration: underline;
+}
+
+.attachment-icon {
+    margin-right: 0.5rem;
+    color: #6c757d;
+}
+
+.attachment-date {
+    margin-left: auto;
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.upload-card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.upload-title {
+    color: #495057;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.upload-form .form-control {
+    border-radius: 5px;
+}
+
+.upload-form .btn {
+    border-radius: 5px;
+    font-weight: 500;
+}
+
+.pdf-btn {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    border: none;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 5px;
+    text-decoration: none;
+    display: inline-block;
+    font-weight: 500;
+    transition: transform 0.2s;
+}
+
+.pdf-btn:hover {
+    color: white;
+    transform: translateY(-2px);
+    text-decoration: none;
+}
+
+@media (max-width: 768px) {
+    .minute-header {
+        padding: 1.5rem;
+    }
+
+    .minute-title {
+        font-size: 2rem;
+    }
+
+    .upload-form .col-6, .upload-form .col-4, .upload-form .col-2 {
+        margin-bottom: 0.5rem;
+    }
+}

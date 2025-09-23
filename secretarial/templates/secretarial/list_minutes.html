@@ -12,7 +12,7 @@
       <div class="row">
         <div class="col-3">
           {{m.meeting_date}}<br>
-          <a href="{% url 'secretarial:minute-generate-pdf' m.id %}" class="btn btn-primary">Generate PDF</a>
+          <a href="{% url 'secretarial:minute-generate-pdf' m.id %}" class="btn btn-primary">Gerar PDF</a>
         </div>
         <div class="col-9">
           {{m.body|safe}}
