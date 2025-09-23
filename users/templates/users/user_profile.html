@@ -7,22 +7,23 @@
 
 <div class="user-profile-container">
     <div class="profile-header">
-        <h1 class="profile-title">Perfil do Usuário</h1>
-        <div class="d-flex justify-content-center mt-3">
-            <a href="{% url 'users:user-profile-update' user_object.id %}" class="update-btn">
-                <i class="bi bi-pencil-square me-2"></i>Atualizar Cadastro
-            </a>
-        </div>
-    </div>
-
-    <div class="card profile-image-card">
-        <div class="card-body text-center">
-            {% if user_object.profile_image %}
-                <img src="{{ user_object.profile_image.url }}" alt="Profile Image" class="profile-image">
-            {% else %}
-                <img src="{% static 'img/user.png' %}" alt="Default Image" class="profile-image">
-            {% endif %}
-            <h4 class="mt-3">{{ user_object.first_name }} {{ user_object.last_name }}</h4>
+        <div class="row align-items-center">
+            <div class="col-md-3 text-center">
+                {% if user_object.profile_image %}
+                    <img src="{{ user_object.profile_image.url }}" alt="Profile Image" class="profile-image">
+                {% else %}
+                    <img src="{% static 'img/user.png' %}" alt="Default Image" class="profile-image">
+                {% endif %}
+            </div>
+            <div class="col-md-6 text-center">
+                <h1 class="profile-title">Perfil do Usuário</h1>
+                <h4 class="user-name">{{ user_object.first_name }} {{ user_object.last_name }}</h4>
+            </div>
+            <div class="col-md-3 text-center">
+                <a href="{% url 'users:user-profile-update' user_object.id %}" class="update-btn">
+                    <i class="bi bi-pencil-square me-2"></i>Atualizar Cadastro
+                </a>
+            </div>
         </div>
     </div>
 
