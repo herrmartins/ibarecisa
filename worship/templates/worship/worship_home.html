@@ -5,27 +5,39 @@
 <link rel="stylesheet" href="{% static 'css/quill.css' %}">
 <link rel="stylesheet" href="{% static 'css/worship.css' %}">
 
-<div class="container text-center" x-data="songSearch" x-cloak>
-    <p class="fs-1">Departamento de Música</p>
-
-    <button type="button" class="btn btn-primary rounded-circle"
-        style="position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; font-size: 24px;"
-        data-bs-toggle="modal" data-bs-target="#addSongModal">
-        +
-    </button>
-
-    <div class="d-flex justify-content-center">
-        <div class="input-group input-group-lg">
-            <input type="text" class="form-control" placeholder="Busca uma canção..." x-model="query"
-                x-on:input.debounce.300ms="searchSongs">
+<div class="container" x-data="songSearch" x-cloak>
+    <div class="worship-header">
+        <div class="row align-items-center">
+            <div class="col-md-9">
+                <h1 class="worship-title">Departamento de Música</h1>
+            </div>
+            <div class="col-md-3 text-end">
+                <button type="button" class="add-song-btn"
+                    data-bs-toggle="modal" data-bs-target="#addSongModal">
+                    <i class="bi bi-plus-circle-fill me-2"></i>Adicionar Canção
+                </button>
+            </div>
         </div>
     </div>
 
-    <div class="mt-4 row">
-        
-            <div class="col-lg-6 mb-4">
-                <div class="result-category" x-show="results.title_matches.length > 0">
-                    <p class="fs-3">Resultados por Título</p>
+    <div class="card search-card">
+        <div class="card-body">
+            <div class="d-flex justify-content-center">
+                <div class="input-group input-group-lg">
+                    <input type="text" class="form-control" placeholder="Busca uma canção..." x-model="query"
+                        x-on:input.debounce.300ms="searchSongs">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-lg-6 mb-4">
+            <div class="card result-card" x-show="results.title_matches.length > 0">
+                <div class="card-header">
+                    <h3 class="card-title">Resultados por Título</h3>
+                </div>
+                <div class="card-body">
                     <table class="table table-striped table-sm">
                         <thead>
                             <tr>
@@ -46,10 +58,14 @@
                     </table>
                 </div>
             </div>
-        
-            <div class="col-lg-6 mb-4">
-                <div class="result-category" x-show="results.artist_matches.length > 0">
-                    <p class="fs-3">Resultados por Artista</p>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+            <div class="card result-card" x-show="results.artist_matches.length > 0">
+                <div class="card-header">
+                    <h3 class="card-title">Resultados por Artista</h3>
+                </div>
+                <div class="card-body">
                     <table class="table table-striped table-sm">
                         <thead>
                             <tr>
@@ -70,10 +86,14 @@
                     </table>
                 </div>
             </div>
-        
-            <div class="col-lg-6 mb-4">
-                <div class="result-category" x-show="results.lyrics_matches.length > 0">
-                    <p class="fs-3">Resultados por Letras</p>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+            <div class="card result-card" x-show="results.lyrics_matches.length > 0">
+                <div class="card-header">
+                    <h3 class="card-title">Resultados por Letras</h3>
+                </div>
+                <div class="card-body">
                     <table class="table table-striped table-sm">
                         <thead>
                             <tr>
@@ -96,10 +116,14 @@
                     </table>
                 </div>
             </div>
-        
-            <div class="col-lg-6 mb-4">
-                <div class="result-category" x-show="results.theme_matches.length > 0">
-                    <p class="fs-3">Resultados por Tema</p>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+            <div class="card result-card" x-show="results.theme_matches.length > 0">
+                <div class="card-header">
+                    <h3 class="card-title">Resultados por Tema</h3>
+                </div>
+                <div class="card-body">
                     <table class="table table-striped table-sm">
                         <thead>
                             <tr>
@@ -121,6 +145,7 @@
                 </div>
             </div>
         </div>
+    </div>
         
 
         <div class="modal fade" id="addSongModal" tabindex="-1">
