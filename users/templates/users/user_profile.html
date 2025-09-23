@@ -33,9 +33,9 @@
             <div class="col-md-4">
               <div class="card bg-info text-white h-100 stats-card">
                 <div class="card-body text-center">
-                  <i class="bi bi-people-fill fs-1 mb-2"></i>
-                  <h5 class="card-title">{{ user_object.groups.count }}</h5>
-                  <p class="card-text mb-0">Grupos</p>
+                  <i class="bi bi-newspaper fs-1 mb-2"></i>
+                  <h5 class="card-title">{{ user_object.post_set.count|add:user_object.comment_set.count }}</h5>
+                  <p class="card-text mb-0">Participação no Blog</p>
                 </div>
               </div>
             </div>
