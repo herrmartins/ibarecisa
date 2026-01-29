@@ -1,0 +1,30 @@
+{
+  "name": "ibarecisa",
+  "version": "1.0.0",
+  "description": "[IBARECISA](https://ibarecisa.org.br/)",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.1.18",
+    "@tailwindcss/typography": "^0.5.19",
+    "tailwindcss": "^4.1.18"
+  },
+  "scripts": {
+    "dev": "tailwindcss -i ./core/static/css/tailwind/input.css -o ./core/static/css/tailwind/output.css --watch",
+    "build": "tailwindcss -i ./core/static/css/tailwind/input.css -o ./core/static/css/tailwind/output.css --minify"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/herrmartins/ibarecisa.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/herrmartins/ibarecisa/issues"
+  },
+  "homepage": "https://github.com/herrmartins/ibarecisa#readme"
+}

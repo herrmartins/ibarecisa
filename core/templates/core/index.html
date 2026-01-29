@@ -61,43 +61,79 @@
 </div>
 
 {% else %}
-<div class="welcome-section py-5 bg-light">
-  <div class="container">
-    <div class="text-center mb-5">
-      <h1 class="display-4 fw-bold text-primary">Bem-vindo de Volta!</h1>
-      <p class="lead text-muted">Veja as últimas novidades da nossa comunidade.</p>
+<!-- Home Logado -->
+<div class="min-h-screen bg-gradient-to-b from-slate-50 to-white pt-20">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Welcome Header -->
+    <div class="text-center mb-8">
+      <h1 class="text-4xl sm:text-5xl font-bold text-primary-600 mb-3">
+        Bem-vindo de Volta!
+      </h1>
+      <p class="text-lg text-slate-500">
+        Veja as últimas novidades da nossa comunidade.
+      </p>
     </div>
+
     {% if post %}
-    <div class="row justify-content-center">
-      <div class="col-lg-8">
-        <div class="card shadow-lg border-0">
-          <div class="card-header bg-light text-dark">
-            <h5 class="card-title mb-0">{{ post.title }}</h5>
+    <!-- Post Card -->
+    <div class="max-w-3xl mx-auto">
+      <article class="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden border border-slate-200">
+        <!-- Post Header -->
+        <div class="bg-gradient-to-r from-primary-500 to-secondary-500 px-6 py-5">
+          <h2 class="text-xl sm:text-2xl font-semibold text-white">
+            {{ post.title }}
+          </h2>
+        </div>
+
+        <!-- Post Content -->
+        <div class="p-6">
+          <div class="post-content text-slate-700 leading-relaxed space-y-4">
+            {{ post.content|safe }}
           </div>
-          <div class="card-body p-3">
-            <div class="post-content text-dark">{{ post.content|safe }}</div>
-          </div>
-          <div class="card-footer bg-light">
-            <div class="d-flex justify-content-between align-items-center">
-              <small class="text-muted">
+        </div>
+
+        <!-- Post Footer -->
+        <div class="bg-slate-50 px-6 py-4 border-t border-slate-200">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <!-- Author Info -->
+            <div class="flex items-center gap-2 text-sm text-slate-500">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              <span>
                 Por {{ post.author.first_name }} {{ post.author.last_name }} em {{ post.created|date:"d/m/Y" }}
-                {% if post.created != post.modified %}• Atualizado em {{ post.modified|date:"d/m/Y" }}{% endif %}
-              </small>
-              <div>
-                {% for category in post.categories.all %}
-                  <span class="badge bg-secondary me-1">{{ category.name }}</span>
-                {% empty %}
-                  <span class="badge bg-secondary">Não categorizado</span>
-                {% endfor %}
-              </div>
+                {% if post.created != post.modified %}
+                  <span class="text-slate-400">• Atualizado em {{ post.modified|date:"d/m/Y" }}</span>
+                {% endif %}
+              </span>
+            </div>
+
+            <!-- Categories -->
+            <div class="flex flex-wrap gap-2">
+              {% for category in post.categories.all %}
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide bg-primary-100 text-primary-700">
+                  {{ category.name }}
+                </span>
+              {% empty %}
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide bg-slate-200 text-slate-600">
+                  Não categorizado
+                </span>
+              {% endfor %}
             </div>
           </div>
         </div>
-      </div>
+      </article>
     </div>
+
     {% else %}
-    <div class="text-center">
-      <p class="text-muted">Nenhuma postagem recente disponível.</p>
+    <!-- No Posts -->
+    <div class="text-center py-12">
+      <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 mb-4">
+        <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      </div>
+      <p class="text-slate-500 text-lg">Nenhuma postagem recente disponível.</p>
     </div>
     {% endif %}
   </div>

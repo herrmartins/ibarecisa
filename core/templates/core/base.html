@@ -1,6 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" x-data>
 <style>
     [x-cloak] { display: none !important; }
 </style>
@@ -11,15 +11,55 @@
         {% block pre_alpine_scripts %}
         {% endblock pre_alpine_scripts %}
         <script defer src="{% static 'js/alpinejs.min.js' %}"></script>
-        <link rel="stylesheet" href="{% static 'img/icons/font/bootstrap-icons.css' %}">
-        <link rel="stylesheet" href="{% static 'css/bootstrap5.3/bootstrap.min.css' %}">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+        <link rel="stylesheet" href="{% static 'css/tailwind/output.css' %}">
     </head>
 
-    <body class="pt-5">
-        {% include 'core/navbar.html' %} {% include 'core/messages.html' %} <div class="mt-3">{% block content %} {% endblock %}</div>
-        <script src="{% static 'js/bootstrap5.3/bootstrap.bundle.min.js' %}"></script>
+    <body>
+        {% include 'core/navbar.html' %}
+        {% include 'core/messages.html' %}
+        <div class="mt-16">{% block content %} {% endblock %}</div>
         <script type="module" src="{% static 'js/comment_like.js' %}"></script>
+
+        <!-- Alpine Stores Globais -->
+        <script>
+        document.addEventListener('alpine:init', () => {
+            // Store de Preferências (persiste no localStorage)
+            Alpine.store('prefs', Alpine.persist({
+                theme: 'system',
+                fontSize: 'normal',
+                sidebarCollapsed: false,
+                notificationsEnabled: true,
+            }));
+
+            // Store do Usuário (injetado pelo Django, NÃO persiste)
+            Alpine.store('user', {
+                id: {{ user.id|default:'null' }} || null,
+                username: '{{ user.username|default:"" }}',
+                firstName: '{{ user.first_name|default:"" }}',
+                lastName: '{{ user.last_name|default:"" }}',
+                email: '{{ user.email|default:"" }}',
+                isAuthenticated: {{ user.is_authenticated|lower }},
+                isStaff: {{ user.is_staff|lower }},
+                userType: '{{ user.type|default:"" }}',
+                // Métodos úteis
+                get fullName() {
+                    return `${this.firstName} ${this.lastName}`.trim() || this.username;
+                },
+                get displayName() {
+                    return this.firstName || this.username;
+                }
+            });
+
+            // Store de UI (estado temporário da interface)
+            Alpine.store('ui', {
+                mobileMenuOpen: false,
+                activeDropdown: null,
+                closeAllDropdowns() {
+                    this.activeDropdown = null;
+                }
+            });
+        });
+        </script>
     </body>
 
 </html>
