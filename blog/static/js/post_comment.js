@@ -3,12 +3,14 @@
 document
 	.getElementById("posts-container")
 	.addEventListener("click", (event) => {
-		if (event.target.classList.contains("submit-reply")) {
-			const commentId = event.target.getAttribute("data-comment-id");
+		// Check for submit-reply button (or its parent)
+		const submitReplyBtn = event.target.closest(".submit-reply") || event.target.closest(".blog-submit-reply-btn");
+		if (submitReplyBtn) {
+			const commentId = submitReplyBtn.getAttribute("data-comment-id");
 			const authorId = document
 				.getElementById("user-info")
 				.getAttribute("comment-author-id");
-			const postId = event.target.getAttribute("data-post-id");
+			const postId = submitReplyBtn.getAttribute("data-post-id");
 			const replyElem = document.getElementById(`reply-${commentId}`);
 			const replyContent = replyElem ? replyElem.value : "";
 			postReply(authorId, postId, commentId, replyContent);
@@ -16,22 +18,21 @@ document
 			return;
 		}
 
-		if (event.target.classList.contains("reply-btn")) {
-			const commentId = event.target.getAttribute("data-comment-id");
+		// Check for reply-btn button (or its parent)
+		const replyBtn = event.target.closest(".blog-reply-btn");
+		if (replyBtn) {
+			const commentId = replyBtn.getAttribute("data-comment-id");
 			toggleReplyForm(commentId);
 			return;
 		}
 
-		if (
-			event.target.tagName === "BUTTON" &&
-			event.target.hasAttribute("data-post-id") &&
-			event.target.id &&
-			event.target.id.startsWith("sendComment-")
-		) {
+		// Check for send comment button (or its parent)
+		const sendCommentBtn = event.target.closest("button[id^='sendComment-']");
+		if (sendCommentBtn) {
 			const authorId = document
 				.getElementById("user-info")
 				.getAttribute("comment-author-id");
-			const postId = event.target.getAttribute("data-post-id");
+			const postId = sendCommentBtn.getAttribute("data-post-id");
 			const commentElem = document.getElementById(`comment-${postId}`);
 			if (!commentElem) {
 				return;
@@ -55,7 +56,7 @@ function postComment(authorId, postId, commentContent) {
 	}
 
 	const csrftoken = getCookie("csrftoken");
-	fetch(`/api2/comments/add/${postId}`, {
+	fetch(`/api2/comments/add/${postId}/`, {
 		method: "POST",
 		headers: {
 			"Content-Type": "application/json",
@@ -72,7 +73,11 @@ function postComment(authorId, postId, commentContent) {
 			addCommentToHTML(data);
 		})
 		.catch((error) => {
-			// Handle error silently
+			console.error('[postComment] Erro ao postar comentário:', error);
+			if (error && typeof error.text === 'function') {
+				error.text().then(txt => console.error('[postComment] response text:', txt)).catch(() => {});
+			}
+			alert('Erro ao enviar comentário. Tente novamente.');
 		});
 }
 
@@ -86,13 +91,14 @@ function toggleReplyForm(commentId) {
 		replyForm.remove();
 	} else {
 		replyForm = document.createElement('div');
-		replyForm.className = 'reply-form mt-3 p-3 bg-light rounded-3 border';
+		replyForm.className = 'reply-form mt-3 p-3 bg-slate-50 rounded-xl border border-slate-200';
 		const postId = commentCard.closest('[id^="comments-"]').id.split('-')[1];
 		replyForm.innerHTML = `
-			<div class="d-flex gap-2">
-				<textarea class="form-control flex-grow-1" id="reply-${commentId}" rows="2" placeholder="Digite sua resposta..."></textarea>
-				<button class="btn btn-primary px-3 submit-reply align-self-start" data-comment-id="${commentId}" data-post-id="${postId}">
-					<i class="bi bi-send me-1"></i>Enviar
+			<div class="flex gap-2">
+				<textarea class="blog-reply-textarea flex-grow-1" id="reply-${commentId}" rows="2" placeholder="Digite sua resposta..."></textarea>
+				<button class="blog-submit-reply-btn" data-comment-id="${commentId}" data-post-id="${postId}">
+					<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+					Enviar
 				</button>
 			</div>
 		`;
@@ -108,7 +114,7 @@ function postReply(authorId, postId, parentId, content) {
 	}
 
 	const csrftoken = getCookie("csrftoken");
-	fetch(`/api2/comments/add/${postId}`, {
+	fetch(`/api2/comments/add/${postId}/`, {
 		method: "POST",
 		headers: {
 			"Content-Type": "application/json",
@@ -144,30 +150,65 @@ function isCurrentUserAuthor(comment) {
 function addReplyToDOM(reply, parentId) {
     const parentCard = document.querySelector(`[data-comment-id="${parentId}"]`);
     const replyCard = document.createElement('div');
-    replyCard.className = 'card ml-3 my-3 p-3 card-no-border shadow-sm';
+    replyCard.className = 'blog-reply-card ml-3 my-3 p-3';
     replyCard.setAttribute('data-comment-id', reply.id);
-    const replyButton = `<button class="btn btn-sm btn-outline-primary reply-btn me-2" data-comment-id="${reply.id}"><i class="bi bi-reply me-1"></i>Responder</button>`;
-    const editButton = isCurrentUserAuthor(reply) ? `<button class="btn btn-sm btn-outline-warning edit-btn me-2" data-comment-id="${reply.id}"><i class="bi bi-pencil me-1"></i>Editar</button>` : '';
+    const replyButton = `<button class="blog-reply-btn" data-comment-id="${reply.id}" title="Responder a este comentário">
+		<svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+		Responder
+	</button>`;
+    const editButton = isCurrentUserAuthor(reply) ? `<button class="blog-edit-comment-btn" data-comment-id="${reply.id}">
+		<svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2h2.828l8.586-8.586z"/></svg>
+		Editar
+	</button>` : '';
+    const deleteButton = isCurrentUserAuthor(reply) ? `<button class="blog-delete-comment-btn" data-comment-id="${reply.id}" title="Excluir este comentário">
+		<svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+		Excluir
+	</button>` : '';
+    const timeAgo = reply.created ? new Date(reply.created).toLocaleString('pt-BR', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    }) : 'Agora mesmo';
+
     replyCard.innerHTML = `
-        <div class="card-body p-0">
-            <div class="comment-content mb-3">${reply.content}</div>
-            <div class="d-flex justify-content-between align-items-center">
-                <div class="d-flex flex-row align-items-center">
-                    ${reply.user_photo ? `<img src="${reply.user_photo}" alt="avatar" width="32" height="32" class="me-2" />` : '<div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;"><i class="bi bi-person"></i></div>'}
-                    <div>
-                        <p class="small mb-0 fw-semibold">${reply.author_name}</p>
-                        <p class="small text-muted mb-0">${reply.created || 'Agora'}</p>
-                    </div>
-                </div>
-                <div class="d-flex flex-row align-items-center">
-                    ${editButton}
-                    ${replyButton}
-                    <button class="btn btn-sm btn-outline-secondary me-2 like-btn" data-comment-id="${reply.id}">
-                        <i class="bi bi-hand-thumbs-up me-1"></i><span class="like-count">${reply.likes_count || 0}</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-    `;
+		<div class="blog-reply-body">
+			<div class="flex mb-3 gap-3">
+				<div class="flex-shrink-0">
+					${
+						reply.user_photo
+							? `<img src="${reply.user_photo}" alt="avatar" width="32" height="32" class="w-8 h-8 rounded-full border-2 border-primary-300 shadow-sm" />`
+							: '<div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 text-white flex items-center justify-center border-2 border-primary-300 shadow-sm"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></div>'
+					}
+				</div>
+				<div class="flex-grow-1">
+					<div class="flex items-center mb-2 gap-2">
+						<h6 class="font-bold text-primary-600 m-0">${reply.author_name}</h6>
+						<span class="text-slate-500 text-sm">
+							<svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+							<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">${timeAgo}</span>
+						</span>
+					</div>
+					<p class="mb-3" style="line-height: 1.6;">${reply.content}</p>
+					<div class="flex justify-between items-center">
+						<div class="flex gap-2">
+							${editButton}
+							${deleteButton}
+							${replyButton}
+							<button class="blog-like-comment-btn" data-comment-id="${reply.id}" title="Curtir este comentário">
+								<svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+								<span class="like-count">${reply.likes_count || 0}</span>
+							</button>
+						</div>
+						<span class="text-slate-500 text-sm">
+							<svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 16h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+							<span class="comment-thread-count">0 respostas</span>
+						</span>
+					</div>
+				</div>
+			</div>
+		</div>
+	`;
     parentCard.appendChild(replyCard);
 }

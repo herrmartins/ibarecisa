@@ -23,15 +23,15 @@
         <!-- Alpine Stores Globais -->
         <script>
         document.addEventListener('alpine:init', () => {
-            // Store de Preferências (persiste no localStorage)
-            Alpine.store('prefs', Alpine.persist({
+            // Store de Preferências
+            Alpine.store('prefs', {
                 theme: 'system',
                 fontSize: 'normal',
                 sidebarCollapsed: false,
                 notificationsEnabled: true,
-            }));
+            });
 
-            // Store do Usuário (injetado pelo Django, NÃO persiste)
+            // Store do Usuário (injetado pelo Django)
             Alpine.store('user', {
                 id: {{ user.id|default:'null' }} || null,
                 username: '{{ user.username|default:"" }}',

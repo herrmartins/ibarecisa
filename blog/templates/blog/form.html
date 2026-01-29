@@ -1,32 +1,75 @@
-{% extends 'core/base.html' %} {% load static %}{% block content %}
+{% extends 'core/base.html' %}
+{% load static %}
 
-{% if 'edit' in request.resolver_match.view_name %}
-<p class="fs-3 fw-light">Altere o post {{post.title}}</p>
-{% else %}
-<p class="fs-3 fw-light">Escreva um post..</p>
-{% endif %}
-<div class="container my-2">
-    <div class="row justify-content-center">
-        <div class="col-md-auto">
-            {% if 'edit' in request.resolver_match.view_name %}
-            <form method="POST" , action="{% url 'blog:update-post' instance.id %}">
-                {% else %}
-                <form method="POST" , action="{% url 'blog:create-post' %}">
-                    {% endif %}
-                    {% csrf_token %}
-                    {{form.media}}
-                    {{form.as_p}}
-                    {% if 'edit' in request.resolver_match.view_name %}
-                    <input type="submit" value="Alterar" class="btn btn-primary">
-                    {% else %}
-                    <input type="submit" value="Cadastrar" class="btn btn-primary">
-                    <a href="{% url 'blog:category-form' %}"><span class="btn btn-primary">Adicionar categoria</span></a>
-                    {% endif %}
-                </form>
+{% block content %}
+<div class="min-h-screen bg-gradient-to-b from-slate-50 to-white py-8">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="text-center mb-8">
+      {% if 'edit' in request.resolver_match.view_name %}
+        <h1 class="text-3xl sm:text-4xl font-bold text-primary-600 mb-2">
+          <svg class="w-10 h-10 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2h2.828l8.586-8.586z"/></svg>
+          Alterar o post: {{ post.title }}
+        </h1>
+        <p class="text-slate-500">Edite o conteúdo do seu post</p>
+      {% else %}
+        <h1 class="text-3xl sm:text-4xl font-bold text-primary-600 mb-2">
+          <svg class="w-10 h-10 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+          Escreva um novo post
+        </h1>
+        <p class="text-slate-500">Compartilhe suas ideias com a comunidade</p>
+      {% endif %}
+    </div>
+
+    <!-- Form Card -->
+    <div class="blog-form-card">
+      {% if 'edit' in request.resolver_match.view_name %}
+        <form method="POST" action="{% url 'blog:update-post' post.id %}" class="space-y-6">
+      {% else %}
+        <form method="POST" action="{% url 'blog:create-post' %}" class="space-y-6">
+      {% endif %}
+        {% csrf_token %}
+
+        <!-- CKEditor Media -->
+        {{ form.media }}
+
+        <!-- Form Fields -->
+        <div class="blog-form-fields">
+          {{ form.as_p }}
         </div>
-        <div class="row">
-           
-               
-            
+
+        <!-- Action Buttons -->
+        <div class="flex flex-wrap items-center gap-3 pt-4 border-t border-slate-200">
+          {% if 'edit' in request.resolver_match.view_name %}
+            <button type="submit" class="blog-submit-btn">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              Salvar Alterações
+            </button>
+            <a href="{% url 'blog:home' %}" class="blog-cancel-btn">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+              Cancelar
+            </a>
+          {% else %}
+            <button type="submit" class="blog-submit-btn">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+              Publicar Post
+            </button>
+            <a href="{% url 'blog:category-form' %}" class="blog-category-btn">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+              Adicionar Categoria
+            </a>
+          {% endif %}
         </div>
-        {% endblock %}
+      </form>
+    </div>
+
+    <!-- Back to Home -->
+    <div class="mt-6 text-center">
+      <a href="{% url 'blog:home' %}" class="inline-flex items-center gap-2 text-slate-500 hover:text-primary-600 transition-colors duration-200">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+        Voltar para o blog
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

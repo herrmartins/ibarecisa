@@ -1,4 +1,5 @@
 from django.views.generic.edit import UpdateView
+from django.urls import reverse_lazy
 from users.models import CustomUser
 from users.forms import UpdateUserProfileModelForm
 from django.contrib.auth.mixins import PermissionRequiredMixin
@@ -22,3 +23,6 @@ class UserProfileUpdateView(PermissionRequiredMixin, UpdateView):
         user = get_object_or_404(CustomUser, pk=self.kwargs["pk"])
         context["user_id"] = user.id
         return context
+
+    def get_success_url(self):
+        return reverse_lazy('users:user-profile', kwargs={'pk': self.object.pk})
