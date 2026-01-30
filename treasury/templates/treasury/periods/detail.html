@@ -2,78 +2,88 @@
 
 {% load static %}
 
-{% block treasury_content %}
-<div class="container mx-auto px-4 py-6" x-data="periodDetail()">
-    <!-- Header -->
-    <div class="flex justify-between items-center mb-6">
-        <div>
-            <a href="{% url 'treasury:period-list' %}" class="text-blue-600 hover:text-blue-800">← Voltar para Períodos</a>
-            <h1 class="text-2xl font-bold text-gray-800 mt-2" x-text="period?.month_name + '/' + period?.year"></h1>
-        </div>
-        <div class="flex gap-2">
-            <template x-if="period?.status === 'open'">
-                <button @click="closePeriod" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg">
-                    Fechar Período
-                </button>
-            </template>
-            <template x-if="period?.status === 'closed'">
-                <button @click="reopenPeriod" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">
-                    Reabrir
-                </button>
-            </template>
-        </div>
-    </div>
+{% block header_back_button %}
+<div class="mb-6">
+  <a href="{% url 'treasury:period-list' %}" class="inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+    </svg>
+    Voltar para Períodos
+  </a>
+</div>
+{% endblock %}
 
+{% block treasury_content %}
+<div class="max-w-6xl mx-auto" x-data="periodDetail()" x-cloak>
     <!-- Loading -->
     <div x-show="loading" class="flex justify-center py-12">
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
     </div>
 
     <!-- Period Content -->
-    <div x-show="!loading && period">
-        <!-- Summary Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div class="bg-white rounded-lg shadow p-4">
-                <p class="text-sm text-gray-500">Status</p>
-                <span class="inline-block px-3 py-1 rounded-full text-sm font-medium mt-1" :class="{
-                    'bg-green-100 text-green-800': period.status === 'open',
-                    'bg-yellow-100 text-yellow-800': period.status === 'closed',
-                    'bg-gray-100 text-gray-800': period.status === 'archived'
-                }" x-text="period.status_label"></span>
-            </div>
-            <div class="bg-white rounded-lg shadow p-4">
-                <p class="text-sm text-gray-500">Saldo Inicial</p>
-                <p class="text-xl font-bold text-gray-800" x-text="formatBRL(period.opening_balance)"></p>
-            </div>
-            <div class="bg-white rounded-lg shadow p-4">
-                <p class="text-sm text-gray-500">Saldo Final</p>
-                <p class="text-xl font-bold" :class="(period.closing_balance || calculatedBalance) >= 0 ? 'text-green-600' : 'text-red-600'"
-                   x-text="formatBRL(period.closing_balance || calculatedBalance || 0)"></p>
-            </div>
-            <div class="bg-white rounded-lg shadow p-4">
-                <p class="text-sm text-gray-500">Variação</p>
-                <p class="text-xl font-bold" :class="(period.transactions_summary?.net || 0) >= 0 ? 'text-green-600' : 'text-red-600'"
-                   x-text="formatBRL(period.transactions_summary?.net || 0)"></p>
+    <div x-show="!loading">
+        <!-- Period Actions -->
+        <div class="flex justify-end mb-6">
+            <template x-if="period && period.status === 'open'">
+                <button @click="closePeriod" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg">
+                    Fechar Período
+                </button>
+            </template>
+            <template x-if="period && period.status === 'closed'">
+                <button @click="reopenPeriod" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">
+                        Reabrir
+                    </button>
+                </template>
             </div>
         </div>
 
-        <!-- Transactions Summary -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div class="bg-green-50 border border-green-200 rounded-lg p-4">
-                <p class="text-sm text-green-600 font-medium">Receitas</p>
-                <p class="text-2xl font-bold text-green-700" x-text="formatBRL(period.transactions_summary?.total_positive || 0)"></p>
-                <p class="text-sm text-green-600" x-text="(period.transactions_summary?.positive_count || 0) + ' transações'"></p>
+        <!-- Summary Cards -->
+        <template x-if="period">
+            <div>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-white rounded-lg shadow p-4">
+                        <p class="text-sm text-gray-500">Status</p>
+                        <span class="inline-block px-3 py-1 rounded-full text-sm font-medium mt-1" :class="{
+                            'bg-green-100 text-green-800': period.status === 'open',
+                            'bg-yellow-100 text-yellow-800': period.status === 'closed',
+                            'bg-gray-100 text-gray-800': period.status === 'archived'
+                        }" x-text="period.status_label"></span>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-4">
+                        <p class="text-sm text-gray-500">Saldo Inicial</p>
+                        <p class="text-xl font-bold text-gray-800" x-text="formatBRL(period.opening_balance)"></p>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-4">
+                        <p class="text-sm text-gray-500">Saldo Final</p>
+                        <p class="text-xl font-bold" :class="(period.closing_balance || calculatedBalance) >= 0 ? 'text-green-600' : 'text-red-600'"
+                           x-text="formatBRL(period.closing_balance || calculatedBalance || 0)"></p>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-4">
+                        <p class="text-sm text-gray-500">Variação</p>
+                        <p class="text-xl font-bold" :class="(period.transactions_summary?.net || 0) >= 0 ? 'text-green-600' : 'text-red-600'"
+                           x-text="formatBRL(period.transactions_summary?.net || 0)"></p>
+                    </div>
+                </div>
+
+                <!-- Transactions Summary -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <p class="text-sm text-green-600 font-medium">Receitas</p>
+                        <p class="text-2xl font-bold text-green-700" x-text="formatBRL(period.transactions_summary?.total_positive || 0)"></p>
+                        <p class="text-sm text-green-600" x-text="(period.transactions_summary?.positive_count || 0) + ' transações'"></p>
+                    </div>
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <p class="text-sm text-red-600 font-medium">Despesas</p>
+                        <p class="text-2xl font-bold text-red-700" x-text="formatBRL(period.transactions_summary?.total_negative || 0)"></p>
+                        <p class="text-sm text-red-600" x-text="(period.transactions_summary?.negative_count || 0) + ' transações'"></p>
+                    </div>
+                    <div class="bg-white border rounded-lg p-4">
+                        <p class="text-sm text-gray-500">Total de Transações</p>
+                        <p class="text-2xl font-bold text-gray-800" x-text="period.transactions_summary?.count || 0"></p>
+                    </div>
+                </div>
             </div>
-            <div class="bg-red-50 border border-red-200 rounded-lg p-4">
-                <p class="text-sm text-red-600 font-medium">Despesas</p>
-                <p class="text-2xl font-bold text-red-700" x-text="formatBRL(period.transactions_summary?.total_negative || 0)"></p>
-                <p class="text-sm text-red-600" x-text="(period.transactions_summary?.negative_count || 0) + ' transações'"></p>
-            </div>
-            <div class="bg-white border rounded-lg p-4">
-                <p class="text-sm text-gray-500">Total de Transações</p>
-                <p class="text-2xl font-bold text-gray-800" x-text="period.transactions_summary?.count || 0"></p>
-            </div>
-        </div>
+        </template>
 
         <!-- Transactions by Category -->
         <div class="bg-white rounded-lg shadow p-6 mb-6">
@@ -97,7 +107,7 @@
         <div class="bg-white rounded-lg shadow">
             <div class="p-4 border-b flex justify-between items-center">
                 <h2 class="text-lg font-bold">Transações do Período</h2>
-                <a :href="`/treasury/transacoes/?period=${period.id}`" class="text-blue-600 hover:text-blue-800 text-sm">
+                <a :href="`/treasury/transacoes/?period=${period?.id}`" class="text-blue-600 hover:text-blue-800 text-sm" x-show="period">
                     Ver todas →
                 </a>
             </div>
@@ -127,21 +137,52 @@
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Close Modal -->
-    <div x-show="showCloseModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
-        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4" @click.away="showCloseModal = false">
+<!-- Close Modal -->
+<div x-data="{
+    isOpen: false,
+    notes: '',
+    periodId: null,
+    open(id) { this.periodId = id; this.notes = ''; this.isOpen = true; },
+    close() { this.isOpen = false; this.periodId = null; this.notes = ''; },
+    async confirm() {
+        if (!this.periodId) return;
+        try {
+            const response = await fetch(`/treasury/api/periods/${this.periodId}/close/`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/json' },
+                body: JSON.stringify({ notes: this.notes })
+            });
+            if (response.ok) {
+                this.close();
+                window.__refreshPeriod?.();
+            }
+        } catch (e) {
+            alert('Erro ao fechar período');
+        }
+    }
+}" x-cloak style="display: none;">
+    <div x-show="isOpen"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4" @click.away="close()">
             <h3 class="text-lg font-bold mb-4">Fechar Período</h3>
             <p class="text-gray-600 mb-4">
                 Ao fechar o período, as transações não poderão mais ser editadas ou excluídas.
             </p>
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Observações</label>
-                <textarea x-model="closeNotes" rows="3" class="w-full rounded-md border-gray-300 shadow-sm"></textarea>
+                <textarea x-model="notes" rows="3" class="w-full rounded-md border-gray-300 shadow-sm"></textarea>
             </div>
             <div class="flex justify-end gap-2">
-                <button @click="showCloseModal = false" class="px-4 py-2 text-gray-600">Cancelar</button>
-                <button @click="confirmClose" class="px-4 py-2 bg-yellow-500 text-white rounded">Confirmar</button>
+                <button @click="close()" class="px-4 py-2 text-gray-600">Cancelar</button>
+                <button @click="confirm()" class="px-4 py-2 bg-yellow-500 text-white rounded">Confirmar</button>
             </div>
         </div>
     </div>
@@ -154,12 +195,24 @@ function periodDetail() {
         transactions: [],
         categories: [],
         loading: true,
-        showCloseModal: false,
-        closeNotes: '',
         calculatedBalance: 0,
+        modalOpen: false,
+        modalNotes: '',
 
         async init() {
             const periodId = window.location.pathname.split('/').slice(-2, -1)[0];
+
+            // Expose refresh function globally
+            window.__refreshPeriod = async () => {
+                await this.loadPeriod(periodId);
+            };
+
+            // Expose modal open function globally
+            window.__openCloseModal = () => {
+                this.modalOpen = true;
+                this.modalNotes = '';
+            };
+
             await this.loadPeriod(periodId);
             await this.loadTransactions(periodId);
         },
@@ -210,26 +263,14 @@ function periodDetail() {
         },
 
         closePeriod() {
-            this.showCloseModal = true;
-        },
-
-        async confirmClose() {
-            try {
-                const response = await fetch(`/treasury/api/periods/${this.period.id}/close/`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': this.getCookie('csrftoken'),
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ notes: this.closeNotes })
-                });
-                if (response.ok) {
-                    this.showCloseModal = false;
-                    await this.loadPeriod(this.period.id);
-                    this.$store.ui.toast('Período fechado com sucesso!');
+            if (!this.period) return;
+            // Encontrar o componente do modal e chamar open()
+            const modalEl = document.querySelector('[x-data*="isOpen"]');
+            if (modalEl) {
+                const modalData = Alpine.$data(modalEl);
+                if (modalData && modalData.open) {
+                    modalData.open(this.period.id);
                 }
-            } catch (error) {
-                console.error('Error closing period:', error);
             }
         },
 
@@ -259,13 +300,21 @@ function periodDetail() {
         },
 
         formatBRL(value) {
-            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+            const numValue = value !== null && value !== undefined ? parseFloat(value) : 0;
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(numValue);
         },
 
         formatDate(dateStr) {
             return new Date(dateStr).toLocaleDateString('pt-BR');
         }
     };
+}
+
+// Helper global para o modal
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
 }
 </script>
 {% endblock %}

@@ -138,3 +138,154 @@
     font-size: 8px;
   }
 }
+
+/* ============================================
+   TREASURY STANDARD COMPONENTS (Tailwind)
+   ============================================ */
+
+/* Buttons */
+.treasury-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+}
+
+.treasury-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}
+
+.treasury-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.treasury-btn-primary {
+    background-color: rgb(37, 99, 235);
+    color: white;
+}
+
+.treasury-btn-primary:hover {
+    background-color: rgb(29, 78, 216);
+}
+
+.treasury-btn-success {
+    background-color: rgb(22, 163, 74);
+    color: white;
+}
+
+.treasury-btn-success:hover {
+    background-color: rgb(21, 128, 61);
+}
+
+.treasury-btn-warning {
+    background-color: rgb(234, 179, 8);
+    color: white;
+}
+
+.treasury-btn-warning:hover {
+    background-color: rgb(202, 138, 4);
+}
+
+.treasury-btn-danger {
+    background-color: rgb(220, 38, 38);
+    color: white;
+}
+
+.treasury-btn-danger:hover {
+    background-color: rgb(185, 28, 28);
+}
+
+.treasury-btn-ghost {
+    background-color: transparent;
+    color: rgb(55, 65, 81);
+}
+
+.treasury-btn-ghost:hover {
+    background-color: rgb(243, 244, 246);
+}
+
+/* Form Controls */
+.treasury-input,
+.treasury-select,
+.treasury-textarea {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid rgb(209, 213, 219);
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    transition: all 0.2s;
+}
+
+.treasury-input:focus,
+.treasury-select:focus,
+.treasury-textarea:focus {
+    outline: none;
+    border-color: rgb(59, 130, 246);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.treasury-input:disabled,
+.treasury-select:disabled,
+.treasury-textarea:disabled {
+    background-color: rgb(243, 244, 246);
+    color: rgb(107, 114, 128);
+    cursor: not-allowed;
+}
+
+.treasury-select {
+    padding-right: 2rem;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+}
+
+.treasury-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: rgb(55, 65, 81);
+    margin-bottom: 0.25rem;
+}
+
+/* Badges */
+.treasury-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.625rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.treasury-badge-success {
+    background-color: rgb(220, 252, 231);
+    color: rgb(22, 101, 52);
+}
+
+.treasury-badge-warning {
+    background-color: rgb(254, 252, 232);
+    color: rgb(120, 53, 15);
+}
+
+.treasury-badge-danger {
+    background-color: rgb(254, 236, 236);
+    color: rgb(153, 27, 27);
+}
+
+.treasury-badge-info {
+    background-color: rgb(219, 234, 254);
+    color: rgb(30, 58, 138);
+}
+
+.treasury-badge-gray {
+    background-color: rgb(243, 244, 246);
+    color: rgb(75, 85, 99);
+}

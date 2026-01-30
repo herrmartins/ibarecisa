@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from django.contrib.auth import get_user_model
+from django.db import models
 from decimal import Decimal
 
 from treasury.models import (
@@ -11,6 +12,14 @@ from treasury.models import (
 )
 
 User = get_user_model()
+
+
+class UserSerializer(serializers.ModelSerializer):
+    """Serializer básico para User."""
+
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'first_name', 'last_name', 'email']
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -140,15 +149,51 @@ class AccountingPeriodCloseSerializer(serializers.Serializer):
         return attrs
 
 
-class AccountingPeriodSerializer(serializers.ModelSerializer):
+class AccountingPeriodSimpleSerializer(serializers.ModelSerializer):
     """Serializer simplificado para AccountingPeriod em transações."""
 
     month_name = serializers.CharField(read_only=True)
     year = serializers.IntegerField(read_only=True, source='month.year')
+    opening_balance = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    closing_balance = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True, allow_null=True)
+    transactions_summary = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = AccountingPeriod
-        fields = ['id', 'month', 'month_name', 'year', 'status']
+        fields = ['id', 'month', 'month_name', 'year', 'status', 'opening_balance', 'closing_balance', 'transactions_summary']
+
+    def get_transactions_summary(self, obj):
+        """Retorna o resumo das transações do período."""
+        from treasury.models.transaction import TransactionModel
+
+        transactions = TransactionModel.objects.filter(
+            accounting_period=obj,
+            transaction_type='original'
+        )
+
+        positive = transactions.filter(is_positive=True).aggregate(
+            total=models.Sum('amount')
+        )['total'] or 0
+
+        negative = transactions.filter(is_positive=False).aggregate(
+            total=models.Sum('amount')
+        )['total'] or 0
+
+        # Para negativas, pegar o valor absoluto (já que armazenamos como negativo)
+        negative_abs = abs(negative) if negative else 0
+
+        net = transactions.aggregate(
+            total=models.Sum('amount')
+        )['total'] or 0
+
+        return {
+            'total_positive': positive,
+            'total_negative': negative_abs,
+            'net': net,
+            'count': transactions.count(),
+            'positive_count': transactions.filter(is_positive=True).count(),
+            'negative_count': transactions.filter(is_positive=False).count(),
+        }
 
 
 class TransactionSerializer(serializers.ModelSerializer):
@@ -167,6 +212,7 @@ class TransactionSerializer(serializers.ModelSerializer):
     period_name = serializers.CharField(source='accounting_period.month_name', read_only=True, allow_null=True)
     period_status = serializers.CharField(source='accounting_period.status', read_only=True, allow_null=True)
     user_name = serializers.CharField(source='user.get_full_name', read_only=True)
+    created_by = UserSerializer(read_only=True, allow_null=True)
     created_by_name = serializers.CharField(source='created_by.get_full_name', read_only=True, allow_null=True)
     reversal_count = serializers.SerializerMethodField()
 
@@ -359,7 +405,9 @@ class ReversalTransactionSerializer(serializers.ModelSerializer):
     original_amount = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
     reversal_amount = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
     difference = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    created_by = UserSerializer(read_only=True, allow_null=True)
     created_by_name = serializers.CharField(source='created_by.get_full_name', read_only=True, allow_null=True)
+    authorized_by = UserSerializer(read_only=True, allow_null=True)
     authorized_by_name = serializers.CharField(source='authorized_by.get_full_name', read_only=True, allow_null=True)
 
     # Informações das transações
@@ -472,6 +520,7 @@ __all__ = [
     'CategoryDetailSerializer',
     'PeriodBalanceSerializer',
     'AccountingPeriodSerializer',
+    'AccountingPeriodSimpleSerializer',
     'AccountingPeriodCloseSerializer',
     'TransactionSerializer',
     'TransactionListSerializer',

@@ -2,22 +2,19 @@
 
 {% load static %}
 
+{% block header_title %}Balanço Financeiro{% endblock %}
+{% block header_subtitle %}Visão geral do saldo acumulado ao longo do tempo{% endblock %}
+
 {% block treasury_content %}
 <div class="container mx-auto px-4 py-6" x-data="balanceSheet()">
-    <!-- Header -->
-    <div class="flex justify-between items-center mb-6">
-        <div>
-            <h1 class="text-2xl font-bold text-gray-800">Balanço Financeiro</h1>
-            <p class="text-gray-500">Visão geral do saldo acumulado ao longo do tempo</p>
-        </div>
-        <div class="flex gap-2">
-            <button @click="exportCSV" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm">
-                Exportar CSV
-            </button>
-            <button @click="printReport" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm">
-                Imprimir
-            </button>
-        </div>
+    <!-- Actions -->
+    <div class="flex justify-end gap-2 mb-6">
+        <button @click="exportCSV" class="text-gray-600 hover:text-gray-800 px-4 py-2 rounded-lg text-sm border border-gray-300 hover:bg-gray-50">
+            Exportar CSV
+        </button>
+        <button @click="printReport" class="text-gray-600 hover:text-gray-800 px-4 py-2 rounded-lg text-sm border border-gray-300 hover:bg-gray-50">
+            Imprimir
+        </button>
     </div>
 
     <!-- Loading -->
@@ -26,28 +23,26 @@
     </div>
 
     <!-- Balance Sheet Content -->
-    <div x-show="!loading" class="space-y-6">
-        <!-- Summary Card -->
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="text-center">
-                    <p class="text-sm text-gray-500">Saldo Atual</p>
-                    <p class="text-3xl font-bold" :class="currentBalance >= 0 ? 'text-green-600' : 'text-red-600'"
-                       x-text="formatBRL(currentBalance)"></p>
-                </div>
-                <div class="text-center">
-                    <p class="text-sm text-gray-500">Total Receitas (todos os períodos)</p>
-                    <p class="text-2xl font-bold text-green-600" x-text="formatBRL(totalPositive)"></p>
-                </div>
-                <div class="text-center">
-                    <p class="text-sm text-gray-500">Total Despesas (todos os períodos)</p>
-                    <p class="text-2xl font-bold text-red-600" x-text="formatBRL(totalNegative)"></p>
-                </div>
+    <x-show="!loading">
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="bg-white rounded-lg shadow p-6 text-center">
+                <p class="text-sm text-gray-500">Saldo Atual</p>
+                <p class="text-3xl font-bold" :class="currentBalance >= 0 ? 'text-green-600' : 'text-red-600'"
+                   x-text="formatBRL(currentBalance)"></p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6 text-center">
+                <p class="text-sm text-gray-500">Total Receitas</p>
+                <p class="text-2xl font-bold text-green-600" x-text="formatBRL(totalPositive)"></p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-6 text-center">
+                <p class="text-sm text-gray-500">Total Despesas</p>
+                <p class="text-2xl font-bold text-red-600" x-text="formatBRL(totalNegative)"></p>
             </div>
         </div>
 
         <!-- Periods Table -->
-        <div class="bg-white rounded-lg shadow">
+        <div class="bg-white rounded-lg shadow overflow-hidden">
             <div class="p-4 border-b">
                 <h2 class="text-lg font-bold">Evolução por Período</h2>
             </div>
@@ -65,70 +60,31 @@
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
-                        <template x-for="period in periods" :key="period.id">
+                        <template x-for="item in periodsWithBalance" :key="item.period.id">
                             <tr class="hover:bg-gray-50">
                                 <td class="px-4 py-3 text-sm font-medium text-gray-900">
-                                    <a :href="`/treasury/periodos/${period.id}/`" class="text-blue-600 hover:text-blue-800">
-                                        <span x-text="period.month_name + '/' + period.year"></span>
+                                    <a :href="`/treasury/periodos/${item.period.id}/`" class="text-blue-600 hover:text-blue-800">
+                                        <span x-text="item.period.month_name"></span>
                                     </a>
                                 </td>
-                                <td class="px-4 py-3 text-sm text-right text-gray-600" x-text="formatBRL(period.opening_balance)"></td>
-                                <td class="px-4 py-3 text-sm text-right text-green-600" x-text="formatBRL(period.transactions_summary?.total_positive || 0)"></td>
-                                <td class="px-4 py-3 text-sm text-right text-red-600" x-text="formatBRL(period.transactions_summary?.total_negative || 0)"></td>
-                                <td class="px-4 py-3 text-sm text-right" :class="(period.transactions_summary?.net || 0) >= 0 ? 'text-green-600' : 'text-red-600'"
-                                    x-text="formatBRL(period.transactions_summary?.net || 0)"></td>
-                                <td class="px-4 py-3 text-sm text-right font-bold" :class="(period.closing_balance || period.opening_balance + (period.transactions_summary?.net || 0)) >= 0 ? 'text-green-600' : 'text-red-600'"
-                                    x-text="formatBRL(period.closing_balance || period.opening_balance + (period.transactions_summary?.net || 0))"></td>
+                                <td class="px-4 py-3 text-sm text-right text-gray-600" x-text="formatBRL(item.opening_balance)"></td>
+                                <td class="px-4 py-3 text-sm text-right text-green-600" x-text="formatBRL(item.total_positive)"></td>
+                                <td class="px-4 py-3 text-sm text-right text-red-600" x-text="formatBRL(item.total_negative)"></td>
+                                <td class="px-4 py-3 text-sm text-right" :class="item.net >= 0 ? 'text-green-600' : 'text-red-600'"
+                                    x-text="formatBRL(item.net)"></td>
+                                <td class="px-4 py-3 text-sm text-right font-bold" :class="item.closing_balance >= 0 ? 'text-green-600' : 'text-red-600'"
+                                    x-text="formatBRL(item.closing_balance)"></td>
                                 <td class="px-4 py-3 text-center">
-                                    <span class="inline-block px-2 py-1 rounded-full text-xs font-medium" :class="{
-                                        'bg-green-100 text-green-800': period.status === 'open',
-                                        'bg-yellow-100 text-yellow-800': period.status === 'closed',
-                                        'bg-gray-100 text-gray-800': period.status === 'archived'
-                                    }" x-text="statusLabel(period.status)"></span>
+                                    <span class="inline-block px-2 py-1 text-xs rounded-full" :class="{
+                                        'bg-green-100 text-green-800': item.period.status === 'open',
+                                        'bg-yellow-100 text-yellow-800': item.period.status === 'closed',
+                                        'bg-gray-100 text-gray-800': item.period.status === 'archived'
+                                    }" x-text="item.status_label"></span>
                                 </td>
                             </tr>
                         </template>
                     </tbody>
                 </table>
-            </div>
-        </div>
-
-        <!-- Chart (simple bar representation) -->
-        <div class="bg-white rounded-lg shadow p-6">
-            <h2 class="text-lg font-bold mb-4">Gráfico de Evolução</h2>
-            <div class="flex items-end gap-2 h-64">
-                <template x-for="period in periods.slice().reverse()" :key="period.id">
-                    <div class="flex-1 flex flex-col items-center">
-                        <!-- Positive bar (income) -->
-                        <div class="w-full bg-green-200 hover:bg-green-300 transition-colors rounded-t relative"
-                             :style="{ height: Math.min(Math.abs((period.transactions_summary?.total_positive || 0) / maxValue * 200), 200) + 'px' }"
-                             :title="'Receitas: ' + formatBRL(period.transactions_summary?.total_positive || 0)">
-                            <span x-show="Math.abs((period.transactions_summary?.total_positive || 0) / maxValue * 200) > 20"
-                                  class="absolute inset-0 flex items-center justify-center text-xs text-green-800"
-                                  x-text="formatBRLShort(period.transactions_summary?.total_positive || 0)"></span>
-                        </div>
-                        <!-- Negative bar (expenses) - goes down from middle -->
-                        <div class="w-full bg-red-200 hover:bg-red-300 transition-colors rounded-b relative"
-                             :style="{ height: Math.min(Math.abs((period.transactions_summary?.total_negative || 0) / maxValue * 200), 200) + 'px' }"
-                             :title="'Despesas: ' + formatBRL(period.transactions_summary?.total_negative || 0)">
-                            <span x-show="Math.abs((period.transactions_summary?.total_negative || 0) / maxValue * 200) > 20"
-                                  class="absolute inset-0 flex items-center justify-center text-xs text-red-800"
-                                  x-text="formatBRLShort(period.transactions_summary?.total_negative || 0)"></span>
-                        </div>
-                        <!-- Label -->
-                        <p class="text-xs text-gray-500 mt-2" x-text="period.month_name?.substring(0, 3)"></p>
-                    </div>
-                </template>
-            </div>
-            <div class="flex justify-center gap-6 mt-4 text-sm">
-                <div class="flex items-center gap-2">
-                    <div class="w-4 h-4 bg-green-200 rounded"></div>
-                    <span>Receitas</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <div class="w-4 h-4 bg-red-200 rounded"></div>
-                    <span>Despesas</span>
-                </div>
             </div>
         </div>
     </div>
@@ -142,7 +98,7 @@ function balanceSheet() {
         currentBalance: 0,
         totalPositive: 0,
         totalNegative: 0,
-        maxValue: 0,
+        periodsWithBalance: [],
 
         async init() {
             await this.loadData();
@@ -165,13 +121,34 @@ function balanceSheet() {
                 const data = await periodsResponse.json();
                 this.periods = data.results || data;
 
-                // Calculate totals
-                this.periods.forEach(p => {
-                    const summary = p.transactions_summary || {};
-                    this.totalPositive += summary.total_positive || 0;
-                    this.totalNegative += summary.total_negative || 0;
-                    this.maxValue = Math.max(this.maxValue, summary.total_positive || 0, summary.total_negative || 0);
+                // Calculate running balance
+                let runningBalance = 0;
+                this.periodsWithBalance = this.periods.map(period => {
+                    const summary = period.transactions_summary || {};
+                    const totalPositive = summary.total_positive || 0;
+                    const totalNegative = summary.total_negative || 0;
+                    const net = totalPositive - totalNegative;
+                    const closingBalance = period.closing_balance || (runningBalance + net);
+
+                    const item = {
+                        period: period,
+                        opening_balance: runningBalance,
+                        total_positive: totalPositive,
+                        total_negative: totalNegative,
+                        net: net,
+                        closing_balance: closingBalance,
+                        status_label: { 'open': 'Aberto', 'closed': 'Fechado', 'archived': 'Arquivado' }[period.status]
+                    };
+
+                    runningBalance = closingBalance;
+
+                    // Totais
+                    this.totalPositive += totalPositive;
+                    this.totalNegative += totalNegative;
+
+                    return item;
                 });
+
             } catch (error) {
                 console.error('Error loading balance sheet:', error);
             } finally {
@@ -179,25 +156,20 @@ function balanceSheet() {
             }
         },
 
-        statusLabel(status) {
-            return { 'open': 'Aberto', 'closed': 'Fechado', 'archived': 'Arquivado' }[status] || status;
-        },
-
         exportCSV() {
             const headers = ['Período', 'Saldo Inicial', 'Receitas', 'Despesas', 'Variação', 'Saldo Final', 'Status'];
-            const rows = this.periods.map(p => [
-                p.month_name + '/' + p.year,
-                (p.opening_balance || 0).toFixed(2),
-                (p.transactions_summary?.total_positive || 0).toFixed(2),
-                (p.transactions_summary?.total_negative || 0).toFixed(2),
-                (p.transactions_summary?.net || 0).toFixed(2),
-                (p.closing_balance || (p.opening_balance + (p.transactions_summary?.net || 0))).toFixed(2),
-                this.statusLabel(p.status)
-            ]);
-
             let csv = headers.join(',') + '\n';
-            rows.forEach(row => {
-                csv += row.join(',') + '\n';
+
+            this.periodsWithBalance.forEach(item => {
+                csv += [
+                    item.period.month_name + '/' + item.period.year,
+                    (item.opening_balance || 0).toFixed(2),
+                    (item.total_positive || 0).toFixed(2),
+                    (item.total_negative || 0).toFixed(2),
+                    (item.net || 0).toFixed(2),
+                    (item.closing_balance || 0).toFixed(2),
+                    item.status_label
+                ].join(',') + '\n';
             });
 
             const blob = new Blob([csv], { type: 'text/csv' });
@@ -221,26 +193,8 @@ function balanceSheet() {
 
         formatBRL(value) {
             return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
-        },
-
-        formatBRLShort(value) {
-            if (Math.abs(value) >= 1000) {
-                return (value / 1000).toFixed(1) + 'k';
-            }
-            return value.toFixed(0);
         }
     };
 }
 </script>
-
-<style>
-@media print {
-    button, a[href*="javascript"] {
-        display: none !important;
-    }
-    .shadow {
-        box-shadow: none !important;
-    }
-}
-</style>
 {% endblock %}

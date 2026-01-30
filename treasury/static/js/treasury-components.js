@@ -10,76 +10,38 @@
  */
 
 // ============================================
-// Tabela de Transações
+// Helper Functions (globais)
 // ============================================
-Alpine.data('transactionTable', () => ({
-    transactions: [],
-    loading: false,
-    filters: {
-        period: null,
-        category: null,
-        search: '',
-    },
-    pagination: {
-        page: 1,
-        totalPages: 1,
-    },
 
-    init() {
-        this.load();
-    },
-
-    async load(page = 1) {
-        this.loading = true;
-        try {
-            const params = new URLSearchParams();
-            if (this.filters.period) params.append('accounting_period', this.filters.period);
-            if (this.filters.category) params.append('category', this.filters.category);
-            if (this.filters.search) params.append('search', this.filters.search);
-            params.append('page', page);
-
-            const response = await fetch(`/treasury/api/transactions/?${params}`, {
-                headers: { 'X-CSRFToken': getCookie('csrftoken') },
-            });
-
-            const data = await response.json();
-            this.transactions = data.results || data;
-            this.pagination = {
-                page: page,
-                totalPages: Math.ceil((data.count || 0) / 50),
-            };
-        } finally {
-            this.loading = false;
-        }
-    },
-
-    async delete(id) {
-        if (!confirm('Tem certeza que deseja excluir esta transação?')) return;
-
-        try {
-            const response = await fetch(`/treasury/api/transactions/${id}/`, {
-                method: 'DELETE',
-                headers: { 'X-CSRFToken': getCookie('csrftoken') },
-            });
-
-            if (response.ok) {
-                this.$store.ui.notify('Transação excluída com sucesso!', 'success');
-                this.load();
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
             }
-        } catch (err) {
-            this.$store.ui.notify('Erro ao excluir transação', 'error');
         }
-    },
+    }
+    return cookieValue;
+}
 
-    formatAmount(amount, isPositive) {
-        const value = isPositive ? amount : -amount;
-        return formatBRL(value);
-    },
+function formatBRL(value) {
+    return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+    }).format(value);
+}
 
-    amountClass(isPositive) {
-        return isPositive ? 'text-green-600' : 'text-red-600';
-    },
-}));
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('pt-BR');
+}
+
+// Wait for Alpine to be initialized before registering components
+document.addEventListener('alpine:init', () => {
 
 // ============================================
 // Formulário de Transação
@@ -570,33 +532,4 @@ Alpine.data('categoryManager', () => ({
     },
 }));
 
-// ============================================
-// Helper Functions (globais)
-// ============================================
-
-function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
-    }
-    return cookieValue;
-}
-
-function formatBRL(value) {
-    return new Intl.NumberFormat('pt-BR', {
-        style: 'currency',
-        currency: 'BRL',
-    }).format(value);
-}
-
-function formatDate(dateString) {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('pt-BR');
-}
+}); // End of alpine:init event listener

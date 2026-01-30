@@ -5,80 +5,224 @@
 {% block header_title %}Transações{% endblock %}
 {% block header_subtitle %}Gerencie as transações financeiras{% endblock %}
 
+{% block extra_head %}
+<style>
+    [x-cloak] { display: none !important; }
+</style>
+{% endblock %}
+
 {% block treasury_content %}
-<div class="container mx-auto px-4 py-6" x-data="transactionTable()">
-    <!-- Header -->
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold text-gray-800">Transações</h1>
-        <a href="{% url 'treasury:transaction-create' %}"
-           class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-            </svg>
-            Nova Transação
-        </a>
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('transactionTable', () => ({
+        transactions: [],
+        categories: [],
+        periods: [],
+        loading: true,
+        summary: { total_positive: 0, total_negative: 0, net: 0 },
+        filters: {
+            period: '',
+            category: '',
+            type: '',
+            search: ''
+        },
+        pagination: {
+            count: 0,
+            page: 1,
+            page_size: 50,
+            num_pages: 1
+        },
+
+        async init() {
+            await Promise.all([
+                this.loadCategories(),
+                this.loadPeriods(),
+                this.loadTransactions()
+            ]);
+            await this.loadSummary();
+        },
+
+        async loadCategories() {
+            try {
+                const response = await fetch('/treasury/api/categories/', {
+                    headers: { 'X-CSRFToken': this.getCookie('csrftoken') }
+                });
+                const data = await response.json();
+                this.categories = data.results || data;
+            } catch (error) {
+                console.error('Error loading categories:', error);
+                this.categories = [];
+            }
+        },
+
+        async loadPeriods() {
+            try {
+                const response = await fetch('/treasury/api/periods/', {
+                    headers: { 'X-CSRFToken': this.getCookie('csrftoken') }
+                });
+                const data = await response.json();
+                this.periods = data.results || data;
+            } catch (error) {
+                console.error('Error loading periods:', error);
+                this.periods = [];
+            }
+        },
+
+        async loadSummary() {
+            // Build API params with correct filter names
+            const apiParams = {};
+
+            // Map filters to API parameters
+            if (this.filters.period) apiParams.accounting_period = this.filters.period;
+            if (this.filters.category) apiParams.category = this.filters.category;
+            if (this.filters.type === 'income') apiParams.is_positive = 'true';
+            if (this.filters.type === 'expense') apiParams.is_positive = 'false';
+            if (this.filters.search) apiParams.search = this.filters.search;
+
+            const params = new URLSearchParams(apiParams);
+            try {
+                const response = await fetch(`/treasury/api/transactions/summary/?${params}`, {
+                    headers: { 'X-CSRFToken': this.getCookie('csrftoken') }
+                });
+                this.summary = await response.json();
+            } catch (error) {
+                console.error('Error loading summary:', error);
+                this.summary = { total_positive: 0, total_negative: 0, net: 0 };
+            }
+        },
+
+        async loadTransactions() {
+            this.loading = true;
+
+            // Build API params with correct filter names
+            const apiParams = {
+                page: this.pagination.page,
+                page_size: this.pagination.page_size
+            };
+
+            // Map filters to API parameters
+            if (this.filters.period) apiParams.accounting_period = this.filters.period;
+            if (this.filters.category) apiParams.category = this.filters.category;
+            if (this.filters.type === 'income') apiParams.is_positive = 'true';
+            if (this.filters.type === 'expense') apiParams.is_positive = 'false';
+            if (this.filters.search) apiParams.search = this.filters.search;
+
+            const params = new URLSearchParams(apiParams);
+
+            try {
+                const response = await fetch(`/treasury/api/transactions/?${params}`, {
+                    headers: { 'X-CSRFToken': this.getCookie('csrftoken') }
+                });
+                const data = await response.json();
+                this.transactions = data.results || data;
+                this.pagination.count = data.count;
+                this.pagination.num_pages = Math.ceil(data.count / this.pagination.page_size);
+            } catch (error) {
+                console.error('Error loading transactions:', error);
+            } finally {
+                this.loading = false;
+            }
+            await this.loadSummary();
+        },
+
+        goToPage(page) {
+            this.pagination.page = page;
+            this.loadTransactions();
+        },
+
+        getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        },
+
+        formatBRL(value) {
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+        },
+
+        formatDate(dateStr) {
+            return new Date(dateStr).toLocaleDateString('pt-BR');
+        }
+    }));
+});
+</script>
+<div class="container mx-auto px-4 py-6" x-data="transactionTable">
+    <!-- Loading Overlay -->
+    <div x-show="loading" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
     </div>
+
+    <!-- Content (shown only after loading) -->
+    <div x-show="!loading" style="display: none;">
 
     <!-- Filters -->
     <div class="bg-white rounded-lg shadow p-4 mb-6" x-data="{ filtersOpen: false }">
-        <button @click="filtersOpen = !filtersOpen" class="flex items-center gap-2 text-gray-600 hover:text-gray-800">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
-            </svg>
-            Filtros
-            <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': filtersOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-            </svg>
-        </button>
+        <div class="flex justify-between items-center">
+            <button @click="filtersOpen = !filtersOpen" class="flex items-center gap-2 text-gray-600 hover:text-gray-800">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+                </svg>
+                Filtros
+                <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': filtersOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </button>
+
+            <a href="{% url 'treasury:transaction-create' %}" class="treasury-btn treasury-btn-primary">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Nova Transação
+            </a>
+        </div>
 
         <div x-show="filtersOpen" x-collapse class="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Período</label>
-                <select x-model="filters.period" @change="loadTransactions()" class="w-full rounded-md border-gray-300 shadow-sm">
+                <label class="treasury-label">Período</label>
+                <select x-model="filters.period" @change="loadTransactions()" class="treasury-select">
                     <option value="">Todos</option>
-                    <template x-for="period in $store.periods.periods" :key="period.id">
+                    <template x-for="period in periods" :key="period.id">
                         <option :value="period.id" x-text="period.month_name + '/' + period.year"></option>
                     </template>
                 </select>
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
-                <select x-model="filters.category" @change="loadTransactions()" class="w-full rounded-md border-gray-300 shadow-sm">
+                <label class="treasury-label">Categoria</label>
+                <select x-model="filters.category" @change="loadTransactions()" class="treasury-select">
                     <option value="">Todas</option>
-                    <template x-for="cat in $store.categories.categories" :key="cat.id">
+                    <template x-for="cat in categories" :key="cat.id">
                         <option :value="cat.id" x-text="cat.name"></option>
                     </template>
                 </select>
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
-                <select x-model="filters.type" @change="loadTransactions()" class="w-full rounded-md border-gray-300 shadow-sm">
+                <label class="treasury-label">Tipo</label>
+                <select x-model="filters.type" @change="loadTransactions()" class="treasury-select">
                     <option value="">Todos</option>
                     <option value="income">Receitas</option>
                     <option value="expense">Despesas</option>
                 </select>
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Buscar</label>
-                <input type="text" x-model="filters.search" @keyup.enter="loadTransactions()" placeholder="Descrição..."
-                       class="w-full rounded-md border-gray-300 shadow-sm">
+                <label class="treasury-label">Buscar</label>
+                <input type="text" x-model="filters.search" @keyup.enter="loadTransactions()" placeholder="Descrição..." class="treasury-input">
             </div>
         </div>
     </div>
 
     <!-- Summary Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6" x-show="summary">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div class="bg-green-50 border border-green-200 rounded-lg p-4">
             <p class="text-sm text-green-600 font-medium">Receitas</p>
-            <p class="text-2xl font-bold text-green-700" x-text="formatBRL(summary.total_positive || 0)"></p>
+            <p class="text-2xl font-bold text-green-700" x-text="formatBRL(summary.total_positive)"></p>
         </div>
         <div class="bg-red-50 border border-red-200 rounded-lg p-4">
             <p class="text-sm text-red-600 font-medium">Despesas</p>
-            <p class="text-2xl font-bold text-red-700" x-text="formatBRL(summary.total_negative || 0)"></p>
+            <p class="text-2xl font-bold text-red-700" x-text="formatBRL(summary.total_negative)"></p>
         </div>
         <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <p class="text-sm text-blue-600 font-medium">Saldo</p>
-            <p class="text-2xl font-bold" :class="(summary.net || 0) >= 0 ? 'text-blue-700' : 'text-red-700'" x-text="formatBRL(summary.net || 0)"></p>
+            <p class="text-2xl font-bold" :class="summary.net >= 0 ? 'text-blue-700' : 'text-red-700'" x-text="formatBRL(summary.net)"></p>
         </div>
     </div>
 
@@ -113,7 +257,7 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-medium"
                                 :class="transaction.is_positive ? 'text-green-600' : 'text-red-600'"
                                 x-text="formatBRL(transaction.amount)"></td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="transaction.accounting_period?.month_name + '/' + transaction.accounting_period?.year || '-'"></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="(transaction?.accounting_period?.month_name && transaction?.accounting_period?.year) ? (transaction.accounting_period.month_name + '/' + transaction.accounting_period.year) : '-'"></td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
                                 <div class="flex justify-center gap-2">
                                     <a :href="`/treasury/transacoes/${transaction.id}/`" class="text-blue-600 hover:text-blue-900">Ver</a>
@@ -135,7 +279,7 @@
         </div>
 
         <!-- Pagination -->
-        <div x-show="pagination.count > pagination.page_size" class="bg-gray-50 px-6 py-4 flex items-center justify-between">
+        <div x-show="pagination.count > pagination.page_size" class="bg-gray-50 px-6 py-4 flex items-center justify-between rounded-b-lg border-t border-gray-200">
             <div class="text-sm text-gray-700">
                 Mostrando <span class="font-medium" x-text="(pagination.page - 1) * pagination.page_size + 1"></span>
                 a <span class="font-medium" x-text="Math.min(pagination.page * pagination.page_size, pagination.count)"></span>
@@ -143,81 +287,12 @@
             </div>
             <div class="flex gap-2">
                 <button @click="goToPage(pagination.page - 1)" :disabled="pagination.page === 1"
-                        class="px-3 py-1 rounded border hover:bg-gray-100 disabled:opacity-50">Anterior</button>
+                        class="treasury-btn treasury-btn-ghost">Anterior</button>
                 <button @click="goToPage(pagination.page + 1)" :disabled="pagination.page >= pagination.num_pages"
-                        class="px-3 py-1 rounded border hover:bg-gray-100 disabled:opacity-50">Próxima</button>
+                        class="treasury-btn treasury-btn-ghost">Próxima</button>
             </div>
         </div>
     </div>
+    </div> <!-- End of x-show="!loading" -->
 </div>
-
-<script>
-function transactionTable() {
-    return {
-        transactions: [],
-        loading: true,
-        summary: null,
-        filters: {
-            period: '',
-            category: '',
-            type: '',
-            search: ''
-        },
-        pagination: {
-            count: 0,
-            page: 1,
-            page_size: 50,
-            num_pages: 1
-        },
-
-        async init() {
-            await this.$store.periods.load();
-            await this.$store.categories.load();
-            await this.loadTransactions();
-        },
-
-        async loadTransactions() {
-            this.loading = true;
-            const params = new URLSearchParams({
-                page: this.pagination.page,
-                page_size: this.pagination.page_size,
-                ...Object.fromEntries(Object.entries(this.filters).filter(([k,v]) => v))
-            });
-
-            try {
-                const response = await fetch(`/treasury/api/transactions/?${params}`, {
-                    headers: { 'X-CSRFToken': this.getCookie('csrftoken') }
-                });
-                const data = await response.json();
-                this.transactions = data.results || data;
-                this.pagination.count = data.count;
-                this.pagination.num_pages = Math.ceil(data.count / this.pagination.page_size);
-            } catch (error) {
-                console.error('Error loading transactions:', error);
-            } finally {
-                this.loading = false;
-            }
-        },
-
-        goToPage(page) {
-            this.pagination.page = page;
-            this.loadTransactions();
-        },
-
-        getCookie(name) {
-            const value = `; ${document.cookie}`;
-            const parts = value.split(`; ${name}=`);
-            if (parts.length === 2) return parts.pop().split(';').shift();
-        },
-
-        formatBRL(value) {
-            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
-        },
-
-        formatDate(dateStr) {
-            return new Date(dateStr).toLocaleDateString('pt-BR');
-        }
-    };
-}
-</script>
 {% endblock %}

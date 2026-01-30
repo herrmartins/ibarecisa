@@ -2,7 +2,13 @@
 
 {% load static %}
 
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'treasury/css/treasury.css' %}">
+{% endblock %}
+
 {% block pre_alpine_scripts %}
+<!-- Alpine Collapse Plugin -->
+<script defer src="{% static 'js/alpine-collapse.min.js' %}"></script>
 <!-- Treasury Stores - loaded before Alpine.js -->
 <script src="{% static 'js/treasury-stores.js' %}"></script>
 {% endblock %}
@@ -18,17 +24,35 @@
 }">
 
     <!-- Treasury Header -->
-    <div class="treasury-header relative">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
-            <div class="text-center">
-                <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">
-                    {% block header_title %}Tesouraria{% endblock %}
-                </h1>
-                <p class="text-white/90 text-lg">
-                    {% block header_subtitle %}Gestão financeira da igreja{% endblock %}
-                </p>
-            </div>
+    <div class="treasury-home-header">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
+
+        <!-- Back Button -->
+        {% block header_back_button %}
+        <div class="mb-6">
+          <a href="{% url 'treasury:dashboard' %}" class="inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            Voltar para Tesouraria
+          </a>
         </div>
+        {% endblock %}
+
+        <div class="text-center mb-8">
+          <h1 class="treasury-home-title">
+            {% block header_title %}Tesouraria{% endblock %}
+          </h1>
+          <p class="treasury-home-subtitle">
+            {% block header_subtitle %}Gestão financeira da igreja{% endblock %}
+          </p>
+        </div>
+
+        <!-- Stats Cards (opcional, sobrescrever vazio se não quiser) -->
+        {% block header_stats %}
+        {% endblock %}
+
+      </div>
     </div>
 
     <!-- Main Content -->
@@ -88,23 +112,5 @@
 
 <!-- Treasury Components -->
 <script src="{% static 'js/treasury-components.js' %}"></script>
-
-<style>
-.treasury-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-    position: relative;
-    overflow: hidden;
-}
-.treasury-header::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-}
-[x-cloak] { display: none !important; }
-</style>
 
 {% endblock %}

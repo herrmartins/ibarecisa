@@ -2,14 +2,22 @@
 
 {% load static %}
 
-{% block treasury_content %}
-<div class="container mx-auto px-4 py-6 max-w-2xl" x-data="transactionForm()">
-    <!-- Header -->
-    <div class="mb-6">
-        <a href="{% url 'treasury:transaction-list' %}" class="text-blue-600 hover:text-blue-800">← Voltar para Transações</a>
-        <h1 class="text-2xl font-bold text-gray-800 mt-2">Nova Transação</h1>
-    </div>
+{% block header_back_button %}
+<div class="mb-6">
+  <a href="{% url 'treasury:transaction-list' %}" class="inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+    </svg>
+    Voltar para Transações
+  </a>
+</div>
+{% endblock %}
 
+{% block header_title %}Nova Transação{% endblock %}
+{% block header_subtitle %}Adicionar nova entrada ou saída{% endblock %}
+
+{% block treasury_content %}
+<div class="max-w-2xl mx-auto" x-data="transactionForm()">
     <!-- Form -->
     <div class="bg-white rounded-lg shadow p-6">
         <form @submit.prevent="submit">

@@ -7,17 +7,6 @@
 
 {% block treasury_content %}
 <div class="container mx-auto px-4 py-6" x-data="periodList()">
-    <!-- Header -->
-    <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold text-gray-800">Períodos Contábeis</h1>
-        <a href="{% url 'treasury:dashboard' %}"
-           class="text-blue-600 hover:text-blue-800 flex items-center gap-2">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-            </svg>
-            Voltar ao Dashboard
-        </a>
-    </div>
 
     <!-- Loading -->
     <div x-show="loading" class="flex justify-center py-12">
@@ -45,7 +34,7 @@
                         </div>
                         <div class="text-right">
                             <p class="text-sm text-gray-500">Saldo Final</p>
-                            <p class="text-lg font-bold" :class="(period.closing_balance || period.calculated_balance) >= 0 ? 'text-green-600' : 'text-red-600'"
+                            <p class="text-lg font-bold" :class="(period.closing_balance || period.calculated_balance || 0) >= 0 ? 'text-green-600' : 'text-red-600'"
                                x-text="formatBRL(period.closing_balance || period.calculated_balance || 0)"></p>
                         </div>
                     </div>
@@ -79,7 +68,7 @@
                         </a>
                         <template x-if="period.status === 'open'">
                             <button @click="closePeriod(period)" class="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded text-sm">
-                                Fechar Período
+                                Fechar
                             </button>
                         </template>
                         <template x-if="period.status === 'closed'">
@@ -105,8 +94,8 @@
                 <textarea x-model="closeNotes" rows="3" class="w-full rounded-md border-gray-300 shadow-sm" placeholder="Opcional"></textarea>
             </div>
             <div class="flex justify-end gap-2">
-                <button @click="showCloseModal = false" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancelar</button>
-                <button @click="confirmClose" class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded">Confirmar</button>
+                <button @click="showCloseModal = false" class="px-4 py-2 text-gray-600">Cancelar</button>
+                <button @click="confirmClose" class="px-4 py-2 bg-yellow-500 text-white rounded">Confirmar</button>
             </div>
         </div>
     </div>
@@ -133,9 +122,9 @@ function periodList() {
                 });
                 const data = await response.json();
                 this.periods = data.results || data;
-                // Add status labels
                 this.periods.forEach(p => {
                     p.status_label = { 'open': 'Aberto', 'closed': 'Fechado', 'archived': 'Arquivado' }[p.status];
+                    p.calculated_balance = p.opening_balance + (p.transactions_summary?.net || 0);
                 });
             } catch (error) {
                 console.error('Error loading periods:', error);
@@ -163,10 +152,11 @@ function periodList() {
                 if (response.ok) {
                     this.showCloseModal = false;
                     await this.loadPeriods();
-                    this.$store.ui.toast('Período fechado com sucesso!');
+                    alert('Período fechado com sucesso!');
                 }
             } catch (error) {
                 console.error('Error closing period:', error);
+                alert('Erro ao fechar período');
             }
         },
 
@@ -182,10 +172,11 @@ function periodList() {
                 });
                 if (response.ok) {
                     await this.loadPeriods();
-                    this.$store.ui.toast('Período reaberto!');
+                    alert('Período reaberto!');
                 }
             } catch (error) {
                 console.error('Error reopening period:', error);
+                alert('Erro ao reabrir período');
             }
         },
 
