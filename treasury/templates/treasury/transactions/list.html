@@ -109,7 +109,7 @@
                                 <span x-text="transaction.description"></span>
                                 <span x-show="transaction.transaction_type === 'reversal'" class="ml-2 text-xs text-red-600">(Estorno)</span>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="transaction.category?.name || '-'"></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="transaction.category_name || '-'"></td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-medium"
                                 :class="transaction.is_positive ? 'text-green-600' : 'text-red-600'"
                                 x-text="formatBRL(transaction.amount)"></td>

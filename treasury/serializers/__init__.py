@@ -140,6 +140,17 @@ class AccountingPeriodCloseSerializer(serializers.Serializer):
         return attrs
 
 
+class AccountingPeriodSerializer(serializers.ModelSerializer):
+    """Serializer simplificado para AccountingPeriod em transações."""
+
+    month_name = serializers.CharField(read_only=True)
+    year = serializers.IntegerField(read_only=True, source='month.year')
+
+    class Meta:
+        model = AccountingPeriod
+        fields = ['id', 'month', 'month_name', 'year', 'status']
+
+
 class TransactionSerializer(serializers.ModelSerializer):
     """Serializer para TransactionModel (leitura)."""
 
@@ -150,7 +161,9 @@ class TransactionSerializer(serializers.ModelSerializer):
     has_reversal = serializers.BooleanField(read_only=True)
 
     # Informações relacionadas
+    category = CategorySerializer(read_only=True, allow_null=True)
     category_name = serializers.CharField(source='category.name', read_only=True, allow_null=True)
+    accounting_period = AccountingPeriodSerializer(read_only=True, allow_null=True)
     period_name = serializers.CharField(source='accounting_period.month_name', read_only=True, allow_null=True)
     period_status = serializers.CharField(source='accounting_period.status', read_only=True, allow_null=True)
     user_name = serializers.CharField(source='user.get_full_name', read_only=True)
@@ -211,7 +224,9 @@ class TransactionListSerializer(serializers.ModelSerializer):
     """Serializer simplificado para listagem de transações."""
 
     signed_amount = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    category = CategorySerializer(read_only=True, allow_null=True)
     category_name = serializers.CharField(source='category.name', read_only=True, allow_null=True)
+    accounting_period = AccountingPeriodSerializer(read_only=True, allow_null=True)
     period_name = serializers.SerializerMethodField()
     period_status = serializers.CharField(source='accounting_period.status', read_only=True, allow_null=True)
     can_be_edited = serializers.BooleanField(read_only=True)
