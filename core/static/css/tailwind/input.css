@@ -1685,21 +1685,47 @@
   box-shadow: 0 4px 20px rgba(102, 126, 234, 0.1);
 }
 
+/* Form Input - standard class for all form inputs across the app */
+/* Form inputs padrão - compacto para formulários */
+.form-input {
+  display: block;
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  color: #334155;
+  transition: all 0.2s ease;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+.form-input::placeholder {
+  color: #94a3b8;
+}
+
+/* Secretarial search input - maior para busdas */
 .secretarial-search-input {
-  padding: 0.875rem 1.25rem;
-  background: rgba(255, 255, 255, 0.9);
-  border: 2px solid rgba(203, 213, 225, 0.6);
-  border-radius: 0.75rem;
-  color: #1e293b;
-  font-size: 0.9375rem;
+  display: block;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  color: #334155;
   transition: all 0.2s ease;
 }
 
 .secretarial-search-input:focus {
   outline: none;
-  border-color: #8b5cf6;
-  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
-  background: white;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
 .secretarial-search-input::placeholder {
@@ -2480,8 +2506,9 @@
 
 .minutes-list-body-content {
   color: #475569;
-  line-height: 1.7;
-  max-height: 200px;
+  line-height: 1.6;
+  font-size: 0.875rem;
+  max-height: 350px;
   overflow-y: auto;
 }
 
@@ -2568,7 +2595,7 @@
 /* Responsive */
 @media (max-width: 768px) {
   .minutes-list-body-content {
-    max-height: 150px;
+    max-height: 250px;
   }
 }
 
@@ -2835,4 +2862,35 @@
   .minute-detail-info-card {
     flex-wrap: wrap;
   }
+}
+
+/* ============================================
+   LOGIN PAGE STYLES
+   ============================================ */
+
+/* Login Submit Button */
+.login-submit-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.login-submit-btn:hover {
+  background: linear-gradient(135deg, #5a6fd6 0%, #6a4190 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.login-submit-btn:active {
+  transform: translateY(0);
 }
