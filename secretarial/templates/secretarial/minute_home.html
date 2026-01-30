@@ -1,163 +1,275 @@
-{% extends 'core/base.html' %} {% block content %}
-{% load static %}
+{% extends 'core/base.html' %} {% load static %}
 
-<div class="container py-4">
-  <div class="text-center my-3">
-    <p class="display-6 fw-light">Registro de Reuniões</p>
-    <p class="text-muted">Gere atas com suporte de IA, pesquise conteúdos e gerencie modelos e trechos.</p>
+{% block content %}
+<div class="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+  <!-- Header Section -->
+  <div class="minute-home-header relative">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
+      <div class="text-center mb-8">
+        <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">
+          Registro de Reuniões
+        </h1>
+        <p class="text-white/90 text-lg">
+          Gere atas com suporte de IA, pesquise conteúdos e gerencie modelos e trechos
+        </p>
+      </div>
+
+      <!-- Stats Cards -->
+      <div class="flex justify-center gap-4 sm:gap-6 flex-wrap">
+        <a href="{% url 'secretarial:list-minutes' %}" class="minute-stat-card">
+          <div class="minute-stat-icon">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+            </svg>
+          </div>
+          <div class="minute-stat-value">{{number_of_minutes}}</div>
+          <div class="minute-stat-label">Atas Registradas</div>
+        </a>
+
+        <a href="{% url 'secretarial:list-templates' %}" class="minute-stat-card">
+          <div class="minute-stat-icon">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+          </div>
+          <div class="minute-stat-value">{{number_of_templates}}</div>
+          <div class="minute-stat-label">Modelos de Atas</div>
+        </a>
+
+        <a href="{% url 'secretarial:list-excerpts' %}" class="minute-stat-card">
+          <div class="minute-stat-icon">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+            </svg>
+          </div>
+          <div class="minute-stat-value">{{number_of_excerpts}}</div>
+          <div class="minute-stat-label">Trechos de Atas</div>
+        </a>
+
+        <a href="{% url 'secretarial:list-minutes-projects' %}" class="minute-stat-card">
+          <div class="minute-stat-icon">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+            </svg>
+          </div>
+          <div class="minute-stat-value">{{number_of_projects}}</div>
+          <div class="minute-stat-label">Projetos de Ata</div>
+        </a>
+      </div>
+    </div>
   </div>
 
-  <div class="row g-3 mb-4 justify-content-center" style="max-width: 1200px; margin: 0 auto;">
-    <div class="col-12 col-sm-6 col-lg-4 col-xl-2">
-      <div class="p-3 stat-card bg-success text-white rounded text-center fw-bold">
-        <div class="mb-2">Atas Registradas</div>
-        <a class="d-inline-block mb-2" href="{% url 'secretarial:list-minutes' %}"><img width="28" height="28" src="{% static 'img/archive.svg' %}" alt=""></a>
-        <div class="h5 fw-light">{{number_of_minutes}}</div>
-      </div>
-    </div>
-    <div class="col-12 col-sm-6 col-lg-4 col-xl-2">
-      <div class="p-3 stat-card bg-primary text-white rounded text-center fw-bold">
-        <div class="mb-2">Modelos de Atas</div>
-        <a class="d-inline-block mb-2" href="{% url 'secretarial:list-templates' %}"><img width="28" height="28" src="{% static 'img/file-text.svg' %}" alt=""></a>
-        <div class="h5 fw-light">{{number_of_templates}}</div>
-      </div>
-    </div>
-    <div class="col-12 col-sm-6 col-lg-4 col-xl-2">
-      <div class="p-3 stat-card bg-info text-white rounded text-center fw-bold">
-        <div class="mb-2">Trechos de Atas</div>
-        <a class="d-inline-block mb-2" href="{% url 'secretarial:list-excerpts' %}"><img width="28" height="28" src="{% static 'img/file-minus.svg' %}" alt=""></a>
-        <div class="h5 fw-light">{{number_of_excerpts}}</div>
-      </div>
-    </div>
-    <div class="col-12 col-sm-6 col-lg-4 col-xl-2">
-      <div class="p-3 stat-card bg-warning text-white rounded text-center fw-bold">
-        <div class="mb-2">Projetos de Ata</div>
-        <a class="d-inline-block mb-2" href="{% url 'secretarial:list-minutes-projects' %}"><img width="28" height="28" src="{% static 'img/edit.svg' %}" alt=""></a>
-        <div class="h5 fw-light">{{number_of_projects}}</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Search and AI Form Section -->
-  <div class="row justify-content-center mb-5">
-    <div class="col-12 col-lg-8 col-xl-7">
-      <div class="card shadow-sm border-0">
-        <div class="card-body p-4">
+  <!-- Main Content -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Search and AI Section -->
+    <div class="max-w-4xl mx-auto mb-8">
+      <div class="minute-search-card">
+        <div class="p-6">
           <!-- Search Form -->
-          <form id="search-form" class="mb-4">
-            <div class="row g-2 align-items-end">
-              <div class="col-12 col-md-4">
-                <label for="searched" class="form-label">Buscar por</label>
-                <input type="text" id="searched" class="form-control" placeholder="Digite o critério de busca..." />
-              </div>
-              <div class="col-12 col-md-4">
-                <label for="search-type" class="form-label">em</label>
-                <select id="search-type" class="form-select">
-                  <option value="minutes">em atas</option>
-                  <option value="templates">em modelos de atas</option>
-                  <option value="projects">em projetos de ata</option>
-                  <option value="members">em membros</option>
-                </select>
-              </div>
-              <div class="col-12 col-md-4 d-grid">
-                <button type="submit" class="btn btn-dark">Buscar</button>
-              </div>
+          <form id="search-form" class="mb-6">
+            <div class="flex items-center gap-3 mb-4">
+              <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              </svg>
+              <h2 class="text-lg font-semibold text-slate-800">Buscar</h2>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-3">
+              <input type="text" id="searched" class="minute-search-input flex-1" placeholder="Digite o critério de busca..." />
+              <select id="search-type" class="minute-search-select">
+                <option value="minutes">em atas</option>
+                <option value="templates">em modelos de atas</option>
+                <option value="projects">em projetos de ata</option>
+                <option value="members">em membros</option>
+              </select>
+              <button type="submit" class="minute-search-btn">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                Buscar
+              </button>
             </div>
           </form>
-          
-          <div id="search-results" class="mb-3"></div>
+
+          <div id="search-results" class="mb-4"></div>
 
           {% if user.is_secretary %}
-          <hr class="my-4"/>
-          
+          <div class="h-px bg-slate-200 my-6"></div>
+
           <!-- AI Generation Form -->
           <form method="POST">
             {% csrf_token %}
-            <div class="mb-3">
-              <label class="form-label text-muted fw-medium">Modelo de Ata (opcional)</label>
-              <select class="form-select" name="template" id="template">
-                <option value="">Nenhum</option>
-                {% for template in templates %}
-                <option value="{{ template.pk }}">{{ template.title }}</option>
-                {% endfor %}
-              </select>
-            </div>
-            
-            <div class="mb-4">
-              <label class="form-label text-muted fw-medium">Prompt para IA</label>
-              <textarea class="form-control" id="prompt" name="prompt"
-                        placeholder="Descreva a reunião para gerar a ata com IA..."
-                        rows="4" style="resize: vertical;"></textarea>
-            </div>
-            
-            <div class="d-flex flex-wrap gap-2 justify-content-start">
-              <button type="submit" class="btn btn-primary px-4">
-                <i class="bi bi-stars me-1"></i> Gerar Ata com IA
-              </button>
-              <a href="{% url 'secretarial:new-minute-view' %}" class="btn btn-outline-secondary px-4">
-                <i class="bi bi-file-earmark-plus me-1"></i> Nova Ata em Branco
-              </a>
-              <a href="{% url 'secretarial:list-templates' %}" class="btn btn-outline-dark px-4">
-                <i class="bi bi-layers me-1"></i> Ver Modelos
-              </a>
+            <div class="minute-ai-card">
+              <div class="flex items-center gap-3 mb-4">
+                <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                </svg>
+                <h2 class="text-lg font-semibold text-slate-800">Gerar Ata com IA</h2>
+              </div>
+
+              <div class="mb-4">
+                <label class="block text-sm font-medium text-slate-700 mb-2">Modelo de Ata (opcional)</label>
+                <select class="minute-search-select w-full" name="template" id="template">
+                  <option value="">Nenhum</option>
+                  {% for template in templates %}
+                  <option value="{{ template.pk }}">{{ template.title }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="mb-4">
+                <label class="block text-sm font-medium text-slate-700 mb-2">Prompt para IA</label>
+                <textarea class="minute-ai-textarea" id="prompt" name="prompt"
+                          placeholder="Descreva a reunião para gerar a ata com IA..."></textarea>
+              </div>
+
+              <div class="flex flex-wrap gap-3">
+                <button type="submit" class="minute-ai-btn">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                  </svg>
+                  Gerar Ata com IA
+                </button>
+                <a href="{% url 'secretarial:new-minute-view' %}" class="minute-ai-btn minute-ai-btn-secondary">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                  </svg>
+                  Nova Ata em Branco
+                </a>
+                <a href="{% url 'secretarial:list-templates' %}" class="minute-ai-btn minute-ai-btn-secondary">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                  </svg>
+                  Ver Modelos
+                </a>
+              </div>
             </div>
           </form>
           {% endif %}
         </div>
       </div>
     </div>
-  </div>
 
-  {% if user.is_secretary %}
-  <div class="row g-4 justify-content-center" style="max-width: 1200px; margin: 0 auto;">
-    <div class="col-12 col-md-4">
-      <div class="card">
-        <div class="card-header">
-          <h5 class="card-title mb-0">Lista de atas</h5>
-        </div>
-        <div class="card-body">
-          <div class="list-group list-group-flush">
-            {% if meeting_minutes %}
-              {% for mm in meeting_minutes %}
-                <a class="list-group-item list-group-item-action" href="{% url 'secretarial:minute-detail-view' mm.pk %}">{{ mm }}</a>
-              {% endfor %}
-            {% else %}
-              <div class="text-muted small">Sem atas ainda.</div>
-            {% endif %}
-          </div>
-        </div>
+    {% if user.is_secretary %}
+    <!-- Recent Minutes Section -->
+    <div class="max-w-5xl mx-auto">
+      <div class="flex items-center gap-3 mb-6">
+        <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <h2 class="text-xl font-bold text-slate-800">Atas Recentes</h2>
       </div>
-    </div>
-    <div class="col-12 col-md-4">
-      <div class="card">
-        <div class="card-header">
-          <h5 class="card-title mb-0">Ações rápidas</h5>
-        </div>
-        <div class="card-body">
-          <div class="d-flex flex-wrap gap-2">
-            <a href="{% url 'secretarial:pdf-import' %}" class="btn btn-outline-success pill">
-              <i class="bi bi-file-earmark-pdf me-1"></i>Importar PDF
+
+      {% if meeting_minutes %}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-32">
+          {% for mm in meeting_minutes %}
+            <a href="{% url 'secretarial:minute-detail-view' mm.pk %}" class="minute-recent-card">
+              <div class="minute-recent-header">
+                <div class="flex items-start justify-between gap-4">
+                  <div>
+                    <h3 class="font-semibold text-slate-800 text-lg">{{ mm }}</h3>
+                    <p class="text-sm text-slate-500 mt-1">Ata de reunião</p>
+                  </div>
+                  <svg class="w-5 h-5 text-primary-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                  </svg>
+                </div>
+              </div>
+              <div class="minute-recent-body">
+                <p class="text-slate-600 text-sm line-clamp-3">
+                  {% if mm.body %}
+                    {{ mm.body|striptags|truncatewords:30 }}
+                  {% else %}
+                    <em class="text-slate-400">Sem conteúdo adicionado ainda.</em>
+                  {% endif %}
+                </p>
+              </div>
+              <div class="minute-recent-footer">
+                <span class="flex items-center gap-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                  </svg>
+                  {{ mm.president|default:"Sem presidente" }}
+                </span>
+                <span class="flex items-center gap-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                  </svg>
+                  {{ mm.meeting_date|date:"d/m/Y" }}
+                </span>
+                {% if mm.number_of_attendees %}
+                <span class="flex items-center gap-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                  </svg>
+                  {{ mm.number_of_attendees }} presentes
+                </span>
+                {% endif %}
+              </div>
             </a>
-            <a href="{% url 'secretarial:list-excerpts' %}" class="btn btn-outline-primary pill">Trechos</a>
-            <a href="{% url 'secretarial:list-templates' %}" class="btn btn-outline-primary pill">Modelos</a>
-            <a href="{% url 'secretarial:list-minutes-projects' %}" class="btn btn-outline-primary pill">Projetos</a>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="minute-list-card max-w-2xl mx-auto mb-32">
+          <div class="p-8 text-center text-slate-500">
+            <svg class="w-16 h-16 mx-auto mb-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            <p class="text-lg font-medium">Sem atas registradas ainda.</p>
+            <p class="text-sm mt-2">Use o formulário acima para criar sua primeira ata.</p>
           </div>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Quick Actions Dock -->
+    <div class="minute-quick-dock">
+      <a href="{% url 'secretarial:new-minute-view' %}" class="minute-quick-dock-btn">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        <span>Nova Ata</span>
+      </a>
+      <a href="{% url 'secretarial:pdf-import' %}" class="minute-quick-dock-btn">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+        </svg>
+        <span>PDF</span>
+      </a>
+      <a href="{% url 'secretarial:list-templates' %}" class="minute-quick-dock-btn">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        <span>Modelos</span>
+      </a>
+      <a href="{% url 'secretarial:list-excerpts' %}" class="minute-quick-dock-btn">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+        </svg>
+        <span>Trechos</span>
+      </a>
+      <a href="{% url 'secretarial:list-minutes-projects' %}" class="minute-quick-dock-btn">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+        </svg>
+        <span>Projetos</span>
+      </a>
+    </div>
+    {% else %}
+    <!-- Non-secretary view -->
+    <div class="max-w-2xl mx-auto">
+      <div class="minute-list-card">
+        <div class="minute-list-header">
+          <h3 class="font-semibold text-slate-800">Lista de Atas</h3>
+        </div>
+        <div>
+          {% for m in minutes %}
+            <a class="minute-list-item" href="{% url 'secretarial:minute-detail-view' m.pk %}">{{ m }}</a>
+          {% endfor %}
         </div>
       </div>
     </div>
+    {% endif %}
   </div>
-  {% else %}
-  <div class="container">
-    <div class="row justify-content-center py-2">
-      <div class="col-12 col-md-10 col-lg-8">
-        <p class="fs-5 fw-light text-center">Lista de Atas</p>
-        {% for m in minutes %}
-          <p><a href="{% url 'secretarial:minute-detail-view' m.pk %}">{{ m }}</a></p>
-        {% endfor %}
-      </div>
-    </div>
-  </div>
-  {% endif %}
 </div>
 
 <script type="module" src="{% static 'js/secretarial_search.js' %}"></script>

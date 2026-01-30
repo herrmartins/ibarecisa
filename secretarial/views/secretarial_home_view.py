@@ -20,4 +20,5 @@ class SecretarialHomeView(PermissionRequiredMixin, TemplateView):
 
         context["number_of_members"] = number_of_members
         context["number_of_visitors"] = number_of_visitors
+        context["total_members"] = number_of_members + number_of_visitors
         return context
