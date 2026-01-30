@@ -1,10 +1,11 @@
+import weasyprint
 from django.views.generic import View
 from secretarial.models import MeetingMinuteModel
-from secretarial.utils import topdfutils
 from django.forms.models import model_to_dict
 from django.http import HttpResponse
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from core.core_context_processor import context_user_data
+from django.template.loader import render_to_string
 
 
 class GeneratePDF(PermissionRequiredMixin, View):
@@ -15,10 +16,24 @@ class GeneratePDF(PermissionRequiredMixin, View):
 
         data_dict = model_to_dict(data)
 
+        # Add formatted names for president and secretary
+        if data.president:
+            data_dict["president"] = f"{data.president.first_name} {data.president.last_name}"
+        if data.secretary:
+            data_dict["secretary"] = f"{data.secretary.first_name} {data.secretary.last_name}"
+
         context_data = context_user_data(request)
         data_dict["church_info"] = context_data.get("church_info")
 
-        pdf = topdfutils.render_to_pdf("secretarial/minute_pdf.html", data_dict)
+        # Render HTML template
+        html_string = render_to_string("secretarial/minute_pdf.html", data_dict)
+
+        # Get base URL for static files
+        base_url = request.build_absolute_uri('/')
+
+        # Generate PDF with WeasyPrint
+        weasyprint_html = weasyprint.HTML(string=html_string, base_url=base_url)
+        pdf = weasyprint_html.write_pdf()
 
         if pdf:
             response = HttpResponse(pdf, content_type="application/pdf")

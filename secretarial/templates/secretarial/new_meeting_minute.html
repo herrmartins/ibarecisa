@@ -5,26 +5,68 @@
 <link href="{% static 'css/quill.css' %}" rel="stylesheet">
 <script src="{% static 'js/quill.js' %}"></script>
 
-<div class="container">
-  <div class="container text-center">
-    <p class="fs-3 fw-light">Nova ata</p>
+<div class="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+  <!-- Header Section -->
+  <div class="minute-create-header relative">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
+      <div class="text-center mb-4">
+        <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">
+          Nova Ata
+        </h1>
+        <p class="text-white/90 text-lg">
+          Crie uma ata em branco para sua reunião
+        </p>
+      </div>
+    </div>
   </div>
-  <div class="container">
 
-    <div id="editor" style="height: 300px;"></div>
+  <!-- Main Content -->
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Back Button -->
+    <div class="mb-6">
+      <a href="{% url 'secretarial:minute-home' %}" class="inline-flex items-center gap-2 text-slate-600 hover:text-primary-600 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+        Voltar para Registro de Reuniões
+      </a>
+    </div>
 
-    <form action="{% url 'secretarial:new-minute-view' %}" method="POST">
-      {% csrf_token %}
-      <input type="hidden" name="content" id="quill-content">
-      <button type="submit" class="btn btn-primary mt-3">Salvar</button>
-    </form>
+    <!-- Editor Card -->
+    <div class="minute-create-editor-card">
+      <div class="p-6">
+        <!-- Quill Editor -->
+        <div id="editor"></div>
+      </div>
 
+      <!-- Form Actions -->
+      <form action="{% url 'secretarial:new-minute-view' %}" method="POST">
+        {% csrf_token %}
+        <input type="hidden" name="content" id="quill-content">
+
+        <div class="minute-create-actions">
+          <a href="{% url 'secretarial:minute-home' %}" class="minute-create-btn minute-create-btn-secondary">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+            Cancelar
+          </a>
+          <button type="submit" class="minute-create-btn">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            Salvar Ata
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
 </div>
 
 <script>
   const quill = new Quill('#editor', {
-    theme: 'snow'
+    theme: 'snow',
+    placeholder: 'Comece a digitar o conteúdo da ata aqui...'
   });
 
   document.querySelector('form').onsubmit = function () {

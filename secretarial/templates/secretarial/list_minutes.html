@@ -1,27 +1,154 @@
-{% extends 'core/base.html' %} {% block content %}
+{% extends 'core/base.html' %}
 {% load static %}
 
-<div class="container">
-  <div class="container text-center">
-    <p class="fs-3 fw-light">Reuniões Registradas</p>
-  </div>
-  <div class="container">
-    <div class="col-12 mx-auto">
-      {% if minutes %}
-      {% for m in minutes %}
-      <div class="row">
-        <div class="col-3">
-          {{m.meeting_date}}<br>
-          <a href="{% url 'secretarial:minute-generate-pdf' m.id %}" class="btn btn-primary">Gerar PDF</a>
-        </div>
-        <div class="col-9">
-          {{m.body|safe}}
-        </div>
+{% block content %}
+<div class="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+  <!-- Header Section -->
+  <div class="minutes-list-header relative">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
+      <div class="text-center mb-4">
+        <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">
+          Reuniões Registradas
+        </h1>
+        <p class="text-white/90 text-lg">
+          Histórico completo das atas de reuniões
+        </p>
       </div>
-      {% endfor %}
-      {% endif %}
     </div>
   </div>
-</div>
 
+  <!-- Main Content -->
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Back Button -->
+    <div class="mb-6">
+      <a href="{% url 'secretarial:minute-home' %}" class="inline-flex items-center gap-2 text-slate-600 hover:text-primary-600 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+        Voltar para Registro de Reuniões
+      </a>
+    </div>
+
+    {% if minutes %}
+      <!-- Minutes Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        {% for m in minutes %}
+        <div class="minutes-list-card">
+          <div class="minutes-list-header-section">
+            <div class="flex items-center justify-between gap-4">
+              <div class="flex items-center gap-3">
+                <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                <div>
+                  <p class="font-semibold text-slate-800">Ata de Reunião</p>
+                  <p class="text-sm text-slate-500">{{ m.meeting_date|date:"d/m/Y" }}</p>
+                </div>
+              </div>
+              <a href="{% url 'secretarial:minute-generate-pdf' m.id %}" class="minutes-pdf-btn">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                </svg>
+                PDF
+              </a>
+            </div>
+            {% if m.president %}
+            <p class="text-sm text-slate-600 mt-2">
+              <span class="font-medium">Presidente:</span> {{ m.president.first_name }} {{ m.president.last_name }}
+            </p>
+            {% endif %}
+          </div>
+          <div class="minutes-list-body-section">
+            <a href="{% url 'secretarial:minute-detail-view' m.id %}" class="block">
+              <div class="minutes-list-body-content">
+                {% if m.body %}
+                  {{ m.body|safe|truncatewords_html:50 }}
+                {% else %}
+                  <p class="text-slate-400 italic">Sem conteúdo.</p>
+                {% endif %}
+              </div>
+            </a>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Pagination -->
+      {% if is_paginated %}
+      <nav class="minutes-pagination">
+        {% if page_obj.has_previous %}
+          <a href="?page=1" class="minutes-pagination-link">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/>
+            </svg>
+            Primeira
+          </a>
+          <a href="?page={{ page_obj.previous_page_number }}" class="minutes-pagination-link">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            Anterior
+          </a>
+        {% else %}
+          <span class="minutes-pagination-link disabled">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/>
+            </svg>
+            Primeira
+          </span>
+          <span class="minutes-pagination-link disabled">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            Anterior
+          </span>
+        {% endif %}
+
+        <span class="text-sm text-slate-600 px-2">
+          Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+        </span>
+
+        {% if page_obj.has_next %}
+          <a href="?page={{ page_obj.next_page_number }}" class="minutes-pagination-link">
+            Próxima
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </a>
+          <a href="?page={{ page_obj.paginator.num_pages }}" class="minutes-pagination-link">
+            Última
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/>
+            </svg>
+          </a>
+        {% else %}
+          <span class="minutes-pagination-link disabled">
+            Próxima
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </span>
+          <span class="minutes-pagination-link disabled">
+            Última
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/>
+            </svg>
+          </span>
+        {% endif %}
+      </nav>
+      {% endif %}
+    {% else %}
+      <!-- Empty State -->
+      <div class="minutes-list-card max-w-2xl mx-auto">
+        <div class="p-8 text-center text-slate-500">
+          <svg class="w-16 h-16 mx-auto mb-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+          <p class="text-lg font-medium">Nenhuma ata registrada ainda.</p>
+          <p class="text-sm mt-2">Crie sua primeira ata no Registro de Reuniões.</p>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</div>
 {% endblock %}

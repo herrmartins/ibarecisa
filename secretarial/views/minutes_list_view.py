@@ -9,3 +9,4 @@ class MinutesListView(PermissionRequiredMixin, ListView):
     template_name = 'secretarial/list_minutes.html'
     context_object_name = 'minutes'
     ordering = "-meeting_date"
+    paginate_by = 6

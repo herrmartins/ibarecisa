@@ -1,59 +1,351 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="pt-br">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Ata de Reunião</title>
-    <style>
-      /* Custom styles mimicking Bootstrap 5 classes */
-      .container {
-          width: 100%;
-          padding-right: 15px;
-          padding-left: 15px;
-          margin-right: auto;
-          margin-left: auto;
-      }
+<head>
+  <meta charset="UTF-8" />
+  <title>Ata de Reunião</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 2cm;
+    }
 
-      .row {
-          display: flex;
-          flex-wrap: wrap;
-          margin-right: -15px;
-          margin-left: -15px;
-      }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-      .col-10 {
-          flex: 0 0 83.333333%;
-          max-width: 83.333333%;
-      }
+    body {
+      font-family: 'Helvetica', 'Arial', sans-serif;
+      font-size: 11pt;
+      line-height: 1.6;
+      color: #333;
+      position: relative;
+    }
 
-      .fs-1 {
-          font-size: 2.25rem;
-      }
+    /* Watermark - Logo Background */
+    .watermark {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(45deg);
+      width: 500px;
+      height: 500px;
+      opacity: 0.03;
+      z-index: -1;
+      pointer-events: none;
+    }
 
-      .fs-3 {
-          font-size: 1.875rem;
-      }
+    .watermark img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
 
-      .fs-6 {
-          font-size: 1rem;
-      }
+    .document-wrapper {
+      max-width: 100%;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
 
-      /* You can add additional styles as needed */
+    /* Header Section */
+    .pdf-header {
+      border-bottom: 3px solid #2c3e50;
+      padding-bottom: 15px;
+      margin-bottom: 25px;
+    }
+
+    .pdf-header-title {
+      font-size: 22pt;
+      font-weight: bold;
+      color: #2c3e50;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+    }
+
+    .pdf-header-subtitle {
+      font-size: 12pt;
+      color: #7f8c8d;
+      text-align: center;
+      margin-bottom: 15px;
+    }
+
+    .pdf-header-divider {
+      height: 2px;
+      background: linear-gradient(to right, transparent, #3498db, transparent);
+      margin: 10px 0;
+    }
+
+    /* Meeting Info Section */
+    .pdf-info-section {
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      padding: 18px;
+      margin-bottom: 25px;
+      border-radius: 4px;
+    }
+
+    .pdf-info-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .pdf-info-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .pdf-info-label {
+      font-weight: bold;
+      color: #2c3e50;
+      min-width: 120px;
+      padding-right: 10px;
+    }
+
+    .pdf-info-value {
+      color: #34495e;
+      flex: 1;
+    }
+
+    .pdf-info-date {
+      font-size: 14pt;
+      font-weight: bold;
+      color: #2980b9;
+    }
+
+    /* Content Section */
+    .pdf-content-section {
+      margin-bottom: 25px;
+    }
+
+    .pdf-section-title {
+      font-size: 14pt;
+      font-weight: bold;
+      color: #2c3e50;
+      border-bottom: 2px solid #3498db;
+      padding-bottom: 8px;
+      margin-bottom: 18px;
+    }
+
+    .pdf-body-content {
+      text-align: justify;
+      line-height: 1.8;
+    }
+
+    .pdf-body-content p {
+      margin-bottom: 12px;
+    }
+
+    .pdf-body-content ul,
+    .pdf-body-content ol {
+      margin: 12px 0;
+      padding-left: 30px;
+    }
+
+    .pdf-body-content li {
+      margin-bottom: 8px;
+    }
+
+    /* Signatures Section */
+    .pdf-signatures {
+      margin-top: 60px;
+      page-break-inside: avoid;
+    }
+
+    .pdf-signature-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 40px;
+    }
+
+    .pdf-signature-block {
+      flex: 1;
+      text-align: center;
+    }
+
+    .pdf-signature-line {
+      border-top: 1px solid #2c3e50;
+      margin-top: 80px;
+      padding-top: 10px;
+      font-size: 10pt;
+      color: #7f8c8d;
+    }
+
+    /* Footer */
+    .pdf-footer {
+      text-align: center;
+      font-size: 9pt;
+      color: #95a5a6;
+      border-top: 1px solid #e9ecef;
+      padding-top: 12px;
+      margin-top: 40px;
+    }
+
+    /* Rich Text Styles */
+    .pdf-body-content h1,
+    .pdf-body-content h2,
+    .pdf-body-content h3 {
+      color: #2c3e50;
+      margin-top: 24px;
+      margin-bottom: 12px;
+      font-weight: 700;
+    }
+
+    .pdf-body-content h1 { font-size: 18pt; }
+    .pdf-body-content h2 { font-size: 15pt; }
+    .pdf-body-content h3 { font-size: 13pt; }
+
+    .pdf-body-content strong {
+      font-weight: 700;
+      color: #2c3e50;
+    }
+
+    .pdf-body-content em {
+      font-style: italic;
+      color: #555;
+    }
+
+    .pdf-body-content a {
+      color: #2980b9;
+      text-decoration: underline;
+    }
+
+    .pdf-body-content blockquote {
+      border-left: 4px solid #3498db;
+      padding-left: 16px;
+      margin: 16px 0;
+      color: #7f8c8d;
+      font-style: italic;
+    }
+
+    .pdf-body-content table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+    }
+
+    .pdf-body-content th,
+    .pdf-body-content td {
+      border: 1px solid #bdc3c7;
+      padding: 10px;
+      text-align: left;
+    }
+
+    .pdf-body-content th {
+      background: #ecf0f1;
+      font-weight: 700;
+      color: #2c3e50;
+    }
+
+    .pdf-body-content hr {
+      border: none;
+      border-top: 1px solid #bdc3c7;
+      margin: 20px 0;
+    }
+
+    .pdf-body-content code {
+      background: #f4f4f4;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9em;
+      color: #e74c3c;
+    }
+
+    .pdf-body-content pre {
+      background: #2c3e50;
+      color: #ecf0f1;
+      padding: 12px;
+      border-radius: 4px;
+      overflow-x: auto;
+      margin: 16px 0;
+    }
+
+    .pdf-body-content pre code {
+      background: none;
+      color: inherit;
+      padding: 0;
+    }
   </style>
-  </head>
-  <body>
-    <div class="container">
-      <div class="row">
-        <div class="col-10">
-          <h3>{{church_info.name}} - {{church_info.CNPJ}}</h3>
-          <p class="fs-1 d-block">Ata da reunião de {{meeting_date}}</p>
-          <div class="row">
-            <div class="col-10">
-              <p class="fs-6">{{ body|safe }}</p>
-            </div>
+</head>
+<body>
+  <!-- Watermark with Logo -->
+  <div class="watermark">
+    <img src="{% get_static_prefix %}img/logo.jpg" alt="" />
+  </div>
+
+  <div class="document-wrapper">
+    <!-- Header -->
+    <div class="pdf-header">
+      <h1 class="pdf-header-title">Ata de Reunião</h1>
+      {% if church_info %}
+      <p class="pdf-header-subtitle">{{church_info.name}}{% if church_info.CNPJ %} - CNPJ: {{church_info.CNPJ}}{% endif %}</p>
+      {% endif %}
+      <div class="pdf-header-divider"></div>
+    </div>
+
+    <!-- Meeting Information -->
+    <div class="pdf-info-section">
+      <div class="pdf-info-row">
+        <span class="pdf-info-label">Data:</span>
+        <span class="pdf-info-value pdf-info-date">{{meeting_date|default:"Não informada"}}</span>
+      </div>
+      {% if president %}
+      <div class="pdf-info-row">
+        <span class="pdf-info-label">Presidente:</span>
+        <span class="pdf-info-value">{{president}}</span>
+      </div>
+      {% endif %}
+      {% if secretary %}
+      <div class="pdf-info-row">
+        <span class="pdf-info-label">Secretário(a):</span>
+        <span class="pdf-info-value">{{secretary}}</span>
+      </div>
+      {% endif %}
+      {% if number_of_attendees %}
+      <div class="pdf-info-row">
+        <span class="pdf-info-label">Participantes:</span>
+        <span class="pdf-info-value">{{number_of_attendees}} presentes</span>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Content -->
+    <div class="pdf-content-section">
+      <h2 class="pdf-section-title">Conteúdo da Ata</h2>
+      <div class="pdf-body-content">
+        {% if body %}
+          {{ body|safe }}
+        {% else %}
+          <p style="color: #95a5a6; font-style: italic;">Sem conteúdo registrado.</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Signatures -->
+    <div class="pdf-signatures">
+      <div class="pdf-signature-row">
+        <div class="pdf-signature-block">
+          <div class="pdf-signature-line">
+            {% if president %}{{president}}{% else %}Presidente{% endif %}
+          </div>
+        </div>
+        <div class="pdf-signature-block">
+          <div class="pdf-signature-line">
+            {% if secretary %}{{secretary}}{% else %}Secretário(a){% endif %}
           </div>
         </div>
       </div>
     </div>
-  </body>
+
+    <!-- Footer -->
+    <div class="pdf-footer">
+      Documento gerado em {% now "d/m/Y \à\s H:i" %}
+    </div>
+  </div>
+</body>
 </html>
