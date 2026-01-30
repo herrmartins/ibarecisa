@@ -2,7 +2,6 @@ from django import forms
 from django.forms import ModelForm
 from secretarial.models import MeetingMinuteModel
 from datetime import date
-from ckeditor.widgets import CKEditorWidget
 from users.models import CustomUser
 
 
@@ -56,7 +55,7 @@ class MinuteModelForm(ModelForm):
                     "class": "form-control",
                 }
             ),
-            "body": CKEditorWidget(),
+            "body": forms.HiddenInput(),
             "agenda": forms.SelectMultiple(
                 attrs={
                     "class": "grid-item d-inline form-control my-2",

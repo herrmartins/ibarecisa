@@ -3,6 +3,7 @@ from secretarial.forms import MinuteTemplateModelForm
 from secretarial.models import MinuteTemplateModel
 from secretarial.models import MinuteExcerptsModel
 from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.urls import reverse_lazy
 
 
 class TemplateCreateView(PermissionRequiredMixin, CreateView):
@@ -11,6 +12,7 @@ class TemplateCreateView(PermissionRequiredMixin, CreateView):
     template_name = "secretarial/template_form.html"
     context_object_name = "template"
     model = MinuteTemplateModel
+    success_url = reverse_lazy('secretarial:list-templates')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

@@ -2,10 +2,10 @@
 {% block content %}
 {% load static %}
 
-<link href="{% static 'css/quill.css' %}" rel="stylesheet">
 <script src="{% static 'js/quill.js' %}"></script>
+<link href="{% static 'css/quill.css' %}" rel="stylesheet">
 
-<div class="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+<div class="min-h-screen bg-gradient-to-b from-slate-50 to-white" x-data="excerptForm">
   <!-- Header Section -->
   <div class="minutes-list-header relative">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
@@ -102,39 +102,43 @@
 </div>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    // Check if Quill is available
-    if (typeof Quill === 'undefined') {
-      console.error('Quill library is not loaded!');
-      return;
-    }
+  document.addEventListener('alpine:init', () => {
+    Alpine.data('excerptForm', () => ({
+      init() {
+        // Check if Quill is available
+        if (typeof Quill === 'undefined') {
+          console.error('Quill library is not loaded!');
+          return;
+        }
 
-    // Initialize Quill editor
-    const quill = new Quill('#editor', {
-      theme: 'snow',
-      placeholder: 'Digite o conteúdo do trecho aqui...',
-      modules: {
-        toolbar: [
-          ['bold', 'italic', 'underline', 'strike'],
-          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-          [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-          ['link', 'blockquote'],
-          ['clean']
-        ]
+        // Initialize Quill editor
+        const quill = new Quill('#editor', {
+          theme: 'snow',
+          placeholder: 'Digite o conteúdo do trecho aqui...',
+          modules: {
+            toolbar: [
+              ['bold', 'italic', 'underline', 'strike'],
+              [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+              [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+              ['link', 'blockquote'],
+              ['clean']
+            ]
+          }
+        });
+
+        // Load existing content if editing
+        const initialContentScript = document.getElementById('excerpt-initial-content');
+        if (initialContentScript) {
+          const initialContent = JSON.parse(initialContentScript.textContent);
+          quill.root.innerHTML = initialContent;
+        }
+
+        // Copy content to hidden field on submit
+        document.getElementById('excerpt-form').onsubmit = function () {
+          document.querySelector('#quill-content').value = quill.root.innerHTML;
+        };
       }
-    });
-
-    // Load existing content if editing
-    const initialContentScript = document.getElementById('excerpt-initial-content');
-    if (initialContentScript) {
-      const initialContent = JSON.parse(initialContentScript.textContent);
-      quill.root.innerHTML = initialContent;
-    }
-
-    // Copy content to hidden field on submit
-    document.getElementById('excerpt-form').onsubmit = function () {
-      document.querySelector('#quill-content').value = quill.root.innerHTML;
-    };
+    }));
   });
 </script>
 

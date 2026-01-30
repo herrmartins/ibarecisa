@@ -1,6 +1,5 @@
 from django import forms
 from secretarial.models import MinuteTemplateModel
-from ckeditor.widgets import CKEditorWidget
 
 
 class MinuteTemplateModelForm(forms.ModelForm):
@@ -20,7 +19,7 @@ class MinuteTemplateModelForm(forms.ModelForm):
                     "placeholder": "Digite o critério de busca...",
                 }
             ),
-            "body": CKEditorWidget(),
+            "body": forms.HiddenInput(),
             "agenda": forms.SelectMultiple(
                 attrs={
                     "class": "grid-item d-inline form-control my-2",

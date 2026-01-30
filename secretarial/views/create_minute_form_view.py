@@ -4,7 +4,7 @@ from secretarial.models import MinuteProjectModel, MinuteTemplateModel
 from secretarial.models import MinuteExcerptsModel
 from django.shortcuts import redirect
 from django.contrib.auth.mixins import PermissionRequiredMixin
-from django.shortcuts import redirect
+from django.contrib import messages
 
 
 class CreateMinuteFormView(PermissionRequiredMixin, FormView):
@@ -34,7 +34,7 @@ class CreateMinuteFormView(PermissionRequiredMixin, FormView):
                     pk=self.kwargs.get("template_pk")
                 )
                 initial["body"] = minute_data.body
-                initial["agenda"] = minute_data.agenda.all()
+                initial["agenda"] = minute_data.agenda.values_list('id', flat=True)
             except MinuteTemplateModel.DoesNotExist:
                 # Handle the case where the template PK does not exist
                 return redirect("secretarial:home")
@@ -49,3 +49,16 @@ class CreateMinuteFormView(PermissionRequiredMixin, FormView):
         )
 
         return context
+
+    def form_valid(self, form):
+        try:
+            form.save()
+            messages.success(self.request, "Ata criada com sucesso!")
+            return redirect('secretarial:list-minutes')
+        except Exception as e:
+            messages.error(self.request, f"Erro ao criar ata: {e}")
+            return self.form_invalid(form)
+
+    def form_invalid(self, form):
+        messages.error(self.request, "Por favor, corrija os erros abaixo.")
+        return super().form_invalid(form)
