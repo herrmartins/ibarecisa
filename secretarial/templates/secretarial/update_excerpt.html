@@ -2,22 +2,140 @@
 {% block content %}
 {% load static %}
 
-<div class="container">
-  <div class="container text-center">
-    <p class="fs-3 fw-light">Editar trecho </p>
-  </div>
-  <div class="container">
-    <div class="row justify-content-center">
-      <div class="col-8">
-        <form method="POST" {% if is_update %}action="{% url 'secretarial:update-excerpt' pk %}"{% else %}action="{% url 'secretarial:create-excerpt' %}"{% endif %}>
-          {% csrf_token %}
-          {{form.media}}
-          {{form}}
-          <input type="submit" value="{% if is_update %}Atualizar{% else %}Criar{% endif %}" class="btn {% if is_update %}btn-warning{% else %}btn-primary{% endif %}">
-        </form>
+<link href="{% static 'css/quill.css' %}" rel="stylesheet">
+<script src="{% static 'js/quill.js' %}"></script>
+
+<div class="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+  <!-- Header Section -->
+  <div class="minutes-list-header relative">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
+      <div class="text-center">
+        <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">
+          {% if is_update %}Editar Trecho{% else %}Criar Trecho{% endif %}
+        </h1>
+        <p class="text-white/90 text-lg">
+          {% if is_update %}Atualize as informações do trecho{% else %}Adicione um novo trecho de ata{% endif %}
+        </p>
       </div>
     </div>
   </div>
+
+  <!-- Main Content -->
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Back Button -->
+    <div class="mb-6">
+      <a href="{% url 'secretarial:list-excerpts' %}" class="inline-flex items-center gap-2 text-slate-600 hover:text-primary-600 transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+        Voltar para Trechos
+      </a>
+    </div>
+
+    <!-- Form Card -->
+    <div class="minute-create-editor-card">
+      <form id="excerpt-form" method="POST" {% if is_update %}action="{% url 'secretarial:update-excerpt' pk %}"{% else %}action="{% url 'secretarial:create-excerpt' %}"{% endif %}>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+        <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+          {% for error in form.non_field_errors %}
+          <p class="text-red-600 text-sm">{{ error }}</p>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Title Field -->
+        <div class="mb-4">
+          <label for="id_title" class="block text-sm font-semibold text-slate-700 mb-2">Título</label>
+          {{ form.title }}
+          {% if form.title.errors %}
+          {% for error in form.title.errors %}
+          <p class="text-red-500 text-sm mt-1">{{ error }}</p>
+          {% endfor %}
+          {% endif %}
+        </div>
+
+        <!-- Quill Editor for Excerpt -->
+        <div class="mb-6">
+          <label class="block text-sm font-semibold text-slate-700 mb-2">Trecho</label>
+          <div id="editor"></div>
+          {% if form.excerpt.errors %}
+          {% for error in form.excerpt.errors %}
+          <p class="text-red-500 text-sm mt-1">{{ error }}</p>
+          {% endfor %}
+          {% endif %}
+        </div>
+
+        <!-- Hidden field for form submission -->
+        <input type="hidden" name="excerpt" id="quill-content" {% if form.excerpt.value %}value="{{ form.excerpt.value }}"{% endif %}>
+
+        <!-- Initial content for Quill -->
+        {% if is_update and excerpt_object %}
+        {{ excerpt_object.excerpt|json_script:"excerpt-initial-content" }}
+        {% elif form.excerpt.value %}
+        {{ form.excerpt.value|json_script:"excerpt-initial-content" }}
+        {% endif %}
+
+        <!-- Submit Button -->
+        <div class="flex justify-end gap-3 mt-6 pt-6 border-t border-slate-200">
+          <a href="{% url 'secretarial:list-excerpts' %}" class="excerpt-cancel-btn">
+            Cancelar
+          </a>
+          <button type="submit" class="{% if is_update %}excerpt-update-btn{% else %}excerpt-submit-btn{% endif %}">
+            {% if is_update %}
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+              </svg>
+              Atualizar
+            {% else %}
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+              Criar
+            {% endif %}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Check if Quill is available
+    if (typeof Quill === 'undefined') {
+      console.error('Quill library is not loaded!');
+      return;
+    }
+
+    // Initialize Quill editor
+    const quill = new Quill('#editor', {
+      theme: 'snow',
+      placeholder: 'Digite o conteúdo do trecho aqui...',
+      modules: {
+        toolbar: [
+          ['bold', 'italic', 'underline', 'strike'],
+          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+          [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+          ['link', 'blockquote'],
+          ['clean']
+        ]
+      }
+    });
+
+    // Load existing content if editing
+    const initialContentScript = document.getElementById('excerpt-initial-content');
+    if (initialContentScript) {
+      const initialContent = JSON.parse(initialContentScript.textContent);
+      quill.root.innerHTML = initialContent;
+    }
+
+    // Copy content to hidden field on submit
+    document.getElementById('excerpt-form').onsubmit = function () {
+      document.querySelector('#quill-content').value = quill.root.innerHTML;
+    };
+  });
+</script>
 
 {% endblock %}

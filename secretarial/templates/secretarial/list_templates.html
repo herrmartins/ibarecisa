@@ -1,30 +1,82 @@
-{% extends 'core/base.html' %} {% block content %}
+{% extends 'core/base.html' %}
 {% load static %}
 
-<div class="container">
-  <div class="container text-center">
-    <p class="fs-3 fw-light">Modelos de Atas</p>
-  </div>
-  <div class="container">
-    <div class="col-12 mx-auto">
-      <div class="d-flex justify-content-center">
-          <a href="{% url 'secretarial:template-form' %}" class="btn btn-primary">Criar Modelo de Ata</a>
+{% block content %}
+<div class="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+  <!-- Header Section -->
+  <div class="minutes-list-header relative">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
+      <div class="text-center mb-4">
+        <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">
+          Modelos de Atas
+        </h1>
+        <p class="text-white/90 text-lg">
+          Gerencie seus modelos para criar novas atas
+        </p>
       </div>
-      {% if templates %}
-      {% for t in templates %}
-      <div class="row">
-        <div class="col-3">
-          {{t.meeting_date}}<br>
-          <a href="{% url 'secretarial:minute-from-template-view' t.id %}" class="btn btn-primary">Criar ata</a>
-        </div>
-        <div class="col-9">
-          {{t.body|safe}}
-        </div>
-      </div>
-      {% endfor %}
-      {% endif %}
     </div>
   </div>
-</div>
 
+  <!-- Main Content -->
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Create Template Button -->
+    <div class="mb-6 flex justify-center">
+      <a href="{% url 'secretarial:template-form' %}" class="template-create-btn">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        Criar Modelo de Ata
+      </a>
+    </div>
+
+    {% if templates %}
+      <!-- Templates Grid -->
+      <div class="grid grid-cols-1 gap-6">
+        {% for t in templates %}
+        <div class="template-list-card">
+          <div class="template-list-header-section">
+            <div class="flex items-center justify-between gap-4">
+              <div class="flex items-center gap-3">
+                <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                <div>
+                  <p class="font-semibold text-slate-800">Modelo de Ata</p>
+                  <p class="text-sm text-slate-500">{{ t.meeting_date|default:"Sem data" }}</p>
+                </div>
+              </div>
+              <a href="{% url 'secretarial:minute-from-template-view' t.id %}" class="template-create-minutes-btn">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Criar Ata
+              </a>
+            </div>
+          </div>
+          <div class="template-list-body-section">
+            <div class="template-list-body-content">
+              {% if t.body %}
+                {{ t.body|safe }}
+              {% else %}
+                <p class="text-slate-400 italic">Sem conteúdo.</p>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <!-- Empty State -->
+      <div class="template-list-card max-w-2xl mx-auto">
+        <div class="p-8 text-center text-slate-500">
+          <svg class="w-16 h-16 mx-auto mb-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+          <p class="text-lg font-medium">Nenhum modelo de ata cadastrado ainda.</p>
+          <p class="text-sm mt-2">Crie seu primeiro modelo para facilitar a criação de atas.</p>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</div>
 {% endblock %}

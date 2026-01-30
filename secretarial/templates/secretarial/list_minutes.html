@@ -31,7 +31,7 @@
 
     {% if minutes %}
       <!-- Minutes Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      <div class="grid grid-cols-1 gap-6 mb-8">
         {% for m in minutes %}
         <div class="minutes-list-card">
           <div class="minutes-list-header-section">
@@ -62,7 +62,7 @@
             <a href="{% url 'secretarial:minute-detail-view' m.id %}" class="block">
               <div class="minutes-list-body-content">
                 {% if m.body %}
-                  {{ m.body|safe|truncatewords_html:120 }}
+                  {{ m.body|safe }}
                 {% else %}
                   <p class="text-slate-400 italic">Sem conteúdo.</p>
                 {% endif %}

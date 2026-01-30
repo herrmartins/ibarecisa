@@ -1,9 +1,10 @@
 from django import forms
 from secretarial.models import MinuteExcerptsModel
-from ckeditor.widgets import CKEditorWidget
 
 
 class MinuteExcerptsModelForm(forms.ModelForm):
+    excerpt = forms.CharField(required=False, widget=forms.HiddenInput())
+
     class Meta:
         model = MinuteExcerptsModel
         fields = ['title', 'excerpt']
@@ -16,13 +17,14 @@ class MinuteExcerptsModelForm(forms.ModelForm):
         widgets = {
             "title": forms.TextInput(
                 attrs={
-                    "class": "form-control",
-                }
-            ),
-            "excerpt": CKEditorWidget(),
-            "agenda": forms.SelectMultiple(
-                attrs={
-                    "class": "grid-item d-inline form-control my-2",
+                    "class": "form-input",
                 }
             ),
         }
+
+    def clean_excerpt(self):
+        excerpt = self.cleaned_data.get('excerpt', '')
+        # Quill returns <p><br></p> for empty content
+        if excerpt in ['', '<p><br></p>', '<p></p>', '<br>', '<p>​</p>', '<p> </p>']:
+            return ''
+        return excerpt

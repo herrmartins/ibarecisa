@@ -5,7 +5,7 @@ from django.urls import reverse
 
 class MinuteExcerptsModel(BaseModel):
     title = models.CharField(max_length=100)
-    excerpt = models.CharField(max_length=1000)
+    excerpt = models.TextField(blank=True)
     times_used = models.IntegerField(default=1)
 
     class Meta:
