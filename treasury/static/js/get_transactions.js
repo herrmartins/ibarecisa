@@ -58,7 +58,10 @@ export async function getTransactions(year, month) {
         document.getElementById('currentAnawareBalance').textContent = formatCurrency(data.monthly_result);
         document.getElementById('positive_transactions').textContent = formatCurrency(data.positive_transactions);
         document.getElementById('negative_transactions').textContent = formatCurrency(data.negative_transactions);
-        document.querySelector('.bg-success .fw-light').textContent = formatCurrency(data.previous_month_balance);
+        const previousBalanceElement = document.getElementById('previousMonthBalance');
+        if (previousBalanceElement) {
+            previousBalanceElement.textContent = formatCurrency(data.previous_month_balance);
+        }
 
         const today = new Date();
         const currentMonth = today.getMonth() + 1;

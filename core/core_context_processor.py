@@ -1,6 +1,7 @@
 from django.contrib.staticfiles.finders import find
 from users.models import CustomUser
 import json
+from django.conf import settings
 
 
 def context_user_data(request):
@@ -18,6 +19,10 @@ def context_user_data(request):
         return {
             "user": user,
             "church_info": church_info,
+            "TINYMCE_API_KEY": getattr(settings, 'TINYMCE_API_KEY', ''),
         }
     else:
-        return {"church_info": church_info}
+        return {
+            "church_info": church_info,
+            "TINYMCE_API_KEY": getattr(settings, 'TINYMCE_API_KEY', ''),
+        }
