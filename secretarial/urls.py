@@ -21,6 +21,7 @@ from secretarial.views import (
     GeneratePDF,
     TemplateCreateView,
     TemplateFormView,
+    TemplateDeleteView,
     AgendaFormView,
     AgendaCreateView,
     CategoryUpdateView,
@@ -71,6 +72,8 @@ urlpatterns = [
     path("meeting/template/form", TemplateFormView.as_view(), name="template-form"),
     path("meeting/template/form/<int:pk>",
          TemplateFormView.as_view(), name="template-update"),
+    path("meeting/template/delete/<int:pk>/",
+         TemplateDeleteView.as_view(), name="delete-template"),
     path(
         "create-minute/project/<int:project_pk>/",
         CreateMinuteFormView.as_view(),

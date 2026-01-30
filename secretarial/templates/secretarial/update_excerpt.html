@@ -1,14 +1,22 @@
 {% extends 'core/base.html' %}
 {% block content %}
 {% load static %}
+<script src="https://cdn.tiny.cloud/1/{{ TINYMCE_API_KEY }}/tinymce/8/tinymce.min.js" referrerpolicy="origin"></script>
 
-<script src="{% static 'js/quill.js' %}"></script>
-<link href="{% static 'css/quill.css' %}" rel="stylesheet">
-
-<div class="min-h-screen bg-gradient-to-b from-slate-50 to-white" x-data="excerptForm">
+<div class="min-h-screen bg-gradient-to-b from-slate-50 to-white">
   <!-- Header Section -->
   <div class="minutes-list-header relative">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
+      <!-- Back Button -->
+      <div class="mb-6">
+        <a href="{% url 'secretarial:list-excerpts' %}" class="inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+          Voltar para Trechos
+        </a>
+      </div>
+
       <div class="text-center">
         <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">
           {% if is_update %}Editar Trecho{% else %}Criar Trecho{% endif %}
@@ -21,17 +29,7 @@
   </div>
 
   <!-- Main Content -->
-  <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <!-- Back Button -->
-    <div class="mb-6">
-      <a href="{% url 'secretarial:list-excerpts' %}" class="inline-flex items-center gap-2 text-slate-600 hover:text-primary-600 transition-colors">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-        </svg>
-        Voltar para Trechos
-      </a>
-    </div>
-
+  <div class="editor-page-container py-8">
     <!-- Form Card -->
     <div class="minute-create-editor-card">
       <form id="excerpt-form" method="POST" {% if is_update %}action="{% url 'secretarial:update-excerpt' pk %}"{% else %}action="{% url 'secretarial:create-excerpt' %}"{% endif %}>
@@ -56,26 +54,16 @@
           {% endif %}
         </div>
 
-        <!-- Quill Editor for Excerpt -->
+        <!-- TinyMCE Editor for Excerpt -->
         <div class="mb-6">
-          <label class="block text-sm font-semibold text-slate-700 mb-2">Trecho</label>
-          <div id="editor"></div>
+          <label for="excerpt_editor" class="block text-sm font-semibold text-slate-700 mb-2">Trecho</label>
+          <textarea id="excerpt_editor" name="excerpt">{% if is_update and excerpt_object %}{{ excerpt_object.excerpt|safe }}{% elif form.excerpt.value %}{{ form.excerpt.value|safe }}{% endif %}</textarea>
           {% if form.excerpt.errors %}
           {% for error in form.excerpt.errors %}
           <p class="text-red-500 text-sm mt-1">{{ error }}</p>
           {% endfor %}
           {% endif %}
         </div>
-
-        <!-- Hidden field for form submission -->
-        <input type="hidden" name="excerpt" id="quill-content" {% if form.excerpt.value %}value="{{ form.excerpt.value }}"{% endif %}>
-
-        <!-- Initial content for Quill -->
-        {% if is_update and excerpt_object %}
-        {{ excerpt_object.excerpt|json_script:"excerpt-initial-content" }}
-        {% elif form.excerpt.value %}
-        {{ form.excerpt.value|json_script:"excerpt-initial-content" }}
-        {% endif %}
 
         <!-- Submit Button -->
         <div class="flex justify-end gap-3 mt-6 pt-6 border-t border-slate-200">
@@ -102,43 +90,33 @@
 </div>
 
 <script>
-  document.addEventListener('alpine:init', () => {
-    Alpine.data('excerptForm', () => ({
-      init() {
-        // Check if Quill is available
-        if (typeof Quill === 'undefined') {
-          console.error('Quill library is not loaded!');
-          return;
-        }
+  document.addEventListener('DOMContentLoaded', function() {
+    // Update form field classes
+    const titleInput = document.querySelector('#id_title');
+    if (titleInput) {
+      titleInput.classList.add('w-full', 'px-4', 'py-2', 'border', 'border-slate-300', 'rounded-lg', 'focus:ring-2', 'focus:ring-primary-500', 'focus:border-primary-500', 'transition-all');
+    }
 
-        // Initialize Quill editor
-        const quill = new Quill('#editor', {
-          theme: 'snow',
-          placeholder: 'Digite o conteúdo do trecho aqui...',
-          modules: {
-            toolbar: [
-              ['bold', 'italic', 'underline', 'strike'],
-              [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-              [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-              ['link', 'blockquote'],
-              ['clean']
-            ]
-          }
-        });
-
-        // Load existing content if editing
-        const initialContentScript = document.getElementById('excerpt-initial-content');
-        if (initialContentScript) {
-          const initialContent = JSON.parse(initialContentScript.textContent);
-          quill.root.innerHTML = initialContent;
-        }
-
-        // Copy content to hidden field on submit
-        document.getElementById('excerpt-form').onsubmit = function () {
-          document.querySelector('#quill-content').value = quill.root.innerHTML;
-        };
-      }
-    }));
+    // Initialize TinyMCE
+    tinymce.init({
+      selector: '#excerpt_editor',
+      language: 'pt-BR',
+      height: 500,
+      width: '100%',
+      resize: true,
+      menubar: false,
+      toolbar: 'undo redo | bold italic underline | forecolor backcolor | ' +
+                'alignleft aligncenter alignright alignjustify | ' +
+                'bullist numlist outdent indent | ' +
+                'link unlink | blockquote removeformat | fullscreen',
+      plugins: 'lists link fullscreen',
+      content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 14px; padding: 10px; }',
+      toolbar_mode: 'sliding',
+      branding: false,
+      promotion: false,
+      license_key: 'gpl',
+      base_url: 'https://cdn.tiny.cloud/1/{{ TINYMCE_API_KEY }}/tinymce/8/'
+    });
   });
 </script>
 

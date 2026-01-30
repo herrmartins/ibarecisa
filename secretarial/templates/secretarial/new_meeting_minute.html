@@ -1,14 +1,22 @@
 {% extends 'core/base.html' %}
 {% load static %}
 {% block content %}
-
-<link href="{% static 'css/quill.css' %}" rel="stylesheet">
-<script src="{% static 'js/quill.js' %}"></script>
+<script src="https://cdn.tiny.cloud/1/{{ TINYMCE_API_KEY }}/tinymce/8/tinymce.min.js" referrerpolicy="origin"></script>
 
 <div class="min-h-screen bg-gradient-to-b from-slate-50 to-white">
   <!-- Header Section -->
-  <div class="minute-create-header relative">
+  <div class="minutes-list-header relative">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
+      <!-- Back Button -->
+      <div class="mb-6">
+        <a href="{% url 'secretarial:minute-home' %}" class="inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+          Voltar para Registro de Reuniões
+        </a>
+      </div>
+
       <div class="text-center mb-4">
         <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">
           Nova Ata
@@ -21,28 +29,17 @@
   </div>
 
   <!-- Main Content -->
-  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <!-- Back Button -->
-    <div class="mb-6">
-      <a href="{% url 'secretarial:minute-home' %}" class="inline-flex items-center gap-2 text-slate-600 hover:text-primary-600 transition-colors">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-        </svg>
-        Voltar para Registro de Reuniões
-      </a>
-    </div>
-
+  <div class="editor-page-container py-8">
     <!-- Editor Card -->
     <div class="minute-create-editor-card">
       <div class="p-6">
-        <!-- Quill Editor -->
-        <div id="editor"></div>
+        <!-- TinyMCE Editor -->
+        <textarea id="editor" name="content"></textarea>
       </div>
 
       <!-- Form Actions -->
       <form action="{% url 'secretarial:new-minute-view' %}" method="POST">
         {% csrf_token %}
-        <input type="hidden" name="content" id="quill-content">
 
         <div class="minute-create-actions">
           <a href="{% url 'secretarial:minute-home' %}" class="minute-create-btn minute-create-btn-secondary">
@@ -64,14 +61,31 @@
 </div>
 
 <script>
-  const quill = new Quill('#editor', {
-    theme: 'snow',
-    placeholder: 'Comece a digitar o conteúdo da ata aqui...'
+  document.addEventListener('DOMContentLoaded', function() {
+    // Initialize TinyMCE
+    tinymce.init({
+      selector: '#editor',
+      language: 'pt-BR',
+      height: 500,
+      width: '100%',
+      resize: true,
+      menubar: false,
+      placeholder: 'Comece a digitar o conteúdo da ata aqui...',
+      toolbar: 'undo redo | bold italic underline | forecolor backcolor | ' +
+                'alignleft aligncenter alignright alignjustify | ' +
+                'bullist numlist outdent indent | ' +
+                'table | link unlink | blockquote removeformat | fullscreen',
+      plugins: 'table lists link fullscreen',
+      table_default_attributes: { 'border': '1' },
+      table_default_styles: { 'border-collapse': 'collapse', 'width': '100%' },
+      content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 14px; padding: 10px; }',
+      toolbar_mode: 'sliding',
+      branding: false,
+      promotion: false,
+      license_key: 'gpl',
+      base_url: 'https://cdn.tiny.cloud/1/{{ TINYMCE_API_KEY }}/tinymce/8/'
+    });
   });
-
-  document.querySelector('form').onsubmit = function () {
-    document.querySelector('#quill-content').value = quill.root.innerHTML;
-  };
 </script>
 
 {% endblock %}

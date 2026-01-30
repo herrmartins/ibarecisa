@@ -31,31 +31,53 @@ document.addEventListener('alpine:init', () => {
       metrics: '',
       message: '',
       success: false,
-  
+
       songId: null,
       files: [],
       selectedFile: null,
       fileType: '',
       file_title: '',
       description: '',
-  
+
       artists: [],
       themes: [],
       hymnals: [],
-  
+
       initAddSongForm() {
         this.fetchArtists();
         this.fetchThemes();
         this.fetchHymnals();
+        this.initTinyMCE();
       },
-  
+
+      initTinyMCE() {
+        tinymce.init({
+          selector: '#editor',
+          language: 'pt-BR',
+          height: 300,
+          width: '100%',
+          resize: true,
+          menubar: false,
+          toolbar: 'undo redo | bold italic underline | forecolor backcolor | ' +
+                    'alignleft aligncenter alignright alignjustify | ' +
+                    'bullist numlist outdent indent | ' +
+                    'link unlink | blockquote removeformat',
+          plugins: 'lists link',
+          content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 14px; padding: 10px; }',
+          toolbar_mode: 'sliding',
+          branding: false,
+          promotion: false,
+          license_key: 'gpl',
+          base_url: 'https://cdn.tiny.cloud/1/' + (typeof TINYMCE_API_KEY !== 'undefined' ? TINYMCE_API_KEY : '') + '/tinymce/8/',
+          setup: (editor) => {
+            editor.on('input', () => {
+              this.lyrics = editor.getContent();
+            });
+          }
+        });
+      },
+
       init() {
-        const quill = new Quill('#editor', {
-          theme: 'snow'
-        });
-        quill.on('text-change', () => {
-          this.lyrics = quill.root.innerHTML;
-        });
         this.$watch('key', (value) => {
           console.log('key:', this.key);
         });
@@ -99,8 +121,9 @@ document.addEventListener('alpine:init', () => {
         this.lyrics = '';
         this.metrics = '';
         this.key = null;
-        if (this.quill) {
-            this.quill.root.innerHTML = '';  
+        const editor = tinymce.get('editor');
+        if (editor) {
+            editor.setContent('');
         }
     },
   

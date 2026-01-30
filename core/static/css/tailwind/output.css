@@ -685,6 +685,9 @@
   .h-3 {
     height: calc(var(--spacing) * 3);
   }
+  .h-3\.5 {
+    height: calc(var(--spacing) * 3.5);
+  }
   .h-4 {
     height: calc(var(--spacing) * 4);
   }
@@ -735,6 +738,9 @@
   }
   .w-3 {
     width: calc(var(--spacing) * 3);
+  }
+  .w-3\.5 {
+    width: calc(var(--spacing) * 3.5);
   }
   .w-4 {
     width: calc(var(--spacing) * 4);
@@ -1574,6 +1580,9 @@
   .text-black {
     color: var(--color-black);
   }
+  .text-current {
+    color: currentcolor;
+  }
   .text-current\/70 {
     color: currentcolor;
     @supports (color: color-mix(in lab, red, red)) {
@@ -1657,6 +1666,12 @@
   }
   .text-white {
     color: var(--color-white);
+  }
+  .text-white\/60 {
+    color: color-mix(in srgb, #fff 60%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      color: color-mix(in oklab, var(--color-white) 60%, transparent);
+    }
   }
   .text-white\/70 {
     color: color-mix(in srgb, #fff 70%, transparent);
@@ -3965,6 +3980,25 @@
   overflow: hidden;
   padding: 2rem;
 }
+.editor-page-container {
+  max-width: 72rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+@media (min-width: 640px) {
+  .editor-page-container {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+@media (min-width: 1024px) {
+  .editor-page-container {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
 .minute-create-editor-card #editor-container {
   border-radius: 0.75rem;
   overflow: hidden;
@@ -4235,6 +4269,46 @@
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
   background: linear-gradient(135deg, #5a67d8 0%, #6b46a1 100%);
+}
+.template-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background: #f59e0b;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2);
+}
+.template-edit-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+  background: #d97706;
+}
+.template-delete-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+}
+.template-delete-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+  background: #dc2626;
 }
 .excerpt-edit-btn {
   display: inline-flex;

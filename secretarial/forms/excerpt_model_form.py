@@ -17,14 +17,14 @@ class MinuteExcerptsModelForm(forms.ModelForm):
         widgets = {
             "title": forms.TextInput(
                 attrs={
-                    "class": "form-input",
+                    "class": "w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all",
                 }
             ),
         }
 
     def clean_excerpt(self):
         excerpt = self.cleaned_data.get('excerpt', '')
-        # Quill returns <p><br></p> for empty content
-        if excerpt in ['', '<p><br></p>', '<p></p>', '<br>', '<p>​</p>', '<p> </p>']:
+        # TinyMCE returns <p>&nbsp;</p> for empty content
+        if excerpt in ['', '<p>&nbsp;</p>', '<p></p>', '<br>', '<p>​</p>', '<p> </p>', '<p><br></p>']:
             return ''
         return excerpt
