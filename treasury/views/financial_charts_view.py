@@ -23,9 +23,15 @@ class FinancialChartsView(PermissionRequiredMixin, TemplateView):
             # Padrão: início do ano até hoje
             end_date = timezone.now().date()
             start_date = timezone.now().replace(month=1, day=1).date()
+        else:
+            # Converter strings para objetos date
+            from datetime import datetime
+            start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+            end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
 
-        context['start_date'] = start_date
-        context['end_date'] = end_date
+        # Passar datas formatadas em ISO para o template
+        context['start_date'] = start_date.isoformat()
+        context['end_date'] = end_date.isoformat()
 
         # Categorias selecionadas
         selected_categories = self.request.GET.getlist('categories')

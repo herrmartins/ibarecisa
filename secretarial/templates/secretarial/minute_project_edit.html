@@ -1,54 +1,126 @@
 {% extends 'core/base.html' %}
 {% load static %}
-{% block content %}
 
-<div class="container">
-  <div class="container text-center mb-4">
-    <p class="fs-3 fw-light">Editar Projeto de Ata</p>
+{% block content %}
+<script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/8/tinymce.min.js" referrerpolicy="origin"></script>
+
+<div class="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+  <!-- Header Section -->
+  <div class="minutes-list-header relative">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
+      <!-- Back Button -->
+      <div class="mb-6">
+        <a href="{% url 'secretarial:list-minutes-projects' %}" class="inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+          Voltar para Projetos de Atas
+        </a>
+      </div>
+
+      <div class="text-center mb-4">
+        <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">
+          Editar Projeto de Ata
+        </h1>
+        <p class="text-white/90 text-lg">
+          Atualize as informações do projeto de ata
+        </p>
+      </div>
+    </div>
   </div>
 
-  <div class="row justify-content-center">
-    <div class="col-10">
-      <form method="POST">
-        {% csrf_token %}
-        {{ form.media }}
+  <!-- Main Content -->
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Form Card -->
+    <div class="minute-create-editor-card">
+      <div class="p-6">
+        <form id="project-form" method="POST">
+          {% csrf_token %}
 
-        <!-- Campos principais -->
-        <div class="row mb-4">
-          <div class="col-md-3">
-            <label for="{{ form.meeting_date.id_for_label }}" class="form-label">{{ form.meeting_date.label }}</label>
-            {{ form.meeting_date }}
-          </div>
-          <div class="col-md-3">
-            <label for="{{ form.number_of_attendees.id_for_label }}" class="form-label">{{ form.number_of_attendees.label }}</label>
-            {{ form.number_of_attendees }}
-          </div>
-          <div class="col-md-3">
-            <label for="{{ form.president.id_for_label }}" class="form-label">{{ form.president.label }}</label>
-            {{ form.president }}
-          </div>
-          <div class="col-md-3">
-            <label for="{{ form.secretary.id_for_label }}" class="form-label">{{ form.secretary.label }}</label>
-            {{ form.secretary }}
-          </div>
-        </div>
+          <!-- Fields Row -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <!-- Meeting Date -->
+            <div>
+              <label for="{{ form.meeting_date.id_for_label }}" class="block text-sm font-semibold text-slate-700 mb-2">Data da Assembleia</label>
+              {{ form.meeting_date }}
+            </div>
 
-        <!-- Campo de texto da ata -->
-        <div class="mb-4">
-          <label for="{{ form.body.id_for_label }}" class="form-label fw-bold">{{ form.body.label }}</label>
-          {{ form.body }}
-          <div class="form-text">
-            Edite o texto da ata conforme necessário. O conteúdo será salvo exatamente como digitado.
-          </div>
-        </div>
+            <!-- Number of Attendees -->
+            <div>
+              <label for="{{ form.number_of_attendees.id_for_label }}" class="block text-sm font-semibold text-slate-700 mb-2">Número de Presentes</label>
+              {{ form.number_of_attendees }}
+            </div>
 
-        <div class="text-center">
-          <button type="submit" class="btn btn-primary btn-lg">Salvar Alterações</button>
-          <a href="{% url 'secretarial:list-minutes-projects' %}" class="btn btn-secondary btn-lg ms-3">Cancelar</a>
-        </div>
-      </form>
+            <!-- President -->
+            <div>
+              <label for="{{ form.president.id_for_label }}" class="block text-sm font-semibold text-slate-700 mb-2">Presidente</label>
+              {{ form.president }}
+            </div>
+
+            <!-- Secretary -->
+            <div>
+              <label for="{{ form.secretary.id_for_label }}" class="block text-sm font-semibold text-slate-700 mb-2">Secretário</label>
+              {{ form.secretary }}
+            </div>
+          </div>
+
+          <!-- Body Field -->
+          <div class="mb-6">
+            <label for="{{ form.body.id_for_label }}" class="block text-sm font-semibold text-slate-700 mb-2">Texto da Ata</label>
+            {{ form.body }}
+            <p class="text-sm text-slate-500 mt-1">Edite o texto da ata conforme necessário.</p>
+          </div>
+
+          <!-- Submit Buttons -->
+          <div class="flex justify-center gap-3 pt-6 border-t border-slate-200">
+            <a href="{% url 'secretarial:list-minutes-projects' %}" class="minute-create-btn minute-create-btn-secondary">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+              Cancelar
+            </a>
+            <button type="submit" class="minute-create-btn">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+              </svg>
+              Salvar Alterações
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 </div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Update form field classes
+    const formInputs = document.querySelectorAll('#project-form input[type="text"], #project-form select');
+    formInputs.forEach(input => {
+      input.classList.add('w-full', 'px-4', 'py-2', 'border', 'border-slate-300', 'rounded-lg', 'focus:ring-2', 'focus:ring-primary-500', 'focus:border-primary-500', 'transition-all');
+    });
+
+    // Initialize TinyMCE
+    tinymce.init({
+      selector: '#id_body',
+      language: 'pt_BR',
+      height: 500,
+      menubar: false,
+      toolbar: 'undo redo | bold italic underline | forecolor backcolor | ' +
+                'alignleft aligncenter alignright alignjustify | ' +
+                'bullist numlist outdent indent | ' +
+                'table | link unlink | blockquote removeformat | fullscreen',
+      plugins: 'table lists link fullscreen',
+      table_default_attributes: { 'border': '1' },
+      table_default_styles: { 'border-collapse': 'collapse', 'width': '100%' },
+      content_style: 'body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 14px; padding: 10px; }',
+      toolbar_mode: 'sliding',
+      branding: false,
+      promotion: false,
+      license_key: 'gpl',
+      base_url: 'https://cdn.tiny.cloud/1/no-api-key/tinymce/8/'
+    });
+  });
+</script>
 
 {% endblock %}

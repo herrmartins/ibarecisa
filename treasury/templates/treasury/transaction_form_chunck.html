@@ -8,21 +8,21 @@
       enctype="multipart/form-data"
     >
       {% csrf_token %}
-      <div class="mb-3">
+      <div class="mb-4">
         {{ form_transaction }}
       </div>
-      <div class="d-grid gap-2">
+      <div class="d-grid gap-2 mb-4">
         <input type="submit" class="btn btn-primary" value="Salvar" />
         <input type="reset" class="btn btn-warning" value="Limpar" />
       </div>
-      <div class="mt-3 d-flex justify-content-center">
-        <a href="{% url 'treasury:category-form' %}" class="btn btn-secondary btn-sm me-2">Adicionar Categoria</a>
+      <div class="mt-3 d-flex justify-content-center gap-2">
+        <a href="{% url 'treasury:category-form' %}" class="btn btn-secondary btn-sm">Adicionar Categoria</a>
         <a href="{% url 'treasury:list-categories' %}" class="btn btn-secondary btn-sm">Listar Categorias</a>
       </div>
     </form>
   {% else %}
     <p class="text-center mb-3">Você deve adicionar a primeira transação...</p>
-    <p class="text-justify small">
+    <p class="text-justify small mb-4">
       Antes de registrar sua primeira transação no sistema de gerenciamento
       financeiro da igreja, é fundamental definir um 'saldo inicial'. Esse saldo
       representa o ponto de partida para as finanças da organização e deve
@@ -33,11 +33,10 @@
     <form action="{% url 'treasury:create-initial-balance' %}" method="POST">
       {% csrf_token %}
       {{ form_balance }}
-      <div class="d-grid gap-2">
+      <div class="d-grid gap-2 mt-4">
         <button type="submit" class="btn btn-primary">Salvar</button>
         <button type="reset" class="btn btn-warning">Limpar</button>
       </div>
     </form>
   {% endif %}
 {% endif %}
-

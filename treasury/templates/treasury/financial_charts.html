@@ -2,132 +2,168 @@
 {% load static %}
 
 {% block content %}
-<link rel="stylesheet" href="{% static 'css/treasury.css' %}">
 <link rel="stylesheet" href="{% static 'css/financial_charts.css' %}">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js@10.2.0/public/assets/styles/choices.min.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/choices.js@10.2.0/public/assets/scripts/choices.min.js"></script>
 
-<div class="welcome-section py-5">
-  <div class="container">
-    <div class="text-center mb-5">
-      <h1 class="display-4 fw-bold text-primary mb-4">Gráficos Financeiros</h1>
-      <p class="lead text-muted mb-4">Visualização gráfica dos dados financeiros</p>
-    </div>
-
-  <!-- Filtros -->
-  <div class="card mb-4">
-    <div class="card-header">
-      <h5 class="card-title mb-0">Filtros</h5>
-    </div>
-    <div class="card-body">
-      <form method="get" class="row g-3 align-items-end">
-        <!-- Botões de período pré-definidos -->
-        <div class="col-12 mb-3">
-          <div class="btn-group" role="group" aria-label="Botões de período">
-            <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-this-year">Este Ano</button>
-            <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-last-year">Ano Passado</button>
-            <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-last-6-months">Últimos 6 Meses</button>
-            <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-last-3-months">Últimos 3 Meses</button>
-            <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-last-month">Último Mês</button>
-          </div>
-        </div>
-
-        <div class="col-md-3">
-          <label for="start_date" class="form-label">Data Inicial</label>
-          <input type="date" class="form-control" id="start_date" name="start_date"
-                 value="{{ start_date }}" required>
-        </div>
-        <div class="col-md-3">
-          <label for="end_date" class="form-label">Data Final</label>
-          <input type="date" class="form-control" id="end_date" name="end_date"
-                 value="{{ end_date }}" required>
-        </div>
-        <div class="col-md-4">
-          <label for="categories" class="form-label">Linhas de Categoria</label>
-          <select multiple class="form-select" id="categories" name="categories" style="min-height: 120px;">
-            {% for category in available_categories %}
-            <option value="{{ category }}" {% if category in selected_categories %}selected{% endif %}>
-              {{ category }}
-            </option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="col-md-2">
-          <label class="form-label">&nbsp;</label>
-          <button type="submit" class="btn btn-primary w-100">Aplicar Filtros</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- Estatísticas Resumo -->
-  <div class="row g-3 mb-4">
-    <div class="col-12">
-      <div class="card">
-        <div class="card-header">
-          <h5 class="card-title mb-0">Resumo do Período</h5>
-        </div>
-        <div class="card-body">
-          <div class="row g-3 justify-content-center">
-            <div class="col-12 col-sm-6 col-md-4">
-              <div class="p-3 bg-success text-white rounded text-center stat-card">
-                <div class="mb-2">Total Receitas</div>
-                <div class="h5 fw-light" id="totalRevenue">R$ 0,00</div>
-              </div>
-            </div>
-            <div class="col-12 col-sm-6 col-md-4">
-              <div class="p-3 bg-danger text-white rounded text-center stat-card">
-                <div class="mb-2">Total Despesas</div>
-                <div class="h5 fw-light" id="totalExpense">R$ 0,00</div>
-              </div>
-            </div>
-            <div class="col-12 col-sm-6 col-md-4">
-              <div class="p-3 bg-primary text-white rounded text-center stat-card">
-                <div class="mb-2">Saldo Final</div>
-                <div class="h5 fw-light" id="finalBalance">R$ 0,00</div>
-              </div>
-            </div>
-          </div>
-        </div>
+<div class="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+  <div class="treasury-home-header">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div class="text-center mb-8">
+        <h1 class="treasury-home-title">Gráficos Financeiros</h1>
+        <p class="treasury-home-subtitle">Visualização gráfica dos dados financeiros da igreja</p>
       </div>
     </div>
   </div>
 
-  <!-- Gráficos -->
-  <div class="row g-4">
-    <!-- Gráfico de Linhas: Receitas vs Despesas vs Saldo -->
-    <div class="col-12">
-      <div class="card chart-container">
-        <div class="card-header">
-          <h5 class="card-title mb-0">Evolução Financeira Mensal</h5>
-          <small class="text-muted">Receitas, Despesas, Saldo e Categorias Selecionadas</small>
-        </div>
-        <div class="card-body">
-          <canvas id="monthlyChart" width="400" height="300"></canvas>
+  <div class="max-w-7xl mx-auto px-4 py-8">
+
+    <!-- Filtros -->
+    <div class="treasury-table-card mb-6">
+      <div class="px-6 py-4 border-b border-slate-100">
+        <h5 class="text-lg font-semibold text-slate-800 flex items-center gap-2">
+          <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+          </svg>
+          Filtros
+        </h5>
+      </div>
+      <div class="p-6">
+        <form method="get" class="space-y-4">
+          <!-- Botões de período pré-definidos -->
+          <div class="flex flex-wrap gap-2">
+            <button type="button" class="treasury-btn treasury-btn-secondary text-sm" id="btn-this-year">Este Ano</button>
+            <button type="button" class="treasury-btn treasury-btn-secondary text-sm" id="btn-last-year">Ano Passado</button>
+            <button type="button" class="treasury-btn treasury-btn-secondary text-sm" id="btn-last-6-months">Últimos 6 Meses</button>
+            <button type="button" class="treasury-btn treasury-btn-secondary text-sm" id="btn-last-3-months">Últimos 3 Meses</button>
+            <button type="button" class="treasury-btn treasury-btn-secondary text-sm" id="btn-last-month">Último Mês</button>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+              <label for="start_date" class="block text-sm font-medium text-slate-700 mb-1">Data Inicial</label>
+              <input type="date" class="form-input" id="start_date" name="start_date" value="{{ start_date }}" required>
+            </div>
+            <div>
+              <label for="end_date" class="block text-sm font-medium text-slate-700 mb-1">Data Final</label>
+              <input type="date" class="form-input" id="end_date" name="end_date" value="{{ end_date }}" required>
+            </div>
+            <div class="lg:col-span-1">
+              <label for="categories" class="block text-sm font-medium text-slate-700 mb-1">Linhas de Categoria</label>
+              <select multiple class="form-input" id="categories" name="categories" style="min-height: 120px;">
+                {% for category in available_categories %}
+                <option value="{{ category }}" {% if category in selected_categories %}selected{% endif %}>
+                  {{ category }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="flex items-end">
+              <button type="submit" class="treasury-btn w-full">Aplicar Filtros</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Estatísticas Resumo -->
+    <div class="treasury-table-card mb-6">
+      <div class="px-6 py-4 border-b border-slate-100">
+        <h5 class="text-lg font-semibold text-slate-800 flex items-center gap-2">
+          <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+          </svg>
+          Resumo do Período
+        </h5>
+      </div>
+      <div class="p-6">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 justify-items-center">
+          <div class="treasury-stat-card-dark treasury-stat-income-dark">
+            <div class="flex items-center justify-center gap-3 mb-2">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span class="text-sm font-medium text-white/90">Total Receitas</span>
+            </div>
+            <div class="text-3xl font-bold text-white" id="totalRevenue">R$ 0,00</div>
+          </div>
+          
+          <div class="treasury-stat-card-dark treasury-stat-expense-dark">
+            <div class="flex items-center justify-center gap-3 mb-2">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 13l-5 5m0 0l-5-5m5 5V6"/>
+              </svg>
+              <span class="text-sm font-medium text-white/90">Total Despesas</span>
+            </div>
+            <div class="text-3xl font-bold text-white" id="totalExpense">R$ 0,00</div>
+          </div>
+          
+          <div class="treasury-stat-card-dark treasury-stat-current-dark">
+            <div class="flex items-center justify-center gap-3 mb-2">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+              </svg>
+              <span class="text-sm font-medium text-white/90">Saldo Final</span>
+            </div>
+            <div class="text-3xl font-bold text-white" id="finalBalance">R$ 0,00</div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Gráficos de Distribuição por Categoria -->
-    <div class="col-md-6">
-      <div class="card chart-container">
-        <div class="card-header">
-          <h5 class="card-title mb-0">Distribuição de Receitas por Categoria</h5>
+    <!-- Gráficos -->
+    <div class="grid grid-cols-1 gap-6">
+      <!-- Gráfico de Linhas: Receitas vs Despesas vs Saldo -->
+      <div class="treasury-table-card">
+        <div class="px-6 py-4 border-b border-slate-100">
+          <h5 class="text-lg font-semibold text-slate-800 flex items-center gap-2">
+            <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
+            </svg>
+            Evolução Financeira Mensal
+          </h5>
+          <p class="text-sm text-slate-500 mt-1 ml-7">Receitas, Despesas, Saldo e Categorias Selecionadas</p>
         </div>
-        <div class="card-body">
-          <canvas id="revenueCategoryChart" width="400" height="300"></canvas>
+        <div class="p-6">
+          <div style="height: 400px;">
+            <canvas id="monthlyChart" width="400" height="300"></canvas>
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="col-md-6">
-      <div class="card chart-container">
-        <div class="card-header">
-          <h5 class="card-title mb-0">Distribuição de Despesas por Categoria</h5>
+      <!-- Gráficos de Distribuição por Categoria -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="treasury-table-card">
+          <div class="px-6 py-4 border-b border-slate-100">
+            <h5 class="text-lg font-semibold text-slate-800 flex items-center gap-2">
+              <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              Distribuição de Receitas por Categoria
+            </h5>
+          </div>
+          <div class="p-6">
+            <div style="height: 350px;">
+              <canvas id="revenueCategoryChart" width="400" height="300"></canvas>
+            </div>
+          </div>
         </div>
-        <div class="card-body">
-          <canvas id="expenseCategoryChart" width="400" height="300"></canvas>
+
+        <div class="treasury-table-card">
+          <div class="px-6 py-4 border-b border-slate-100">
+            <h5 class="text-lg font-semibold text-slate-800 flex items-center gap-2">
+              <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 13l-5 5m0 0l-5-5m5 5V6"/>
+              </svg>
+              Distribuição de Despesas por Categoria
+            </h5>
+          </div>
+          <div class="p-6">
+            <div style="height: 350px;">
+              <canvas id="expenseCategoryChart" width="400" height="300"></canvas>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -197,30 +233,33 @@
       datasets: [{
         label: 'Receitas',
         data: monthlyData.map(item => item.revenue),
-        borderColor: 'rgb(40, 167, 69)',
-        backgroundColor: 'rgba(40, 167, 69, 0.1)',
-        tension: 0.1,
+        borderColor: 'rgb(16, 185, 129)',
+        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+        tension: 0.4,
         borderWidth: 3,
         pointRadius: 5,
-        pointHoverRadius: 7
+        pointHoverRadius: 7,
+        fill: true
       }, {
         label: 'Despesas',
         data: monthlyData.map(item => item.expense),
-        borderColor: 'rgb(220, 53, 69)',
-        backgroundColor: 'rgba(220, 53, 69, 0.1)',
-        tension: 0.1,
+        borderColor: 'rgb(239, 68, 68)',
+        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+        tension: 0.4,
         borderWidth: 3,
         pointRadius: 5,
-        pointHoverRadius: 7
+        pointHoverRadius: 7,
+        fill: true
       }, {
         label: 'Saldo',
         data: monthlyData.map(item => item.balance),
-        borderColor: 'rgb(0, 123, 255)',
-        backgroundColor: 'rgba(0, 123, 255, 0.1)',
-        tension: 0.1,
+        borderColor: 'rgb(59, 130, 246)',
+        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+        tension: 0.4,
         borderWidth: 3,
         pointRadius: 5,
-        pointHoverRadius: 7
+        pointHoverRadius: 7,
+        fill: true
       }, ...createCategoryDatasets()]
     },
     options: {
@@ -228,23 +267,28 @@
       maintainAspectRatio: false,
       plugins: {
         title: {
-          display: true,
-          text: 'Evolução Financeira Mensal',
-          font: {
-            size: 16,
-            weight: 'bold'
-          }
+          display: false
         },
         legend: {
           position: 'bottom',
           labels: {
             usePointStyle: true,
-            padding: 20
+            padding: 20,
+            font: {
+              size: 12
+            }
           }
         },
         tooltip: {
           mode: 'index',
           intersect: false,
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          titleColor: '#1e293b',
+          bodyColor: '#475569',
+          borderColor: '#e2e8f0',
+          borderWidth: 1,
+          padding: 12,
+          cornerRadius: 8,
           callbacks: {
             label: function(context) {
               let label = context.dataset.label || '';
@@ -260,16 +304,28 @@
       scales: {
         x: {
           display: true,
+          grid: {
+            display: false
+          },
           title: {
             display: true,
-            text: 'Mês/Ano'
+            text: 'Mês/Ano',
+            font: {
+              weight: 'bold'
+            }
           }
         },
         y: {
           beginAtZero: true,
+          grid: {
+            color: 'rgba(0, 0, 0, 0.05)'
+          },
           title: {
             display: true,
-            text: 'Valor (R$)'
+            text: 'Valor (R$)',
+            font: {
+              weight: 'bold'
+            }
           },
           ticks: {
             callback: function(value) {
@@ -393,37 +449,46 @@
       datasets: [{
         data: revenueCategoryData.map(item => item.total),
         backgroundColor: [
-          'rgb(40, 167, 69)',
-          'rgb(23, 162, 184)',
-          'rgb(255, 193, 7)',
-          'rgb(108, 117, 125)',
-          'rgb(52, 58, 64)',
-          'rgb(220, 53, 69)',
-          'rgb(0, 123, 255)',
-          'rgb(255, 99, 132)',
-          'rgb(54, 162, 235)',
-          'rgb(255, 205, 86)'
-        ]
+          '#10b981', '#059669', '#047857', '#34d399', '#6ee7b7',
+          '#3b82f6', '#2563eb', '#1d4ed8', '#60a5fa', '#93c5fd'
+        ],
+        borderWidth: 2,
+        borderColor: '#fff'
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      cutout: '60%',
       plugins: {
         legend: {
           position: 'bottom',
           labels: {
-            padding: 15
+            padding: 15,
+            usePointStyle: true,
+            font: {
+              size: 11
+            }
           }
         },
         tooltip: {
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          titleColor: '#1e293b',
+          bodyColor: '#475569',
+          borderColor: '#e2e8f0',
+          borderWidth: 1,
+          padding: 12,
+          cornerRadius: 8,
           callbacks: {
             label: function(context) {
               let label = context.label || '';
               if (label) {
                 label += ': ';
               }
+              const total = context.dataset.data.reduce((a, b) => a + b, 0);
+              const percentage = ((context.parsed / total) * 100).toFixed(1);
               label += 'R$ ' + context.parsed.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+              label += ' (' + percentage + '%)';
               return label;
             }
           }
@@ -441,37 +506,46 @@
       datasets: [{
         data: expenseCategoryData.map(item => item.total),
         backgroundColor: [
-          'rgb(220, 53, 69)',
-          'rgb(255, 99, 132)',
-          'rgb(255, 159, 64)',
-          'rgb(255, 193, 7)',
-          'rgb(23, 162, 184)',
-          'rgb(40, 167, 69)',
-          'rgb(0, 123, 255)',
-          'rgb(54, 162, 235)',
-          'rgb(255, 205, 86)',
-          'rgb(108, 117, 125)'
-        ]
+          '#ef4444', '#dc2626', '#b91c1c', '#f87171', '#fca5a5',
+          '#f59e0b', '#d97706', '#fbbf24', '#fb923c', '#fcd34d'
+        ],
+        borderWidth: 2,
+        borderColor: '#fff'
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      cutout: '60%',
       plugins: {
         legend: {
           position: 'bottom',
           labels: {
-            padding: 15
+            padding: 15,
+            usePointStyle: true,
+            font: {
+              size: 11
+            }
           }
         },
         tooltip: {
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          titleColor: '#1e293b',
+          bodyColor: '#475569',
+          borderColor: '#e2e8f0',
+          borderWidth: 1,
+          padding: 12,
+          cornerRadius: 8,
           callbacks: {
             label: function(context) {
               let label = context.label || '';
               if (label) {
                 label += ': ';
               }
+              const total = context.dataset.data.reduce((a, b) => a + b, 0);
+              const percentage = ((context.parsed / total) * 100).toFixed(1);
               label += 'R$ ' + context.parsed.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+              label += ' (' + percentage + '%)';
               return label;
             }
           }
@@ -480,8 +554,4 @@
     }
   });
 </script>
-
-  </div>
-</div>
-
 {% endblock %}

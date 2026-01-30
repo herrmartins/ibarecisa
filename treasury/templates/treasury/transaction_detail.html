@@ -2,44 +2,112 @@
 {% load static%}
 
 {% block content %}
-
-<div class="container text-center">
-    <p class="fs-3 fw-light">Detalhes da transação</p>
-</div>
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">{{ transaction.description }} - {{ transaction.category }}</h5>
-                    <p class="card-text">
-                    <p>Date: {{ transaction.date }}</p>
-                    <p>Amount: R$ {{ transaction.amount }}</p>
-                    {% if transaction.acquittance_doc %}
-                        <img src="{{ transaction.acquittance_doc.url }}" alt="Receipt for {{ transaction.description }}" width="400" height="400">
-                    {% else %}
-                        <p>Não há recibo disponível.</p>
-                    {% endif %}
-                    </p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card py-3 px-5">
-                <form action="{% url 'treasury:transaction-update' transaction.id %}" method="POST" enctype="multipart/form-data">
-                    {% csrf_token %}
-                    {{form}}
-                    <input type="submit" class="btn btn-primary my-3" value="Salvar"></a>
-                </form>
-                <form id="deleteForm" action="{% url 'treasury:transaction-delete' transaction.id %}" method="POST">
-                    {% csrf_token %}
-                    <input type="hidden" name="_method" value="DELETE">
-                    <button type="button" class="btn btn-danger" onclick="deleteTransaction()">Deletar</button>
-                </form>
-
-            </div>
-        </div>
+<div class="min-h-screen bg-gradient-to-b from-slate-50 to-white py-8">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-bold text-slate-800">Detalhes da transação</h1>
     </div>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Transaction Info -->
+      <div class="treasury-table-card">
+        <div class="treasury-form-header">
+          <h5 class="treasury-form-title">{{ transaction.description }} - {{ transaction.category }}</h5>
+        </div>
+        <div class="treasury-form-body">
+          <div class="space-y-4">
+            <div>
+              <span class="block text-sm font-medium text-slate-500">Data</span>
+              <span class="text-slate-700">{{ transaction.date }}</span>
+            </div>
+            <div>
+              <span class="block text-sm font-medium text-slate-500">Valor</span>
+              <span class="text-xl font-bold {% if transaction.amount >= 0 %}text-emerald-600{% else %}text-red-600{% endif %}">
+                R$ {{ transaction.amount }}
+              </span>
+            </div>
+            {% if transaction.acquittance_doc %}
+            <div>
+              <span class="block text-sm font-medium text-slate-500 mb-2">Recibo</span>
+              <img src="{{ transaction.acquittance_doc.url }}" alt="Receipt for {{ transaction.description }}" class="rounded-lg shadow-lg max-w-full">
+            </div>
+            {% else %}
+            <div>
+              <span class="block text-sm font-medium text-slate-500">Recibo</span>
+              <span class="text-slate-500">Não há recibo disponível.</span>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      
+      <!-- Edit Form -->
+      <div class="treasury-table-card">
+        <div class="treasury-form-header">
+          <h5 class="treasury-form-title">Editar Transação</h5>
+        </div>
+        <div class="treasury-form-body">
+          <form action="{% url 'treasury:transaction-update' transaction.id %}" method="POST" enctype="multipart/form-data" class="space-y-4">
+            {% csrf_token %}
+            <div class="space-y-4">
+              {{ form.as_p }}
+            </div>
+            <div class="flex flex-col sm:flex-row gap-3 mt-6">
+              <input type="submit" class="treasury-btn cursor-pointer flex-1" value="Salvar">
+              <button type="button" class="treasury-btn treasury-btn-danger flex-1" onclick="deleteTransaction()">Deletar</button>
+            </div>
+          </form>
+          
+          <form id="deleteForm" action="{% url 'treasury:transaction-delete' transaction.id %}" method="POST" class="hidden">
+            {% csrf_token %}
+            <input type="hidden" name="_method" value="DELETE">
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
+
+<style>
+/* Form styling for Django forms */
+form p {
+  margin-bottom: 1rem;
+}
+
+form label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 0.5rem;
+}
+
+form input[type="text"],
+form input[type="number"],
+form input[type="date"],
+form select,
+form textarea,
+form input[type="file"] {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  color: #334155;
+  transition: all 0.2s ease;
+}
+
+form input[type="text"]:focus,
+form input[type="number"]:focus,
+form input[type="date"]:focus,
+form select:focus,
+form textarea:focus {
+  outline: none;
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+</style>
+
 <script src="{% static 'js/confirm.js' %}"></script>
 {% endblock %}

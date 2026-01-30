@@ -1,10 +1,15 @@
 {% for transaction in transactions %}
 <tr>
-    <td>{{ transaction.date }}</td>
-    <td>{{ transaction.description }}</td>
-    <td class="{% if transaction.amount >= 0 %}text-primary{% else %}text-danger{% endif %}">{{ transaction.amount }}</td>
-    <td>{{ transaction.current_balance }}</td>
-    <td><a href="{% url 'treasury:transaction-detail' transaction.id %}" class="btn btn-light btn-sm">&#x270D;</a></td>
+    <td class="text-slate-600">{{ transaction.date }}</td>
+    <td class="text-slate-700 font-medium">{{ transaction.description }}</td>
+    <td class="{% if transaction.amount >= 0 %}text-emerald-600 font-semibold{% else %}text-red-600 font-semibold{% endif %}">
+        {{ transaction.amount }}
+    </td>
+    <td class="text-slate-600">{{ transaction.current_balance }}</td>
+    <td>
+        <a href="{% url 'treasury:transaction-detail' transaction.id %}" class="treasury-btn treasury-btn-secondary" style="padding: 0.375rem 0.75rem; font-size: 0.75rem;">
+            &#x270D;
+        </a>
+    </td>
 </tr>
 {% endfor %}
-

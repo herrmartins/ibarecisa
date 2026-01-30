@@ -1,51 +1,70 @@
 {% extends 'core/base.html' %}
 {% load static%}
 {% block content %}
-<style>
-  .pill { border-radius: 999px; }
-  .stat-card { transition: transform .2s ease, box-shadow .2s ease; border-radius: 16px; }
-  .stat-card:hover { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(0,0,0,.12); }
-</style>
-<div class="container py-3">
-  <div class="text-center mb-3">
-    <p class="fs-3 fw-light">Relatórios Financeiros</p>
-    <p class="text-muted">Relatórios disponíveis a partir do primeiro mês registrado.</p>
-  </div>
-  <div class="row g-3">
-    <div class="col-12 col-lg-6">
-      <div class="card stat-card h-100">
-        <div class="card-body">
-          <h5 class="card-title fw-light">Relatórios Mensais</h5>
-          <div class="list-group list-group-flush">
-            {% for r in reports %}
-              {% if not r.is_first_month %}
-                <a class="list-group-item list-group-item-action" href="{% url 'treasury:monthly-transactions' r.month.year r.month.month %}">
-                  Relatório de {{r.month.month}}/{{r.month.year}} - {{r.balance}}
-                </a>
-              {% endif %}
-            {% empty %}
-              <div class="text-muted small">Sem relatórios.</div>
-            {% endfor %}
-          </div>
+<div class="min-h-screen bg-gradient-to-b from-slate-50 to-white py-8">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-bold text-slate-800">Relatórios Financeiros</h1>
+      <p class="text-slate-500 mt-2">Relatórios disponíveis a partir do primeiro mês registrado.</p>
+    </div>
+    
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Monthly Reports -->
+      <div class="treasury-table-card">
+        <div class="treasury-form-header">
+          <h5 class="treasury-form-title">Relatórios Mensais</h5>
+        </div>
+        <div class="treasury-form-body p-0">
+          {% for r in reports %}
+            {% if not r.is_first_month %}
+              <a class="treasury-list-item flex justify-between items-center text-decoration-none" href="{% url 'treasury:monthly-transactions' r.month.year r.month.month %}">
+                <span class="text-slate-700">Relatório de {{r.month.month}}/{{r.month.year}}</span>
+                <span class="treasury-badge treasury-badge-income">{{r.balance}}</span>
+              </a>
+            {% endif %}
+          {% empty %}
+            <div class="p-4 text-center text-slate-500">Sem relatórios.</div>
+          {% endfor %}
         </div>
       </div>
-    </div>
-    <div class="col-12 col-lg-6">
-      <div class="card stat-card h-100">
-        <div class="card-body">
-          <h5 class="card-title fw-light">Relatórios Analíticos</h5>
-          <div class="list-group list-group-flush">
-            {% for r in analytical_reports %}
-              <a class="list-group-item list-group-item-action" href="{% url 'treasury:analytical-report' r.id %}">
-                Relatório Analítico de {{r.month.month}}/{{r.month.year}} - {{r.balance}}
-              </a>
-            {% empty %}
-              <div class="text-muted small">Sem relatórios analíticos.</div>
-            {% endfor %}
-          </div>
+      
+      <!-- Analytical Reports -->
+      <div class="treasury-table-card">
+        <div class="treasury-form-header">
+          <h5 class="treasury-form-title">Relatórios Analíticos</h5>
+        </div>
+        <div class="treasury-form-body p-0">
+          {% for r in analytical_reports %}
+            <a class="treasury-list-item flex justify-between items-center text-decoration-none" href="{% url 'treasury:analytical-report' r.id %}">
+              <span class="text-slate-700">Relatório Analítico de {{r.month.month}}/{{r.month.year}}</span>
+              <span class="treasury-badge treasury-badge-income">{{r.balance}}</span>
+            </a>
+          {% empty %}
+            <div class="p-4 text-center text-slate-500">Sem relatórios analíticos.</div>
+          {% endfor %}
         </div>
       </div>
     </div>
   </div>
 </div>
+
+<style>
+.treasury-list-item {
+  padding: 0.75rem 1.5rem;
+  border-bottom: 1px solid #f1f5f9;
+  transition: all 0.2s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.treasury-list-item:last-child {
+  border-bottom: none;
+}
+
+.treasury-list-item:hover {
+  background: #f8fafc;
+  padding-left: 1.75rem;
+}
+</style>
 {% endblock %}

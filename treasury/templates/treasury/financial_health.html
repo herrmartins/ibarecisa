@@ -1,39 +1,54 @@
 {% extends 'core/base.html' %}
 
 {% block content %}
-
-    <h1>Financial Data Health</h1>
-    <p>{{ integrity }}</p>
-    <form method="get" action="{% url 'treasury:fix-financial-data' %}">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-warning">Fix Financial Data</button>
-    </form>
-    <table>
-        <thead>
-            <tr>
-                <th>Month</th>
-                <th>Balance</th>
-                <th>Expected Balance</th>
-                <th>Aggregate Transactions</th>
-                <th>Integrity</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for item in monthly_balances %}
+<div class="min-h-screen bg-gradient-to-b from-slate-50 to-white py-8">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-bold text-slate-800">Financial Data Health</h1>
+    </div>
+    
+    <div class="treasury-table-card mb-6">
+      <div class="treasury-form-header flex justify-between items-center">
+        <h5 class="treasury-form-title mb-0">Status de Integridade</h5>
+        <form method="get" action="{% url 'treasury:fix-financial-data' %}" class="inline">
+          {% csrf_token %}
+          <button type="submit" class="treasury-btn treasury-btn-secondary">Fix Financial Data</button>
+        </form>
+      </div>
+      <div class="treasury-form-body">
+        <p class="text-slate-600 mb-4">{{ integrity }}</p>
+        <div class="overflow-x-auto">
+          <table class="treasury-table">
+            <thead>
+              <tr>
+                <th class="text-left">Month</th>
+                <th class="text-left">Balance</th>
+                <th class="text-left">Expected Balance</th>
+                <th class="text-left">Aggregate Transactions</th>
+                <th class="text-left">Integrity</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in monthly_balances %}
                 <tr>
-                    <td>{{ item.month }}</td>
-                    <td>{{ item.balance }}</td>
-                    <td>{{ item.expected_balance }}</td>
-                    <td>{{ item.aggregate_transactions }}</td>
-                    <td>
-                        {% if item.integrity %}
-                            <span style="color: green;">Correct</span>
-                        {% else %}
-                            <span style="color: red;">Incorrect</span>
-                        {% endif %}
-                    </td>
+                  <td class="text-slate-700">{{ item.month }}</td>
+                  <td class="text-slate-700">{{ item.balance }}</td>
+                  <td class="text-slate-700">{{ item.expected_balance }}</td>
+                  <td class="text-slate-700">{{ item.aggregate_transactions }}</td>
+                  <td>
+                    {% if item.integrity %}
+                      <span class="treasury-badge treasury-badge-income">Correct</span>
+                    {% else %}
+                      <span class="treasury-badge treasury-badge-expense">Incorrect</span>
+                    {% endif %}
+                  </td>
                 </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}

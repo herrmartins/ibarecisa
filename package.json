@@ -26,5 +26,9 @@
   "bugs": {
     "url": "https://github.com/herrmartins/ibarecisa/issues"
   },
-  "homepage": "https://github.com/herrmartins/ibarecisa#readme"
+  "homepage": "https://github.com/herrmartins/ibarecisa#readme",
+  "dependencies": {
+    "quill-better-table": "^1.2.10",
+    "tinymce": "^8.3.2"
+  }
 }

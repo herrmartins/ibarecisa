@@ -1,169 +1,132 @@
 {% extends 'core/base.html' %} {% load index %} {% load static%} {% block content %}
-<link rel="stylesheet" href="{% static 'css/treasury.css' %}">
+<div class="min-h-screen bg-gradient-to-b from-slate-50 to-white py-6">
+  <div class="max-w-7xl mx-auto px-4">
+    <div class="text-center mb-6">
+      <h1 class="text-3xl font-bold text-slate-800">{{church_info.name}}</h1>
+      <p class="text-xl text-slate-600 mt-2">Relatório detalhado de {{month}}/{{year}}</p>
+    </div>
 
-<div class="container py-3">
-  <div class="text-center mb-4">
-    <p class="fs-3 fw-light mb-0">{{church_info.name}}</p>
-    <p class="fs-5 fw-light">Relatório detalhado de {{month}}/{{year}}</p>
-  </div>
-
-  <div class="row g-3 mb-4 justify-content-center" style="max-width: 1200px; margin: 0 auto;">
-   <div class="col-12 col-sm-6 col-lg-4 col-xl-2">
-     <div class="p-3 bg-success text-white rounded text-center fw-bold stat-card">
-       <div class="mb-2">Saldo Anterior</div>
-       <img width="28" height="28" src="{% static 'img/book-open.svg' %}" alt="" class="mb-2">
-       <div class="h5 fw-light">{{balance}}</div>
-     </div>
-   </div>
-   <div class="col-12 col-sm-6 col-lg-4 col-xl-2">
-     <div class="p-3 bg-primary text-white rounded text-center fw-bold stat-card">
-       <div class="mb-2">Saldo Final</div>
-       <img width="28" height="28" src="{% static 'img/dollar-sign.svg' %}" alt="" class="mb-2">
-       <div class="h5 fw-light">{{total}}</div>
-     </div>
-   </div>
-   <div class="col-12 col-sm-6 col-lg-4 col-xl-2">
-     <div class="p-3 bg-secondary text-white rounded text-center fw-bold stat-card">
-       <div class="mb-2">Resultado Mensal</div>
-       <img width="28" height="28" src="{% static 'img/calendar.svg' %}" alt="" class="mb-2">
-       <div class="h5 fw-light">{{monthly_result}}</div>
-     </div>
-   </div>
-   <div class="col-12 col-sm-6 col-lg-4 col-xl-2">
-     <div class="p-3 bg-info text-white rounded text-center fw-bold stat-card">
-       <div class="mb-2">Total de Transações</div>
-       <div class="mb-2" style="height: 28px; display: flex; align-items: center; justify-content: center;">
-         <i class="bi bi-receipt" style="font-size: 28px;"></i>
-       </div>
-       <div class="h5 fw-light">{{finance_entries|length}}</div>
-     </div>
-   </div>
- </div>
-
-  <div class="ai-hero p-3 mb-4">
-    <div class="row justify-content-center align-items-center g-2">
-      <div class="col-auto">
-        <a href="{% url 'treasury:home' %}" class="btn btn-outline-light pill">← Voltar</a>
+    <!-- Stats Cards -->
+    <div class="flex justify-center gap-4 flex-wrap mb-6" style="max-width: 1200px; margin: 0 auto;">
+      <div class="treasury-stat-card treasury-stat-balance">
+        <div class="flex items-center justify-center gap-3 mb-2">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+          </svg>
+          <span class="text-sm font-medium text-white/90">Saldo Anterior</span>
+        </div>
+        <div class="text-3xl font-bold text-white">{{balance}}</div>
       </div>
-      <div class="col-auto">
-        <a href="{% url 'treasury:export-pdf-monthly-report' month year %}" class="btn btn-primary pill">Gerar PDF</a>
+      
+      <div class="treasury-stat-card treasury-stat-current">
+        <div class="flex items-center justify-center gap-3 mb-2">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <span class="text-sm font-medium text-white/90">Saldo Final</span>
+        </div>
+        <div class="text-3xl font-bold text-white">{{total}}</div>
       </div>
-      {% if ncd and user.is_treasurer %}
-        {% if not is_report %}
-          <div class="col-auto">
-            <a href="{% url 'treasury:gen-report' month year %}" class="btn btn-success pill">Gerar Relatório Analítico</a>
-          </div>
+      
+      <div class="treasury-stat-card treasury-stat-monthly">
+        <div class="flex items-center justify-center gap-3 mb-2">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+          </svg>
+          <span class="text-sm font-medium text-white/90">Resultado Mensal</span>
+        </div>
+        <div class="text-3xl font-bold text-white">{{monthly_result}}</div>
+      </div>
+      
+      <div class="treasury-stat-card treasury-stat-income">
+        <div class="flex items-center justify-center gap-3 mb-2">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+          </svg>
+          <span class="text-sm font-medium text-white/90">Total de Transações</span>
+        </div>
+        <div class="text-3xl font-bold text-white">{{finance_entries|length}}</div>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="treasury-nav-month mb-6">
+      <div class="flex items-center justify-center gap-3 flex-wrap">
+        <a href="{% url 'treasury:home' %}" class="treasury-btn treasury-btn-secondary">
+          ← Voltar
+        </a>
+        <a href="{% url 'treasury:export-pdf-monthly-report' month year %}" class="treasury-btn">
+          Gerar PDF
+        </a>
+        {% if ncd and user.is_treasurer %}
+          {% if not is_report %}
+            <a href="{% url 'treasury:gen-report' month year %}" class="treasury-btn" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+              Gerar Relatório Analítico
+            </a>
+          {% endif %}
         {% endif %}
-      {% endif %}
+      </div>
     </div>
-  </div>
 
-</div>
-
-<div class="container-fluid px-xl-5">
-  <div class="card mx-auto" style="max-width: 1400px;">
-    <div class="card-header">
-      <h5 class="card-title mb-0">Transações do Mês</h5>
-    </div>
-    <div class="card-body">
-      <div class="d-md-none">
-        {% for fe in finance_entries %}
-        <div class="card mb-3 border-left-primary">
-          <div class="card-body p-3">
-            <div class="row align-items-center">
-              <div class="col-8">
-                <div class="fw-medium">{{fe.description}}</div>
-                <small class="text-muted">{{fe.category}} • {{fe.date|date:"d/m"}}</small>
-              </div>
-              <div class="col-4 text-end">
-                {% if fe.is_positive %}
-                  <div class="text-success fw-semibold">+{{fe.amount}}</div>
-                {% else %}
-                  <div class="text-danger fw-semibold">{{fe.amount}}</div>
-                {% endif %}
-                {% if user.is_treasurer %}
-                <div class="btn-group mt-2" role="group">
-                  <a href="{% url 'treasury:transaction-detail' fe.id %}" class="btn btn-sm btn-outline-primary">
-                    <i class="bi bi-pencil"></i>
+    <!-- Transactions Table -->
+    <div class="treasury-table-card">
+      <div class="treasury-form-header">
+        <h5 class="treasury-form-title">Transações do Mês</h5>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="treasury-table">
+          <thead class="bg-slate-50">
+            <tr>
+              <th class="text-left">Data</th>
+              <th class="text-left">Descrição</th>
+              <th class="text-center">Valor</th>
+              <th class="hidden xl:table-cell text-left">Saldo</th>
+              {% if user.is_treasurer %}<th class="text-center">Ações</th>{% endif %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for fe in finance_entries %}
+            <tr>
+              <td class="font-semibold text-slate-600">{{fe.date|date:"d/m"}}</td>
+              <td>
+                <div class="flex flex-col">
+                  <span class="font-medium text-slate-700">{{fe.description}}</span>
+                  <span class="text-sm text-slate-500">{{fe.category}}</span>
+                </div>
+              </td>
+              {% if fe.is_positive %}
+                <td class="text-center font-semibold text-emerald-600">+{{fe.amount}}</td>
+              {% else %}
+                <td class="text-center font-semibold text-red-600">{{fe.amount}}</td>
+              {% endif %}
+              <td class="hidden xl:table-cell text-secondary font-medium">{{ subtotal|index:forloop.counter0 }}</td>
+              {% if user.is_treasurer %}
+              <td class="text-center">
+                <div class="flex justify-center gap-2">
+                  <a href="{% url 'treasury:transaction-detail' fe.id %}" class="treasury-btn treasury-btn-secondary" style="padding: 0.375rem 0.75rem; font-size: 0.75rem;" title="Editar">
+                    ✏️
                   </a>
-                  <form action="{% url 'treasury:transaction-delete' fe.id %}" method="POST" class="d-inline">
+                  <form action="{% url 'treasury:transaction-delete' fe.id %}" method="POST" class="inline">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-sm btn-outline-danger"
-                            onclick="return confirm('Tem certeza que deseja excluir esta transação?')">
-                      <i class="bi bi-trash"></i>
+                    <button type="submit" class="treasury-btn treasury-btn-danger" style="padding: 0.375rem 0.75rem; font-size: 0.75rem;" title="Excluir" onclick="return confirm('Tem certeza que deseja excluir esta transação?')">
+                      🗑️
                     </button>
                   </form>
                 </div>
-                {% endif %}
-              </div>
-            </div>
-          </div>
-        </div>
-        {% empty %}
-        <div class="text-center py-4">
-          <i class="bi bi-receipt-x text-muted" style="font-size: 3rem;"></i>
-          <p class="text-muted mt-2">Não há transações para este mês</p>
-        </div>
-        {% endfor %}
-      </div>
-
-      <div class="d-none d-md-block">
-        <div class="table-responsive">
-          <table class="table table-hover align-middle">
-            <thead class="table-light">
-              <tr>
-                <th scope="col">Data</th>
-                <th scope="col">Descrição</th>
-                <th scope="col" class="text-center">Valor</th>
-                <th scope="col" class="d-none d-xl-table-cell">Saldo</th>
-                {% if user.is_treasurer %}<th scope="col" class="text-center">Ações</th>{% endif %}
-              </tr>
-            </thead>
-            <tbody>
-              {% for fe in finance_entries %}
-              <tr>
-                <td class="fw-semibold">{{fe.date|date:"d/m"}}</td>
-                <td>
-                  <div class="d-flex flex-column">
-                    <span class="fw-medium">{{fe.description}}</span>
-                    <small class="text-muted">{{fe.category}}</small>
-                  </div>
-                </td>
-                {% if fe.is_positive %}
-                  <td class="text-center text-success fw-semibold">+{{fe.amount}}</td>
-                {% else %}
-                  <td class="text-center text-danger fw-semibold">{{fe.amount}}</td>
-                {% endif %}
-                <td class="d-none d-xl-table-cell text-secondary fw-medium">{{ subtotal|index:forloop.counter0 }}</td>
-                {% if user.is_treasurer %}
-                <td class="text-center">
-                  <div class="btn-group" role="group">
-                    <a href="{% url 'treasury:transaction-detail' fe.id %}" class="btn btn-sm btn-outline-primary" title="Editar">
-                      <i class="bi bi-pencil"></i>
-                    </a>
-                    <form action="{% url 'treasury:transaction-delete' fe.id %}" method="POST" class="d-inline">
-                      {% csrf_token %}
-                      <button type="submit" class="btn btn-sm btn-outline-danger" title="Excluir"
-                              onclick="return confirm('Tem certeza que deseja excluir esta transação?')">
-                        <i class="bi bi-trash"></i>
-                      </button>
-                    </form>
-                  </div>
-                </td>
-                {% endif %}
-              </tr>
-              {% endfor %}
-            </tbody>
-            <tfoot class="table-light">
-              <tr class="border-top border-2">
-                <td colspan="{% if user.is_treasurer %}2{% else %}2{% endif %}" class="fw-bold fs-6">Totais do Mês</td>
-                <td class="text-center fw-bold fs-6">{{monthly_result}}</td>
-                <td class="d-none d-xl-table-cell fw-bold fs-6">{{total}}</td>
-                {% if user.is_treasurer %}<td></td>{% endif %}
-              </tr>
-            </tfoot>
-          </table>
-        </div>
+              </td>
+              {% endif %}
+            </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot class="bg-slate-50">
+            <tr class="border-t-2">
+              <td colspan="{% if user.is_treasurer %}2{% else %}2{% endif %}" class="font-bold text-lg">Totais do Mês</td>
+              <td class="text-center font-bold text-lg">{{monthly_result}}</td>
+              <td class="hidden xl:table-cell font-bold text-lg">{{total}}</td>
+              {% if user.is_treasurer %}<td></td>{% endif %}
+            </tr>
+          </tfoot>
+        </table>
       </div>
     </div>
   </div>

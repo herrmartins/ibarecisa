@@ -1,18 +1,52 @@
-{% extends 'core/base.html' %} {% load static%} {% block content %}
+{% extends 'core/base.html' %}
+{% load static %}
 
-    <div class="container text-center">
-        <p class="fs-3 fw-light">Lista de Categorias de Transações</p>
+{% block content %}
+<div class="min-h-screen bg-gradient-to-b from-slate-50 to-white py-8">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-bold text-slate-800">Lista de Categorias de Transações</h1>
     </div>
-    <div class="container col-10">
-        <div class="row">
-            <div class="col-md-6 text-center">
-                {% for c in categories %}
-                    <div class="row">
-                        <a href="{% url 'treasury:edit-category' c.pk %}"><p>{{c}}</p></a>
-                    </div>
-                {% endfor %}
-            </div>
+    
+    <div class="treasury-table-card">
+      <div class="treasury-form-header flex justify-between items-center">
+        <h5 class="treasury-form-title mb-0">Categorias</h5>
+        <a href="{% url 'treasury:create-category' %}" class="treasury-btn">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+          Nova Categoria
+        </a>
+      </div>
+      <div class="treasury-form-body">
+        {% for c in categories %}
+        <div class="treasury-list-item">
+          <a href="{% url 'treasury:edit-category' c.pk %}" class="text-emerald-600 font-medium hover:text-emerald-700 transition-colors">
+            {{ c }}
+          </a>
         </div>
+        {% empty %}
+        <p class="text-center text-slate-500 py-4">Nenhuma categoria cadastrada.</p>
+        {% endfor %}
+      </div>
     </div>
+  </div>
+</div>
 
+<style>
+.treasury-list-item {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #f1f5f9;
+  transition: all 0.2s ease;
+}
+
+.treasury-list-item:last-child {
+  border-bottom: none;
+}
+
+.treasury-list-item:hover {
+  background: #f8fafc;
+  padding-left: 1.25rem;
+}
+</style>
 {% endblock %}
