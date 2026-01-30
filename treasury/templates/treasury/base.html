@@ -1,0 +1,110 @@
+{% extends "core/base.html" %}
+
+{% load static %}
+
+{% block pre_alpine_scripts %}
+<!-- Treasury Stores - loaded before Alpine.js -->
+<script src="{% static 'js/treasury-stores.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+<div x-data="{
+    init() {
+        // Inicializar stores da tesouraria
+        if (this.$store.periods) this.$store.periods.load();
+        if (this.$store.categories) this.$store.categories.load();
+        if (this.$store.reports) this.$store.reports.loadCurrentBalance();
+    }
+}">
+
+    <!-- Treasury Header -->
+    <div class="treasury-header relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
+            <div class="text-center">
+                <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">
+                    {% block header_title %}Tesouraria{% endblock %}
+                </h1>
+                <p class="text-white/90 text-lg">
+                    {% block header_subtitle %}Gestão financeira da igreja{% endblock %}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {% block treasury_content %}{% endblock %}
+    </div>
+
+</div>
+
+<!-- Notifications Toast -->
+<div x-data="{ notifications: $store.ui?.notifications || [] }"
+     x-show="notifications.length > 0"
+     x-transition:enter="transform ease-out duration-300 transition"
+     x-transition:enter-start="translate-y-2 opacity-0 sm:translate-y-0 sm:translate-x-2"
+     x-transition:enter-end="translate-y-0 opacity-100 sm:translate-x-0"
+     x-transition:leave="transition ease-in duration-100"
+     x-transition:leave-start="opacity-100"
+     x-transition:leave-end="opacity-0"
+     class="fixed bottom-4 right-4 z-50 space-y-2"
+     x-cloak>
+    <template x-for="notification in notifications" :key="notification.id">
+        <div :class="{
+            'bg-green-50 border-green-200 text-green-800': notification.type === 'success',
+            'bg-red-50 border-red-200 text-red-800': notification.type === 'error',
+            'bg-yellow-50 border-yellow-200 text-yellow-800': notification.type === 'warning',
+            'bg-blue-50 border-blue-200 text-blue-800': notification.type === 'info',
+        }" class="px-4 py-3 rounded-lg border shadow-lg max-w-md">
+            <div class="flex items-center justify-between">
+                <span x-text="notification.message"></span>
+                <button @click="$store.ui?.removeNotification?.(notification.id)"
+                        class="ml-3 text-gray-400 hover:text-gray-600">
+                    ✕
+                </button>
+            </div>
+        </div>
+    </template>
+</div>
+
+<!-- Loading Overlay -->
+<div x-show="$store.ui?.loading"
+     x-transition:enter="ease-out duration-300"
+     x-transition:enter-start="opacity-0"
+     x-transition:enter-end="opacity-100"
+     x-transition:leave="ease-in duration-200"
+     x-transition:leave-start="opacity-100"
+     x-transition:leave-end="opacity-0"
+     class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50"
+     x-cloak style="display: none;">
+    <div class="bg-white rounded-lg p-8 flex items-center space-x-4">
+        <svg class="animate-spin h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <span class="text-gray-700">Carregando...</span>
+    </div>
+</div>
+
+<!-- Treasury Components -->
+<script src="{% static 'js/treasury-components.js' %}"></script>
+
+<style>
+.treasury-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    position: relative;
+    overflow: hidden;
+}
+.treasury-header::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+[x-cloak] { display: none !important; }
+</style>
+
+{% endblock %}

@@ -1,11 +1,13 @@
 from .post_save_monthly_report import post_save_monthly_report
-from .create_missing_monthly_balances import create_missing_monthly_balances
+# DEPRECATED: Signals removidos durante refatoração de períodos contábeis
+# - update_monthly_balance_on_create (substituído por AccountingPeriod)
+# - update_monthly_balance_on_edit (substituído por AccountingPeriod)
+# - update_monthly_balance_on_delete (substituído por AccountingPeriod)
+# - updated_subsequent_monthly_balances (substituído por AccountingPeriod)
+# - create_missing_monthly_balances (substituído por AccountingPeriod)
+# - check_is_positive (mantido como lógica de negócio, não como signal)
+
 # DEPRECATED: track_transaction_edit substituído por django-reversion
 # from .track_transaction_edit import track_transaction_edit
-from .update_monthly_balance_on_delete import update_monthly_balance_on_delete
-from .update_monthly_balance_on_create import update_monthly_balance_on_create
-from .update_monthly_balance_on_edit import update_monthly_balance_on_edit
-from .check_is_positive import check_is_positive
-from .updated_subsequent_monthly_balances import updated_subsequent_monthly_balances
 # DEPRECATED: track_transaction_delete substituído por django-reversion
 # from .track_transaction_delete import track_transaction_delete

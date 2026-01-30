@@ -26,6 +26,21 @@ from treasury.views import (
     FinancialAnalysisView,
 )
 
+# New template-based views
+from treasury.views.template_views import (
+    TreasuryDashboardView,
+    PeriodListView,
+    PeriodDetailView,
+    TransactionListView as TemplateTransactionListView,
+    TransactionDetailView as TemplateTransactionDetailView,
+    TransactionCreateView,
+    TransactionUpdateView as TemplateTransactionUpdateView,
+    CategoryListView as TemplateCategoryListView,
+    MonthlyReportView,
+    ReversalView,
+    BalanceSheetView,
+)
+
 app_name = "treasury"
 
 urlpatterns = [
@@ -120,4 +135,25 @@ urlpatterns = [
     path('financial-charts/', FinancialChartsView.as_view(), name='financial-charts'),
     path('analysis/', FinancialAnalysisView.as_view(), name='financial-analysis'),
 
+    # ===== NEW TEMPLATE-BASED VIEWS =====
+    # Dashboard
+    path('dashboard/', TreasuryDashboardView.as_view(), name='dashboard'),
+
+    # Períodos
+    path('periodos/', PeriodListView.as_view(), name='period-list'),
+    path('periodos/<int:pk>/', PeriodDetailView.as_view(), name='period-detail'),
+
+    # Transações (new)
+    path('transacoes/', TemplateTransactionListView.as_view(), name='transaction-list'),
+    path('transacoes/<int:pk>/', TemplateTransactionDetailView.as_view(), name='transaction-detail-new'),
+    path('transacoes/nova/', TransactionCreateView.as_view(), name='transaction-create'),
+    path('transacoes/<int:pk>/editar/', TemplateTransactionUpdateView.as_view(), name='transaction-update-new'),
+    path('transacoes/<int:pk>/estornar/', ReversalView.as_view(), name='transaction-reversal'),
+
+    # Relatórios
+    path('relatorios/mensal/<int:year>/<int:month>/', MonthlyReportView.as_view(), name='monthly-report-new'),
+    path('relatorios/balanco/', BalanceSheetView.as_view(), name='balance-sheet'),
+
+    # Categorias (new)
+    path('categorias/', TemplateCategoryListView.as_view(), name='category-list'),
 ]

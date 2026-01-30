@@ -1,0 +1,285 @@
+{% extends "treasury/base.html" %}
+
+{% load static %}
+
+{% block treasury_content %}
+<div class="container mx-auto px-4 py-6 max-w-2xl" x-data="transactionUpdate()">
+    <!-- Header -->
+    <div class="mb-6">
+        <a href="{% url 'treasury:transaction-list' %}" class="text-blue-600 hover:text-blue-800">← Voltar para Transações</a>
+        <h1 class="text-2xl font-bold text-gray-800 mt-2">Editar Transação</h1>
+    </div>
+
+    <!-- Warning for Closed Period -->
+    <div x-show="needsReversal" class="mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+        <div class="flex items-start gap-3">
+            <svg class="w-6 h-6 text-yellow-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+            <div>
+                <h3 class="font-bold text-yellow-800">Período Fechado</h3>
+                <p class="text-sm text-yellow-700 mt-1">
+                    Esta transação pertence a um período fechado e não pode ser editada diretamente.
+                    Você precisa criar um estorno com a correção.
+                </p>
+                <button @click="goToReversal" class="mt-3 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded text-sm">
+                    Criar Estorno
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form -->
+    <div x-show="!needsReversal" class="bg-white rounded-lg shadow p-6">
+        <form @submit.prevent="submit">
+            <!-- Type Toggle (may be disabled) -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Transação</label>
+                <div class="flex gap-4">
+                    <label class="flex items-center">
+                        <input type="radio" x-model="form.is_positive" :value="true" :disabled="!canEditType" class="mr-2">
+                        <span class="text-green-600 font-medium">Receita</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="radio" x-model="form.is_positive" :value="false" :disabled="!canEditType" class="mr-2">
+                        <span class="text-red-600 font-medium">Despesa</span>
+                    </label>
+                </div>
+                <p x-show="!canEditType" class="text-xs text-gray-500 mt-1">Tipo não pode ser alterado</p>
+            </div>
+
+            <!-- Date -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Data</label>
+                <input type="date" x-model="form.date" :disabled="!canEditDate" class="w-full rounded-md border-gray-300 shadow-sm" required>
+                <p x-show="!canEditDate" class="text-xs text-gray-500 mt-1">Data não pode ser alterada</p>
+            </div>
+
+            <!-- Description -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
+                <input type="text" x-model="form.description" placeholder="Ex: Dízimo, Oferta, Salário..."
+                       class="w-full rounded-md border-gray-300 shadow-sm" required>
+            </div>
+
+            <!-- Amount -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Valor (R$)</label>
+                <input type="number" x-model="form.amount" step="0.01" min="0.01" placeholder="0,00"
+                       class="w-full rounded-md border-gray-300 shadow-sm" required>
+            </div>
+
+            <!-- Category -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
+                <select x-model="form.category" class="w-full rounded-md border-gray-300 shadow-sm">
+                    <option value="">Selecione uma categoria</option>
+                    <template x-for="cat in categories" :key="cat.id">
+                        <option :value="cat.id" x-text="cat.name"></option>
+                    </template>
+                </select>
+            </div>
+
+            <!-- Document (optional) -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Comprovante (opcional)</label>
+                <div x-show="existingDoc" class="mb-2 p-2 bg-gray-50 rounded text-sm">
+                    <span class="text-gray-600">Arquivo atual: </span>
+                    <a :href="existingDoc" target="_blank" class="text-blue-600 hover:underline">Ver arquivo</a>
+                    <label class="ml-4 text-red-600 hover:underline cursor-pointer">
+                        <input type="checkbox" x-model="removeDoc" class="mr-1"> Remover
+                    </label>
+                </div>
+                <input type="file" x-ref="docFile" accept="image/*,.pdf" class="w-full rounded-md border-gray-300 shadow-sm">
+                <p class="text-xs text-gray-500 mt-1">Imagens ou PDF (máx. 5MB). Deixe em branco para manter o atual.</p>
+            </div>
+
+            <!-- Errors -->
+            <div x-show="hasErrors" class="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-700">
+                <template x-for="error in errors" :key="error">
+                    <p x-text="error"></p>
+                </template>
+            </div>
+
+            <!-- Submit -->
+            <div class="flex gap-3">
+                <button type="submit" :disabled="submitting"
+                        class="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg font-medium">
+                    <span x-show="!submitting">Salvar Alterações</span>
+                    <span x-show="submitting">Salvando...</span>
+                </button>
+                <a :href="backLink" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                    Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Original Transaction Info (for reference) -->
+    <div x-show="originalTransaction" class="mt-6 bg-gray-50 border border-gray-200 rounded-lg p-4">
+        <h3 class="font-medium text-gray-700 mb-2">Transação Original</h3>
+        <div class="text-sm text-gray-600 space-y-1">
+            <p><strong>Descrição:</strong> <span x-text="originalTransaction.description"></span></p>
+            <p><strong>Valor:</strong> <span x-text="formatBRL(originalTransaction.amount)"></span></p>
+            <p><strong>Data:</strong> <span x-text="formatDate(originalTransaction.date)"></span></p>
+        </div>
+    </div>
+</div>
+
+<script>
+function transactionUpdate() {
+    return {
+        form: {
+            is_positive: true,
+            date: '',
+            description: '',
+            amount: '',
+            category: ''
+        },
+        categories: [],
+        submitting: false,
+        errors: [],
+        loading: true,
+        needsReversal: false,
+        canEditType: true,
+        canEditDate: true,
+        existingDoc: null,
+        removeDoc: false,
+        originalTransaction: null,
+        transactionId: null,
+
+        async init() {
+            this.transactionId = window.location.pathname.split('/').slice(-2, -1)[0];
+            await this.loadTransaction();
+            await this.loadCategories();
+        },
+
+        async loadTransaction() {
+            try {
+                const response = await fetch(`/treasury/api/transactions/${this.transactionId}/`, {
+                    headers: { 'X-CSRFToken': this.getCookie('csrftoken') }
+                });
+                const data = await response.json();
+                this.originalTransaction = { ...data };
+                this.form = {
+                    is_positive: data.is_positive,
+                    date: data.date,
+                    description: data.description,
+                    amount: data.amount,
+                    category: data.category?.id || ''
+                };
+                this.existingDoc = data.acquittance_doc;
+                this.canEditType = data.can_be_edited;
+                this.canEditDate = data.can_be_edited;
+                this.needsReversal = !data.can_be_edited;
+                this.loading = false;
+            } catch (error) {
+                console.error('Error loading transaction:', error);
+                this.errors = ['Erro ao carregar transação'];
+                this.loading = false;
+            }
+        },
+
+        async loadCategories() {
+            try {
+                const response = await fetch('/treasury/api/categories/', {
+                    headers: { 'X-CSRFToken': this.getCookie('csrftoken') }
+                });
+                const data = await response.json();
+                this.categories = data.results || data;
+            } catch (error) {
+                console.error('Error loading categories:', error);
+            }
+        },
+
+        get hasErrors() {
+            return this.errors.length > 0;
+        },
+
+        get backLink() {
+            return `/treasury/transacoes/${this.transactionId}/`;
+        },
+
+        goToReversal() {
+            window.location.href = `/treasury/transacoes/${this.transactionId}/estornar/`;
+        },
+
+        async submit() {
+            this.errors = [];
+            this.submitting = true;
+
+            // Validation
+            if (!this.form.description) {
+                this.errors.push('Descrição é obrigatória');
+            }
+            if (!this.form.amount || parseFloat(this.form.amount) <= 0) {
+                this.errors.push('Valor deve ser maior que zero');
+            }
+            if (!this.form.date) {
+                this.errors.push('Data é obrigatória');
+            }
+
+            if (this.hasErrors) {
+                this.submitting = false;
+                return;
+            }
+
+            // Prepare form data
+            const formData = new FormData();
+            formData.append('description', this.form.description);
+            formData.append('amount', this.form.amount);
+            formData.append('is_positive', this.form.is_positive);
+            formData.append('date', this.form.date);
+            if (this.form.category) {
+                formData.append('category', this.form.category);
+            }
+            if (this.removeDoc) {
+                formData.append('acquittance_doc', '');
+            }
+
+            const docFile = this.$refs.docFile?.files[0];
+            if (docFile) {
+                formData.append('acquittance_doc', docFile);
+            }
+
+            try {
+                const response = await fetch(`/treasury/api/transactions/${this.transactionId}/`, {
+                    method: 'PATCH',
+                    headers: {
+                        'X-CSRFToken': this.getCookie('csrftoken')
+                    },
+                    body: formData
+                });
+
+                if (response.ok) {
+                    this.$store.ui.toast('Transação atualizada com sucesso!');
+                    window.location.href = this.backLink;
+                } else {
+                    const data = await response.json();
+                    this.errors = Object.values(data).flat();
+                }
+            } catch (error) {
+                this.errors = ['Erro ao atualizar transação. Tente novamente.'];
+                console.error(error);
+            } finally {
+                this.submitting = false;
+            }
+        },
+
+        getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        },
+
+        formatBRL(value) {
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+        },
+
+        formatDate(dateStr) {
+            return new Date(dateStr).toLocaleDateString('pt-BR');
+        }
+    };
+}
+</script>
+{% endblock %}

@@ -1,0 +1,467 @@
+from rest_framework import serializers
+from rest_framework.validators import UniqueValidator
+from django.contrib.auth import get_user_model
+from decimal import Decimal
+
+from treasury.models import (
+    AccountingPeriod,
+    TransactionModel,
+    ReversalTransaction,
+    CategoryModel,
+)
+
+User = get_user_model()
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    """Serializer para CategoryModel."""
+
+    class Meta:
+        model = CategoryModel
+        fields = ['id', 'name']
+        read_only_fields = ['id']
+
+
+class CategoryDetailSerializer(CategorySerializer):
+    """Serializer detalhado para CategoryModel com estatísticas."""
+
+    transaction_count = serializers.SerializerMethodField()
+    total_amount = serializers.SerializerMethodField()
+
+    class Meta(CategorySerializer.Meta):
+        fields = CategorySerializer.Meta.fields + ['transaction_count', 'total_amount']
+
+    def get_transaction_count(self, obj):
+        return obj.transactions.count()
+
+    def get_total_amount(self, obj):
+        return obj.transactions.aggregate(
+            total=serializers.FloatField(serializers.Sum('amount'))
+        )['total'] or 0
+
+
+class PeriodBalanceSerializer(serializers.Serializer):
+    """Serializer para retornar o saldo de um período."""
+
+    period_id = serializers.IntegerField()
+    period_name = serializers.CharField()
+    opening_balance = serializers.DecimalField(max_digits=10, decimal_places=2)
+    current_balance = serializers.DecimalField(max_digits=10, decimal_places=2)
+    closing_balance = serializers.DecimalField(max_digits=10, decimal_places=2, allow_null=True)
+    status = serializers.CharField()
+    is_open = serializers.BooleanField()
+
+
+class AccountingPeriodSerializer(serializers.ModelSerializer):
+    """Serializer para AccountingPeriod."""
+
+    year = serializers.IntegerField(read_only=True)
+    month_number = serializers.IntegerField(read_only=True, source='month.month')
+    month_name = serializers.CharField(read_only=True)
+    first_day = serializers.DateField(read_only=True)
+    last_day = serializers.DateField(read_only=True)
+    is_open = serializers.BooleanField(read_only=True)
+    is_closed = serializers.BooleanField(read_only=True)
+    is_archived = serializers.BooleanField(read_only=True)
+    can_be_closed = serializers.BooleanField(read_only=True)
+    closed_by_name = serializers.CharField(source='closed_by.get_full_name', read_only=True, allow_null=True)
+
+    # Resumo de transações
+    transactions_summary = serializers.SerializerMethodField()
+
+    class Meta:
+        model = AccountingPeriod
+        fields = [
+            'id',
+            'month',
+            'year',
+            'month_number',
+            'month_name',
+            'first_day',
+            'last_day',
+            'status',
+            'opening_balance',
+            'closing_balance',
+            'is_open',
+            'is_closed',
+            'is_archived',
+            'can_be_closed',
+            'closed_at',
+            'closed_by',
+            'closed_by_name',
+            'notes',
+            'transactions_summary',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = [
+            'id',
+            'year',
+            'month_number',
+            'month_name',
+            'first_day',
+            'last_day',
+            'is_open',
+            'is_closed',
+            'is_archived',
+            'can_be_closed',
+            'closed_at',
+            'closed_by',
+            'closed_by_name',
+            'created_at',
+            'updated_at',
+        ]
+
+    def get_transactions_summary(self, obj):
+        summary = obj.get_transactions_summary()
+        return {
+            'total_positive': float(summary['total_positive']),
+            'total_negative': float(summary['total_negative']),
+            'net': float(summary['net']),
+            'count': summary['count'],
+        }
+
+    def validate_month(self, value):
+        """Valida que o mês é o primeiro dia."""
+        if value.day != 1:
+            raise serializers.ValidationError("A data deve ser o primeiro dia do mês.")
+        return value
+
+
+class AccountingPeriodCloseSerializer(serializers.Serializer):
+    """Serializer para fechar um período contábil."""
+
+    notes = serializers.CharField(required=False, allow_blank=True, max_length=1000)
+
+    def validate(self, attrs):
+        period = self.context['period']
+        if not period.can_be_closed:
+            raise serializers.ValidationError("Apenas períodos abertos podem ser fechados.")
+        return attrs
+
+
+class TransactionSerializer(serializers.ModelSerializer):
+    """Serializer para TransactionModel (leitura)."""
+
+    signed_amount = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    can_be_edited = serializers.BooleanField(read_only=True)
+    can_be_deleted = serializers.BooleanField(read_only=True)
+    can_be_reversed = serializers.BooleanField(read_only=True)
+    has_reversal = serializers.BooleanField(read_only=True)
+
+    # Informações relacionadas
+    category_name = serializers.CharField(source='category.name', read_only=True, allow_null=True)
+    period_name = serializers.CharField(source='accounting_period.month_name', read_only=True, allow_null=True)
+    period_status = serializers.CharField(source='accounting_period.status', read_only=True, allow_null=True)
+    user_name = serializers.CharField(source='user.get_full_name', read_only=True)
+    created_by_name = serializers.CharField(source='created_by.get_full_name', read_only=True, allow_null=True)
+    reversal_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = TransactionModel
+        fields = [
+            'id',
+            'user',
+            'user_name',
+            'category',
+            'category_name',
+            'description',
+            'amount',
+            'is_positive',
+            'signed_amount',
+            'date',
+            'acquittance_doc',
+            'accounting_period',
+            'period_name',
+            'period_status',
+            'transaction_type',
+            'reverses',
+            'created_by',
+            'created_by_name',
+            'created_at',
+            'updated_at',
+            'can_be_edited',
+            'can_be_deleted',
+            'can_be_reversed',
+            'has_reversal',
+            'reversal_count',
+        ]
+        read_only_fields = [
+            'id',
+            'signed_amount',
+            'can_be_edited',
+            'can_be_deleted',
+            'can_be_reversed',
+            'has_reversal',
+            'user_name',
+            'category_name',
+            'period_name',
+            'period_status',
+            'created_by_name',
+            'created_at',
+            'updated_at',
+            'reversal_count',
+        ]
+
+    def get_reversal_count(self, obj):
+        return obj.reversals.count()
+
+
+class TransactionListSerializer(serializers.ModelSerializer):
+    """Serializer simplificado para listagem de transações."""
+
+    signed_amount = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    category_name = serializers.CharField(source='category.name', read_only=True, allow_null=True)
+    period_name = serializers.SerializerMethodField()
+    period_status = serializers.CharField(source='accounting_period.status', read_only=True, allow_null=True)
+    can_be_edited = serializers.BooleanField(read_only=True)
+
+    class Meta:
+        model = TransactionModel
+        fields = [
+            'id',
+            'description',
+            'amount',
+            'is_positive',
+            'signed_amount',
+            'date',
+            'category',
+            'category_name',
+            'accounting_period',
+            'period_name',
+            'period_status',
+            'transaction_type',
+            'can_be_edited',
+        ]
+
+    def get_period_name(self, obj):
+        if obj.accounting_period:
+            return obj.accounting_period.month_name
+        return None
+
+
+class TransactionCreateSerializer(serializers.ModelSerializer):
+    """Serializer para criar transações."""
+
+    class Meta:
+        model = TransactionModel
+        fields = [
+            'category',
+            'description',
+            'amount',
+            'is_positive',
+            'date',
+            'acquittance_doc',
+        ]
+
+    def validate_date(self, value):
+        """Valida que a data não é futura."""
+        from django.utils import timezone
+        today = timezone.now().date()
+        if value > today:
+            raise serializers.ValidationError("Não é permitido criar transações com data futura.")
+        return value
+
+    def validate_amount(self, value):
+        """Valida que o amount é positivo."""
+        if value <= 0:
+            raise serializers.ValidationError("O valor deve ser positivo.")
+        return value
+
+    def create(self, validated_data):
+        """Cria a transação vinculando ao usuário e período."""
+        request = self.context['request']
+        user = request.user
+
+        # Encontrar ou criar o período
+        from treasury.models import AccountingPeriod
+        period_month = validated_data['date'].replace(day=1)
+
+        period, created = AccountingPeriod.objects.get_or_create(
+            month=period_month,
+            defaults={'status': 'open', 'opening_balance': Decimal('0.00')}
+        )
+
+        # Criar a transação
+        transaction = TransactionModel.objects.create(
+            user=user,
+            created_by=user,
+            accounting_period=period,
+            **validated_data
+        )
+
+        return transaction
+
+
+class TransactionUpdateSerializer(serializers.ModelSerializer):
+    """Serializer para atualizar transações."""
+
+    class Meta:
+        model = TransactionModel
+        fields = [
+            'category',
+            'description',
+            'amount',
+            'is_positive',
+            'date',
+            'acquittance_doc',
+        ]
+
+    def validate_date(self, value):
+        """Valida que a data não é futura."""
+        from django.utils import timezone
+        today = timezone.now().date()
+        if value > today:
+            raise serializers.ValidationError("Não é permitido criar transações com data futura.")
+        return value
+
+    def validate_amount(self, value):
+        """Valida que o amount é positivo."""
+        if value <= 0:
+            raise serializers.ValidationError("O valor deve ser positivo.")
+        return value
+
+    def update(self, instance, validated_data):
+        """Atualiza a transação com validação de período."""
+        # Verificar se o período está fechado
+        if instance.accounting_period and instance.accounting_period.is_closed:
+            raise serializers.ValidationError(
+                "Não é possível editar transações de períodos fechados. "
+                "Utilize a funcionalidade de estorno."
+            )
+
+        # Atualizar os campos
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        instance.save()
+        return instance
+
+
+class ReversalTransactionSerializer(serializers.ModelSerializer):
+    """Serializer para ReversalTransaction."""
+
+    original_amount = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    reversal_amount = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    difference = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
+    created_by_name = serializers.CharField(source='created_by.get_full_name', read_only=True, allow_null=True)
+    authorized_by_name = serializers.CharField(source='authorized_by.get_full_name', read_only=True, allow_null=True)
+
+    # Informações das transações
+    original_transaction = TransactionListSerializer(read_only=True)
+    reversal_transaction = TransactionListSerializer(read_only=True)
+
+    class Meta:
+        model = ReversalTransaction
+        fields = [
+            'id',
+            'original_transaction',
+            'reversal_transaction',
+            'reason',
+            'original_amount',
+            'reversal_amount',
+            'difference',
+            'authorized_by',
+            'authorized_by_name',
+            'created_by',
+            'created_by_name',
+            'created_at',
+        ]
+        read_only_fields = [
+            'id',
+            'original_amount',
+            'reversal_amount',
+            'difference',
+            'created_by',
+            'created_at',
+        ]
+
+
+class ReversalCreateSerializer(serializers.Serializer):
+    """Serializer para criar um estorno."""
+
+    original_transaction_id = serializers.IntegerField(write_only=True)
+    description = serializers.CharField(max_length=255, required=False)
+    amount = serializers.DecimalField(max_digits=10, decimal_places=2)
+    is_positive = serializers.BooleanField()
+    category_id = serializers.IntegerField(required=False, allow_null=True)
+    reason = serializers.CharField(max_length=1000)
+    authorized_by_id = serializers.IntegerField(required=False, allow_null=True)
+    acquittance_doc = serializers.ImageField(required=False, allow_null=True)
+
+    def validate_original_transaction_id(self, value):
+        """Valida que a transação original existe."""
+        try:
+            transaction = TransactionModel.objects.get(id=value)
+            if not transaction.can_be_reversed:
+                raise serializers.ValidationError(
+                    "Esta transação não pode ser estornada. "
+                    "Verifique se ela pertence a um período fechado."
+                )
+            if transaction.has_reversal:
+                raise serializers.ValidationError("Esta transação já possui um estorno.")
+            return value
+        except TransactionModel.DoesNotExist:
+            raise serializers.ValidationError("Transação não encontrada.")
+
+    def validate(self, attrs):
+        """Validações adicionais."""
+        # Se o período está arquivado, exige autorização
+        transaction = TransactionModel.objects.get(id=attrs['original_transaction_id'])
+        if transaction.accounting_period.is_archived:
+            if not attrs.get('authorized_by_id'):
+                raise serializers.ValidationError(
+                    "Estornos em períodos arquivados requerem autorização de um administrador."
+                )
+        return attrs
+
+    def create(self, validated_data):
+        """Cria o estorno."""
+        request = self.context['request']
+        user = request.user
+
+        original_transaction = TransactionModel.objects.get(
+            id=validated_data['original_transaction_id']
+        )
+
+        # Preparar dados da nova transação
+        new_data = {
+            'description': validated_data.get('description', original_transaction.description),
+            'amount': validated_data['amount'],
+            'is_positive': validated_data['is_positive'],
+            'category_id': validated_data.get('category_id'),
+            'acquittance_doc': validated_data.get('acquittance_doc'),
+        }
+
+        if new_data['category_id']:
+            try:
+                new_data['category'] = CategoryModel.objects.get(id=new_data.pop('category_id'))
+            except CategoryModel.DoesNotExist:
+                pass
+
+        # Criar o estorno
+        reversal = ReversalTransaction.create_reversal(
+            original_transaction=original_transaction,
+            new_data=new_data,
+            reason=validated_data['reason'],
+            user=user,
+            authorized_by_id=validated_data.get('authorized_by_id'),
+        )
+
+        return reversal
+
+
+# Exportar todos os serializers
+__all__ = [
+    'CategorySerializer',
+    'CategoryDetailSerializer',
+    'PeriodBalanceSerializer',
+    'AccountingPeriodSerializer',
+    'AccountingPeriodCloseSerializer',
+    'TransactionSerializer',
+    'TransactionListSerializer',
+    'TransactionCreateSerializer',
+    'TransactionUpdateSerializer',
+    'ReversalTransactionSerializer',
+    'ReversalCreateSerializer',
+]

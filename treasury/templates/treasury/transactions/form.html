@@ -1,0 +1,192 @@
+{% extends "treasury/base.html" %}
+
+{% load static %}
+
+{% block treasury_content %}
+<div class="container mx-auto px-4 py-6 max-w-2xl" x-data="transactionForm()">
+    <!-- Header -->
+    <div class="mb-6">
+        <a href="{% url 'treasury:transaction-list' %}" class="text-blue-600 hover:text-blue-800">← Voltar para Transações</a>
+        <h1 class="text-2xl font-bold text-gray-800 mt-2">Nova Transação</h1>
+    </div>
+
+    <!-- Form -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <form @submit.prevent="submit">
+            <!-- Type Toggle -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Transação</label>
+                <div class="flex gap-4">
+                    <label class="flex items-center">
+                        <input type="radio" x-model="form.is_positive" :value="true" class="mr-2">
+                        <span class="text-green-600 font-medium">Receita</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="radio" x-model="form.is_positive" :value="false" class="mr-2">
+                        <span class="text-red-600 font-medium">Despesa</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Date -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Data</label>
+                <input type="date" x-model="form.date" class="w-full rounded-md border-gray-300 shadow-sm" required>
+            </div>
+
+            <!-- Description -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
+                <input type="text" x-model="form.description" placeholder="Ex: Dízimo, Oferta, Salário..."
+                       class="w-full rounded-md border-gray-300 shadow-sm" required>
+            </div>
+
+            <!-- Amount -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Valor (R$)</label>
+                <input type="number" x-model="form.amount" step="0.01" min="0.01" placeholder="0,00"
+                       class="w-full rounded-md border-gray-300 shadow-sm" required>
+            </div>
+
+            <!-- Category -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
+                <select x-model="form.category" class="w-full rounded-md border-gray-300 shadow-sm">
+                    <option value="">Selecione uma categoria</option>
+                    <template x-for="cat in categories" :key="cat.id">
+                        <option :value="cat.id" x-text="cat.name"></option>
+                    </template>
+                </select>
+            </div>
+
+            <!-- Document (optional) -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Comprovante (opcional)</label>
+                <input type="file" x-ref="docFile" accept="image/*,.pdf" class="w-full rounded-md border-gray-300 shadow-sm">
+                <p class="text-xs text-gray-500 mt-1">Imagens ou PDF (máx. 5MB)</p>
+            </div>
+
+            <!-- Errors -->
+            <div x-show="hasErrors" class="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-700">
+                <template x-for="error in errors" :key="error">
+                    <p x-text="error"></p>
+                </template>
+            </div>
+
+            <!-- Submit -->
+            <div class="flex gap-3">
+                <button type="submit" :disabled="submitting"
+                        class="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg font-medium">
+                    <span x-show="!submitting">Salvar Transação</span>
+                    <span x-show="submitting">Salvando...</span>
+                </button>
+                <a href="{% url 'treasury:transaction-list' %}" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                    Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function transactionForm() {
+    return {
+        form: {
+            is_positive: true,
+            date: new Date().toISOString().split('T')[0],
+            description: '',
+            amount: '',
+            category: ''
+        },
+        categories: [],
+        submitting: false,
+        errors: [],
+
+        async init() {
+            await this.loadCategories();
+        },
+
+        async loadCategories() {
+            try {
+                const response = await fetch('/treasury/api/categories/', {
+                    headers: { 'X-CSRFToken': this.getCookie('csrftoken') }
+                });
+                const data = await response.json();
+                this.categories = data.results || data;
+            } catch (error) {
+                console.error('Error loading categories:', error);
+            }
+        },
+
+        get hasErrors() {
+            return this.errors.length > 0;
+        },
+
+        async submit() {
+            this.errors = [];
+            this.submitting = true;
+
+            // Validation
+            if (!this.form.description) {
+                this.errors.push('Descrição é obrigatória');
+            }
+            if (!this.form.amount || parseFloat(this.form.amount) <= 0) {
+                this.errors.push('Valor deve ser maior que zero');
+            }
+            if (!this.form.date) {
+                this.errors.push('Data é obrigatória');
+            }
+
+            if (this.hasErrors) {
+                this.submitting = false;
+                return;
+            }
+
+            // Prepare form data
+            const formData = new FormData();
+            formData.append('description', this.form.description);
+            formData.append('amount', this.form.amount);
+            formData.append('is_positive', this.form.is_positive);
+            formData.append('date', this.form.date);
+            if (this.form.category) {
+                formData.append('category', this.form.category);
+            }
+
+            const docFile = this.$refs.docFile?.files[0];
+            if (docFile) {
+                formData.append('acquittance_doc', docFile);
+            }
+
+            try {
+                const response = await fetch('/treasury/api/transactions/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': this.getCookie('csrftoken')
+                    },
+                    body: formData
+                });
+
+                if (response.ok) {
+                    this.$store.ui.toast('Transação criada com sucesso!');
+                    window.location.href = '/treasury/transacoes/';
+                } else {
+                    const data = await response.json();
+                    this.errors = Object.values(data).flat();
+                }
+            } catch (error) {
+                this.errors = ['Erro ao criar transação. Tente novamente.'];
+                console.error(error);
+            } finally {
+                this.submitting = false;
+            }
+        },
+
+        getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+    };
+}
+</script>
+{% endblock %}

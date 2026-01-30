@@ -1,0 +1,333 @@
+{% extends "treasury/base.html" %}
+
+{% load static %}
+
+{% block treasury_content %}
+<div class="container mx-auto px-4 py-6 max-w-2xl" x-data="reversalForm()">
+    <!-- Header -->
+    <div class="mb-6">
+        <a :href="backLink" class="text-blue-600 hover:text-blue-800">← Voltar para Transação</a>
+        <h1 class="text-2xl font-bold text-gray-800 mt-2">Estornar Transação</h1>
+    </div>
+
+    <!-- Info Alert -->
+    <div class="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div class="flex items-start gap-3">
+            <svg class="w-6 h-6 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <div>
+                <h3 class="font-bold text-blue-800">Como funciona o estorno</h3>
+                <p class="text-sm text-blue-700 mt-1">
+                    O estorno criará uma nova transação que substitui a original. A transação original permanecerá no histórico
+                    mas será marcada como estornada. O saldo do período será recalculado automaticamente.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Original Transaction Card -->
+    <div x-show="originalTransaction" class="mb-6 bg-white rounded-lg shadow p-4 border-l-4" :class="{
+        'border-green-500': originalTransaction?.is_positive,
+        'border-red-500': !originalTransaction?.is_positive
+    }">
+        <h3 class="font-medium text-gray-700 mb-3">Transação Original</h3>
+        <div class="grid grid-cols-2 gap-4 text-sm">
+            <div>
+                <p class="text-gray-500">Descrição</p>
+                <p class="font-medium" x-text="originalTransaction?.description"></p>
+            </div>
+            <div>
+                <p class="text-gray-500">Valor Original</p>
+                <p class="font-bold" :class="originalTransaction?.is_positive ? 'text-green-600' : 'text-red-600'"
+                   x-text="formatBRL(originalTransaction?.amount)"></p>
+            </div>
+            <div>
+                <p class="text-gray-500">Data</p>
+                <p class="font-medium" x-text="formatDate(originalTransaction?.date)"></p>
+            </div>
+            <div>
+                <p class="text-gray-500">Categoria</p>
+                <p class="font-medium" x-text="originalTransaction?.category?.name || '-'"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reversal Form -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <form @submit.prevent="submit">
+            <!-- Warning for Archived Period -->
+            <div x-show="needsAuthorization" class="mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div class="flex items-start gap-3">
+                    <svg class="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                    <div>
+                        <h3 class="font-bold text-yellow-800">Período Arquivado</h3>
+                        <p class="text-sm text-yellow-700 mt-1">
+                            Este período está arquivado. O estorno requer autorização de um administrador.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- New Transaction Data -->
+            <h3 class="font-medium text-gray-700 mb-4">Dados da Nova Transação</h3>
+
+            <!-- Type Toggle -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Tipo</label>
+                <div class="flex gap-4">
+                    <label class="flex items-center">
+                        <input type="radio" x-model="form.is_positive" :value="true" class="mr-2">
+                        <span class="text-green-600 font-medium">Receita</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="radio" x-model="form.is_positive" :value="false" class="mr-2">
+                        <span class="text-red-600 font-medium">Despesa</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
+                <input type="text" x-model="form.description" placeholder="Nova descrição para a transação"
+                       class="w-full rounded-md border-gray-300 shadow-sm" required>
+            </div>
+
+            <!-- Amount -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Novo Valor (R$)</label>
+                <input type="number" x-model="form.amount" step="0.01" min="0.01" placeholder="0,00"
+                       class="w-full rounded-md border-gray-300 shadow-sm" required>
+            </div>
+
+            <!-- Category -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
+                <select x-model="form.category" class="w-full rounded-md border-gray-300 shadow-sm">
+                    <option value="">Selecione uma categoria</option>
+                    <template x-for="cat in categories" :key="cat.id">
+                        <option :value="cat.id" x-text="cat.name"></option>
+                    </template>
+                </select>
+            </div>
+
+            <!-- Date -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Data</label>
+                <input type="date" x-model="form.date" class="w-full rounded-md border-gray-300 shadow-sm" required>
+                <p class="text-xs text-gray-500 mt-1">A data da nova transação (geralmente a data atual)</p>
+            </div>
+
+            <!-- Reason -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Motivo do Estorno *</label>
+                <textarea x-model="form.reason" rows="3" placeholder="Explique por que esta transação está sendo estornada..."
+                          class="w-full rounded-md border-gray-300 shadow-sm" required></textarea>
+            </div>
+
+            <!-- Authorization (for archived periods) -->
+            <div x-show="needsAuthorization" class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Autorizador</label>
+                <select x-model="form.authorized_by" class="w-full rounded-md border-gray-300 shadow-sm">
+                    <option value="">Selecione um administrador</option>
+                    <template x-for="user in admins" :key="user.id">
+                        <option :value="user.id" x-text="user.username"></option>
+                    </template>
+                </select>
+            </div>
+
+            <!-- Errors -->
+            <div x-show="hasErrors" class="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-700">
+                <template x-for="error in errors" :key="error">
+                    <p x-text="error"></p>
+                </template>
+            </div>
+
+            <!-- Submit -->
+            <div class="flex gap-3">
+                <button type="submit" :disabled="submitting"
+                        class="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg font-medium">
+                    <span x-show="!submitting">Confirmar Estorno</span>
+                    <span x-show="submitting">Processando...</span>
+                </button>
+                <a :href="backLink" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                    Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function reversalForm() {
+    return {
+        originalTransaction: null,
+        form: {
+            is_positive: true,
+            description: '',
+            amount: '',
+            category: '',
+            date: new Date().toISOString().split('T')[0],
+            reason: '',
+            authorized_by: ''
+        },
+        categories: [],
+        admins: [],
+        submitting: false,
+        errors: [],
+        loading: true,
+        needsAuthorization: false,
+        transactionId: null,
+
+        get backLink() {
+            return `/treasury/transacoes/${this.transactionId}/`;
+        },
+
+        async init() {
+            this.transactionId = window.location.pathname.split('/').slice(-2, -1)[0];
+            await this.loadTransaction();
+            await this.loadCategories();
+        },
+
+        async loadTransaction() {
+            try {
+                const response = await fetch(`/treasury/api/transactions/${this.transactionId}/`, {
+                    headers: { 'X-CSRFToken': this.getCookie('csrftoken') }
+                });
+                const data = await response.json();
+                this.originalTransaction = data;
+
+                // Pre-fill form with original data
+                this.form.is_positive = data.is_positive;
+                this.form.description = 'CORREÇÃO: ' + data.description;
+                this.form.amount = data.amount;
+                this.form.category = data.category?.id || '';
+
+                // Check if authorization is needed
+                this.needsAuthorization = data.accounting_period?.status === 'archived';
+                if (this.needsAuthorization) {
+                    await this.loadAdmins();
+                }
+
+                this.loading = false;
+            } catch (error) {
+                console.error('Error loading transaction:', error);
+                this.errors = ['Erro ao carregar transação'];
+                this.loading = false;
+            }
+        },
+
+        async loadCategories() {
+            try {
+                const response = await fetch('/treasury/api/categories/', {
+                    headers: { 'X-CSRFToken': this.getCookie('csrftoken') }
+                });
+                const data = await response.json();
+                this.categories = data.results || data;
+            } catch (error) {
+                console.error('Error loading categories:', error);
+            }
+        },
+
+        async loadAdmins() {
+            try {
+                const response = await fetch('/treasury/api/admins/', {
+                    headers: { 'X-CSRFToken': this.getCookie('csrftoken') }
+                });
+                const data = await response.json();
+                this.admins = data.results || data;
+            } catch (error) {
+                console.error('Error loading admins:', error);
+            }
+        },
+
+        get hasErrors() {
+            return this.errors.length > 0;
+        },
+
+        async submit() {
+            this.errors = [];
+            this.submitting = true;
+
+            // Validation
+            if (!this.form.description) {
+                this.errors.push('Descrição é obrigatória');
+            }
+            if (!this.form.amount || parseFloat(this.form.amount) <= 0) {
+                this.errors.push('Valor deve ser maior que zero');
+            }
+            if (!this.form.date) {
+                this.errors.push('Data é obrigatória');
+            }
+            if (!this.form.reason || this.form.reason.trim().length < 5) {
+                this.errors.push('Motivo do estorno é obrigatório (mínimo 5 caracteres)');
+            }
+            if (this.needsAuthorization && !this.form.authorized_by) {
+                this.errors.push('Autorização de administrador é necessária');
+            }
+
+            if (this.hasErrors) {
+                this.submitting = false;
+                return;
+            }
+
+            // Prepare data
+            const requestData = {
+                original_transaction: this.transactionId,
+                description: this.form.description,
+                amount: this.form.amount,
+                is_positive: this.form.is_positive,
+                date: this.form.date,
+                category: this.form.category || null,
+                reason: this.form.reason
+            };
+
+            if (this.needsAuthorization) {
+                requestData.authorized_by = this.form.authorized_by;
+            }
+
+            try {
+                const response = await fetch('/treasury/api/reversals/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': this.getCookie('csrftoken'),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                });
+
+                if (response.ok) {
+                    this.$store.ui.toast('Estorno criado com sucesso!');
+                    window.location.href = this.backLink;
+                } else {
+                    const data = await response.json();
+                    this.errors = Object.values(data).flat();
+                }
+            } catch (error) {
+                this.errors = ['Erro ao criar estorno. Tente novamente.'];
+                console.error(error);
+            } finally {
+                this.submitting = false;
+            }
+        },
+
+        getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        },
+
+        formatBRL(value) {
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+        },
+
+        formatDate(dateStr) {
+            return new Date(dateStr).toLocaleDateString('pt-BR');
+        }
+    };
+}
+</script>
+{% endblock %}
