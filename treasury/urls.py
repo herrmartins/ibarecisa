@@ -8,10 +8,12 @@ from treasury.views import (
     TransactionUpdateView,
     TransactionDeleteView,
     GenerateMonthlyPDFTransactionListView,
+    GeneratePeriodPDFView,
     GenerateMonthlyReportView,
     MonthlyReportCreateView,
     MonthlyAnalyticalReportDetailView,
     GenerateMonthlyPDFAnReportView,
+    GeneratePeriodAnalyticalPDFView,
     AnReportDeleteView,
     CategoryCreateView,
     CategoryFormView,
@@ -100,6 +102,17 @@ urlpatterns = [
         "anreport/pdf/<int:pk>",
         GenerateMonthlyPDFAnReportView,
         name="export-anreport-pdf",
+    ),
+    # Novas rotas padronizadas para PDFs (por period_id)
+    path(
+        "periodos/<int:period_id>/pdf/extrato/",
+        GeneratePeriodPDFView,
+        name="export-period-extract-pdf",
+    ),
+    path(
+        "periodos/<int:period_id>/pdf/analitico/",
+        GeneratePeriodAnalyticalPDFView,
+        name="export-period-analytical-pdf",
     ),
     # Categories
     path(

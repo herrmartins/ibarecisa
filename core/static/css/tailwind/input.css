@@ -2602,6 +2602,63 @@
   border-left: 4px solid #667eea;
 }
 
+/* Generic App-wide Header Cards */
+.app-header-card {
+  min-width: 160px;
+  max-width: 280px;
+  padding: 1.25rem 1.5rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-left-width: 5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.app-header-card:hover {
+  transform: translateY(-4px);
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Header Card Color Variants (borda lateral colorida) */
+.app-header-current {
+  border-left-color: rgb(22, 163, 74);
+}
+
+.app-header-income {
+  border-left-color: rgb(22, 163, 74);
+}
+
+.app-header-expense {
+  border-left-color: rgb(220, 38, 38);
+}
+
+.app-header-monthly {
+  border-left-color: rgb(37, 99, 235);
+}
+
+.app-header-balance {
+  border-left-color: rgb(139, 92, 246);
+}
+
+.app-header-members {
+  border-left-color: rgb(245, 158, 11);
+}
+
+.app-header-visitors {
+  border-left-color: rgb(59, 130, 246);
+}
+
+.app-header-total {
+  border-left-color: rgb(16, 185, 129);
+}
+
 /* Generic App-wide Progress Bar */
 .app-progress-bar {
   background: linear-gradient(90deg, #28a745, #20c997);

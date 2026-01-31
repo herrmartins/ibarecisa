@@ -8,7 +8,9 @@ from .transaction_delete_view import TransactionDeleteView
 from .generate_monthly_pdf_transaction_list_view import (
     GenerateMonthlyPDFTransactionListView,
 )
+from .generate_period_pdf_view import GeneratePeriodPDFView
 from .generate_monthly_pdf_analytical_report_view import GenerateMonthlyPDFAnReportView
+from .generate_period_analytical_pdf_view import GeneratePeriodAnalyticalPDFView
 from .generate_report_view import GenerateMonthlyReportView
 from .create_monthly_report import MonthlyReportCreateView
 from .analytical_detailed_report_view import MonthlyAnalyticalReportDetailView

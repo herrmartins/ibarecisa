@@ -503,10 +503,21 @@ class MonthlyReportView(APIView):
                     'count': data['count'],
                 })
 
+            # Calcular saldo inicial acumulado (soma de todos os períodos anteriores)
+            accumulated_balance = 0
+            previous_period = period.get_previous_period()
+            if previous_period:
+                if previous_period.closing_balance is not None:
+                    accumulated_balance = previous_period.closing_balance
+                else:
+                    # Se período anterior não tem closing_balance, calcula
+                    prev_summary = previous_period.get_transactions_summary()
+                    accumulated_balance = prev_summary['total_positive'] - prev_summary['total_negative']
+
             return Response({
                 'period': AccountingPeriodSerializer(period).data,
                 'summary': {
-                    'opening_balance': float(period.opening_balance),
+                    'opening_balance': float(accumulated_balance),
                     'total_positive': float(summary['total_positive']),
                     'total_negative': float(summary['total_negative']),
                     'net': float(summary['net']),
