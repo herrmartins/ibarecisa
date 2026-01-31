@@ -2,13 +2,14 @@ from events.forms import VenueForm
 from django.views.generic.edit import FormView
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from events.models import Venue
+from django.urls import reverse_lazy
 
 
 class VenueFormView(PermissionRequiredMixin, FormView):
     permission_required = "events.add_event"
     template_name = 'events/venue_form.html'
     form_class = VenueForm
-    success_url = '/events/venue/register/'
+    success_url = reverse_lazy('events:venues-list')
 
     def get_initial(self):
         venue_id = self.kwargs.get('pk')

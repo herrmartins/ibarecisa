@@ -34,17 +34,17 @@ class EventForm(forms.ModelForm):
         widgets = {
             "user": forms.HiddenInput(),
             "start_date": forms.DateTimeInput(
-                attrs={"class": "form-control", 'type': 'datetime-local'}),
+                attrs={"class": "app-input", 'type': 'datetime-local'}),
             "end_date": forms.DateTimeInput(
-                attrs={"class": "form-control", 'type': 'datetime-local'}),
-            "price": forms.NumberInput(attrs={"class": "form-control"}),
-            "contact_name": forms.TextInput(attrs={"class": "form-control"}),
-            "contact_user": forms.Select(attrs={"class": "form-select"}),
-            "title": forms.TextInput(attrs={"class": "form-control"}),
+                attrs={"class": "app-input", 'type': 'datetime-local'}),
+            "price": forms.NumberInput(attrs={"class": "app-input"}),
+            "contact_name": forms.TextInput(attrs={"class": "app-input"}),
+            "contact_user": forms.Select(attrs={"class": "app-input"}),
+            "title": forms.TextInput(attrs={"class": "app-input"}),
             "description": forms.Textarea(
-                attrs={"class": "form-control", "rows": 3}),
-            "location": forms.Select(attrs={"class": "form-select"}),
-            "category": forms.Select(attrs={"class": "form-select"}),
+                attrs={"class": "app-input", "rows": 3}),
+            "location": forms.Select(attrs={"class": "app-input"}),
+            "category": forms.Select(attrs={"class": "app-input"}),
         }
 
     def __init__(self, *args, **kwargs):

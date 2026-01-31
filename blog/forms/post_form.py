@@ -18,14 +18,10 @@ class PostForm(forms.ModelForm):
             "categories": "Categorias",
         }
         widgets = {
-            'title': forms.TextInput(
-                attrs={'class': 'w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all'}),
-            'summary': forms.TextInput(
-                attrs={'class': 'w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all'}),
-            'keywords': forms.TextInput(
-                attrs={'class': 'w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all'}),
-            'categories': forms.SelectMultiple(
-                attrs={'class': 'w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all'}),
+            'title': forms.TextInput(attrs={'class': 'app-input', 'placeholder': 'Título do post'}),
+            'summary': forms.TextInput(attrs={'class': 'app-input', 'placeholder': 'Resumo breve do post'}),
+            'keywords': forms.TextInput(attrs={'class': 'app-input', 'placeholder': 'palavra1, palavra2, palavra3'}),
+            'categories': forms.SelectMultiple(attrs={'class': 'app-input'}),
         }
 
     def __init__(self, *args, **kwargs):
