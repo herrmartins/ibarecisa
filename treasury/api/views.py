@@ -288,8 +288,8 @@ class TransactionViewSet(viewsets.ModelViewSet):
             'user', 'category', 'accounting_period', 'created_by'
         ).prefetch_related('reversals')
 
-        # Filtro por período
-        period_id = self.request.query_params.get('period_id')
+        # Filtro por período (aceita ambos: period_id e accounting_period)
+        period_id = self.request.query_params.get('period_id') or self.request.query_params.get('accounting_period')
         if period_id:
             queryset = queryset.filter(accounting_period_id=period_id)
 
@@ -301,9 +301,10 @@ class TransactionViewSet(viewsets.ModelViewSet):
         if date_to:
             queryset = queryset.filter(date__lte=date_to)
 
-        # Filtro por tipo (excluir reversals por padrão)
+        # Filtro por tipo (excluir reversals por padrão, exceto para action summary)
         show_reversals = self.request.query_params.get('show_reversals', 'false') == 'true'
-        if not show_reversals:
+        is_summary_action = self.action == 'summary'
+        if not show_reversals and not is_summary_action:
             queryset = queryset.filter(transaction_type='original')
 
         return queryset
@@ -339,7 +340,6 @@ class TransactionViewSet(viewsets.ModelViewSet):
     def summary(self, request):
         """Retorna um resumo das transações com base nos filtros."""
         queryset = self.get_queryset()
-        queryset = queryset.filter(transaction_type='original')
 
         # Calcular totais
         positive = queryset.filter(is_positive=True).aggregate(
@@ -350,12 +350,18 @@ class TransactionViewSet(viewsets.ModelViewSet):
             total=Coalesce(Sum('amount'), Decimal('0.00'), output_field=DecimalField())
         )['total']
 
+        # Net: receitas + despesas (despesas já são negativas no aggregate)
+        net = positive + negative
+
         count = queryset.count()
+
+        # Para exibição, usar valor absoluto das despesas
+        negative_display = abs(negative)
 
         return Response({
             'total_positive': float(positive),
-            'total_negative': float(negative),
-            'net': float(positive - negative),
+            'total_negative': float(negative_display),
+            'net': float(net),
             'count': count,
         })
 
