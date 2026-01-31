@@ -2,99 +2,7 @@
 
 {% load static %}
 
-{% block header_back_button %}
-<div class="mb-6">
-  <a href="{% url 'treasury:dashboard' %}" class="app-back-link">
-    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-    </svg>
-    Voltar para Tesouraria
-  </a>
-</div>
-{% endblock %}
-
-{% block header_title %}Nova Transação{% endblock %}
-{% block header_subtitle %}Adicionar nova entrada ou saída{% endblock %}
-
-{% block treasury_content %}
-<div class="max-w-2xl mx-auto" x-data="transactionForm()">
-    <!-- Form -->
-    <div class="bg-white rounded-lg shadow p-6">
-        <form @submit.prevent="submit">
-            <!-- Type Toggle -->
-            <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Transação</label>
-                <div class="flex gap-4">
-                    <label class="flex items-center">
-                        <input type="radio" x-model="form.is_positive" :value="true" class="mr-2">
-                        <span class="text-green-600 font-medium">Receita</span>
-                    </label>
-                    <label class="flex items-center">
-                        <input type="radio" x-model="form.is_positive" :value="false" class="mr-2">
-                        <span class="text-red-600 font-medium">Despesa</span>
-                    </label>
-                </div>
-            </div>
-
-            <!-- Date -->
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Data</label>
-                <input type="date" x-model="form.date" class="app-input" required>
-            </div>
-
-            <!-- Description -->
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
-                <input type="text" x-model="form.description" placeholder="Ex: Dízimo, Oferta, Salário..."
-                       class="app-input" required>
-            </div>
-
-            <!-- Amount -->
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Valor (R$)</label>
-                <input type="number" x-model="form.amount" step="0.01" min="0.01" placeholder="0,00"
-                       class="app-input" required>
-            </div>
-
-            <!-- Category -->
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
-                <select x-model="form.category" class="app-input">
-                    <option value="">Selecione uma categoria</option>
-                    <template x-for="cat in categories" :key="cat.id">
-                        <option :value="cat.id" x-text="cat.name"></option>
-                    </template>
-                </select>
-            </div>
-
-            <!-- Document (optional) -->
-            <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Comprovante (opcional)</label>
-                <input type="file" x-ref="docFile" accept="image/*,.pdf" class="app-input">
-                <p class="text-xs text-gray-500 mt-1">Imagens ou PDF (máx. 5MB)</p>
-            </div>
-
-            <!-- Errors -->
-            <div x-show="hasErrors" class="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-700">
-                <template x-for="error in errors" :key="error">
-                    <p x-text="error"></p>
-                </template>
-            </div>
-
-            <!-- Submit -->
-            <div class="flex gap-3">
-                <button type="submit" :disabled="submitting" class="app-btn app-btn-primary flex-1">
-                    <span x-show="!submitting">Salvar Transação</span>
-                    <span x-show="submitting">Salvando...</span>
-                </button>
-                <a href="{% url 'treasury:dashboard' %}" class="app-btn app-btn-secondary">
-                    Cancelar
-                </a>
-            </div>
-        </form>
-    </div>
-</div>
-
+{% block extra_head %}
 <script>
 function transactionForm() {
     return {
@@ -105,6 +13,7 @@ function transactionForm() {
             amount: '',
             category: ''
         },
+        amountDisplay: '',
         categories: [],
         submitting: false,
         errors: [],
@@ -122,6 +31,18 @@ function transactionForm() {
                 this.categories = data.results || data;
             } catch (error) {
                 console.error('Error loading categories:', error);
+            }
+        },
+
+        updateAmountFromDisplay() {
+            const value = this.amountDisplay.trim();
+
+            if (value.startsWith('-')) {
+                this.form.is_positive = false;
+                this.form.amount = value.substring(1);
+            } else {
+                this.form.is_positive = true;
+                this.form.amount = value;
             }
         },
 
@@ -196,4 +117,99 @@ function transactionForm() {
     };
 }
 </script>
+{% endblock %}
+
+{% block header_back_button %}
+<div class="mb-6">
+  <a href="{% url 'treasury:dashboard' %}" class="app-back-link">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+    </svg>
+    Voltar para Tesouraria
+  </a>
+</div>
+{% endblock %}
+
+{% block header_title %}Nova Transação{% endblock %}
+{% block header_subtitle %}Adicionar nova entrada ou saída{% endblock %}
+
+{% block treasury_content %}
+<div class="max-w-2xl mx-auto" x-data="transactionForm()">
+    <!-- Form -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <form @submit.prevent="submit">
+            <!-- Type Toggle -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Transação</label>
+                <div class="flex gap-4">
+                    <label class="flex items-center">
+                        <input type="radio" x-model="form.is_positive" :value="true" class="mr-2">
+                        <span class="text-green-600 font-medium">Receita</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="radio" x-model="form.is_positive" :value="false" class="mr-2">
+                        <span class="text-red-600 font-medium">Despesa</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Date -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Data</label>
+                <input type="date" x-model="form.date" class="app-input" required>
+            </div>
+
+            <!-- Description -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
+                <input type="text" x-model="form.description" placeholder="Ex: Dízimo, Oferta, Salário..."
+                       class="app-input" required>
+            </div>
+
+            <!-- Amount -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Valor (R$)</label>
+                <input type="text" x-model="amountDisplay" @input="updateAmountFromDisplay" step="0.01" placeholder="0,00"
+                       class="app-input" required>
+                <p class="text-xs text-gray-500 mt-1">Digite um valor negativo (ex: -100) para despesa</p>
+            </div>
+
+            <!-- Category -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
+                <select x-model="form.category" class="app-input">
+                    <option value="">Selecione uma categoria</option>
+                    <template x-for="cat in categories" :key="cat.id">
+                        <option :value="cat.id" x-text="cat.name"></option>
+                    </template>
+                </select>
+            </div>
+
+            <!-- Document (optional) -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Comprovante (opcional)</label>
+                <input type="file" x-ref="docFile" accept="image/*,.pdf" class="app-input">
+                <p class="text-xs text-gray-500 mt-1">Imagens ou PDF (máx. 5MB)</p>
+            </div>
+
+            <!-- Errors -->
+            <div x-show="hasErrors" class="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-700">
+                <template x-for="error in errors" :key="error">
+                    <p x-text="error"></p>
+                </template>
+            </div>
+
+            <!-- Submit -->
+            <div class="flex gap-3">
+                <button type="submit" :disabled="submitting" class="app-btn app-btn-primary flex-1">
+                    <span x-show="!submitting">Salvar Transação</span>
+                    <span x-show="submitting">Salvando...</span>
+                </button>
+                <a href="{% url 'treasury:dashboard' %}" class="app-btn app-btn-secondary">
+                    Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
 {% endblock %}
