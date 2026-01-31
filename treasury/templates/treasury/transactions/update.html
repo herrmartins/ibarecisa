@@ -4,7 +4,7 @@
 
 {% block header_back_button %}
 <div class="mb-6">
-  <a href="{% url 'treasury:transaction-list' %}" class="inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors">
+  <a href="{% url 'treasury:transaction-list' %}" class="app-back-link">
     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
     </svg>
@@ -58,7 +58,7 @@
             <!-- Date -->
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Data</label>
-                <input type="date" x-model="form.date" :disabled="!canEditDate" class="w-full rounded-md border-gray-300 shadow-sm" required>
+                <input type="date" x-model="form.date" :disabled="!canEditDate" class="app-input" required>
                 <p x-show="!canEditDate" class="text-xs text-gray-500 mt-1">Data não pode ser alterada</p>
             </div>
 
@@ -66,20 +66,20 @@
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
                 <input type="text" x-model="form.description" placeholder="Ex: Dízimo, Oferta, Salário..."
-                       class="w-full rounded-md border-gray-300 shadow-sm" required>
+                       class="app-input" required>
             </div>
 
             <!-- Amount -->
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Valor (R$)</label>
                 <input type="number" x-model="form.amount" step="0.01" min="0.01" placeholder="0,00"
-                       class="w-full rounded-md border-gray-300 shadow-sm" required>
+                       class="app-input" required>
             </div>
 
             <!-- Category -->
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
-                <select x-model="form.category" class="w-full rounded-md border-gray-300 shadow-sm">
+                <select x-model="form.category" class="app-input">
                     <option value="">Selecione uma categoria</option>
                     <template x-for="cat in categories" :key="cat.id">
                         <option :value="cat.id" x-text="cat.name"></option>
@@ -97,7 +97,7 @@
                         <input type="checkbox" x-model="removeDoc" class="mr-1"> Remover
                     </label>
                 </div>
-                <input type="file" x-ref="docFile" accept="image/*,.pdf" class="w-full rounded-md border-gray-300 shadow-sm">
+                <input type="file" x-ref="docFile" accept="image/*,.pdf" class="app-input">
                 <p class="text-xs text-gray-500 mt-1">Imagens ou PDF (máx. 5MB). Deixe em branco para manter o atual.</p>
             </div>
 
@@ -110,12 +110,11 @@
 
             <!-- Submit -->
             <div class="flex gap-3">
-                <button type="submit" :disabled="submitting"
-                        class="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg font-medium">
+                <button type="submit" :disabled="submitting" class="app-btn app-btn-primary flex-1">
                     <span x-show="!submitting">Salvar Alterações</span>
                     <span x-show="submitting">Salvando...</span>
                 </button>
-                <a :href="backLink" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                <a :href="backLink" class="app-btn app-btn-secondary">
                     Cancelar
                 </a>
             </div>

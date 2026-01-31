@@ -184,7 +184,7 @@ EMAIL_HOST_USER = config("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD")
 EMAIL_PORT = config("EMAIL_PORT")
 EMAIL_USE_TLS = True
-DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="rafael@rdmartins.adv.br")
+DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="Rafael Martins <naoresponda@ibarecisa.org.br>")
 
 
 handler404 = "core.views.custom_404"

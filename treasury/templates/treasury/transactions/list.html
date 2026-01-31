@@ -11,6 +11,128 @@
 </style>
 {% endblock %}
 
+{% block header_stats %}
+<!-- Stats Cards in Header -->
+<div class="flex justify-center gap-4 sm:gap-6 flex-wrap" x-data="transactionHeaderStats()" x-init="init()" @transaction-refresh.window="loadSummary()">
+  <!-- Receitas -->
+  <div class="treasury-stat-card treasury-stat-income">
+    <div class="flex items-center justify-center gap-2 mb-2">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12"/>
+      </svg>
+      <span class="text-xs font-medium text-white/90">Receitas</span>
+    </div>
+    <div class="text-2xl font-bold text-white" x-text="formatBRL(summary.total_positive)"></div>
+  </div>
+
+  <!-- Despesas -->
+  <div class="treasury-stat-card treasury-stat-expense">
+    <div class="flex items-center justify-center gap-2 mb-2">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 13l-5 5m0 0l-5-5m5 5V6"/>
+      </svg>
+      <span class="text-xs font-medium text-white/90">Despesas</span>
+    </div>
+    <div class="text-2xl font-bold text-white" x-text="formatBRL(summary.total_negative)"></div>
+  </div>
+
+  <!-- Resultado do Mês -->
+  <div class="treasury-stat-card" :class="summary.net >= 0 ? 'treasury-stat-income' : 'treasury-stat-expense'">
+    <div class="flex items-center justify-center gap-2 mb-2">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+      </svg>
+      <span class="text-xs font-medium text-white/90">Resultado</span>
+    </div>
+    <div class="text-2xl font-bold text-white" x-text="formatBRL(summary.net)"></div>
+  </div>
+
+  <!-- Saldo Atual -->
+  <div class="treasury-stat-card treasury-stat-current">
+    <div class="flex items-center justify-center gap-2 mb-2">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      <span class="text-xs font-medium text-white/90">Saldo Atual</span>
+    </div>
+    <div class="text-2xl font-bold text-white" x-text="formatBRL(currentBalance)"></div>
+  </div>
+</div>
+
+<!-- Script for Header Stats -->
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('transactionHeaderStats', () => ({
+        summary: { total_positive: 0, total_negative: 0, net: 0 },
+        currentBalance: 0,
+        filters: {
+            period: '',
+            category: '',
+            type: '',
+            search: ''
+        },
+
+        async init() {
+            // Listen for filter changes from main table
+            window.addEventListener('transaction-refresh', (e) => {
+                this.loadSummary(e.detail);
+            });
+            await Promise.all([
+                this.loadSummary(),
+                this.loadCurrentBalance()
+            ]);
+        },
+
+        async loadSummary(filters = null) {
+            // Update filters if provided
+            if (filters) {
+                this.filters = { ...filters };
+            }
+
+            const apiParams = {};
+            if (this.filters.period) apiParams.accounting_period = this.filters.period;
+            if (this.filters.category) apiParams.category = this.filters.category;
+            if (this.filters.type === 'income') apiParams.is_positive = 'true';
+            if (this.filters.type === 'expense') apiParams.is_positive = 'false';
+            if (this.filters.search) apiParams.search = this.filters.search;
+
+            const params = new URLSearchParams(apiParams);
+            try {
+                const response = await fetch(`/treasury/api/transactions/summary/?${params}`, {
+                    headers: { 'X-CSRFToken': this.getCookie('csrftoken') }
+                });
+                this.summary = await response.json();
+            } catch (error) {
+                console.error('Error loading summary:', error);
+            }
+        },
+
+        async loadCurrentBalance() {
+            try {
+                const response = await fetch('/treasury/api/reports/current-balance/', {
+                    headers: { 'X-CSRFToken': this.getCookie('csrftoken') }
+                });
+                const data = await response.json();
+                this.currentBalance = data.current_balance || 0;
+            } catch (error) {
+                console.error('Error loading current balance:', error);
+            }
+        },
+
+        formatBRL(value) {
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+        },
+
+        getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+    }));
+});
+</script>
+{% endblock %}
+
 {% block treasury_content %}
 <script>
 document.addEventListener('alpine:init', () => {
@@ -19,7 +141,6 @@ document.addEventListener('alpine:init', () => {
         categories: [],
         periods: [],
         loading: true,
-        summary: { total_positive: 0, total_negative: 0, net: 0 },
         filters: {
             period: '',
             category: '',
@@ -39,7 +160,6 @@ document.addEventListener('alpine:init', () => {
                 this.loadPeriods(),
                 this.loadTransactions()
             ]);
-            await this.loadSummary();
         },
 
         async loadCategories() {
@@ -65,29 +185,6 @@ document.addEventListener('alpine:init', () => {
             } catch (error) {
                 console.error('Error loading periods:', error);
                 this.periods = [];
-            }
-        },
-
-        async loadSummary() {
-            // Build API params with correct filter names
-            const apiParams = {};
-
-            // Map filters to API parameters
-            if (this.filters.period) apiParams.accounting_period = this.filters.period;
-            if (this.filters.category) apiParams.category = this.filters.category;
-            if (this.filters.type === 'income') apiParams.is_positive = 'true';
-            if (this.filters.type === 'expense') apiParams.is_positive = 'false';
-            if (this.filters.search) apiParams.search = this.filters.search;
-
-            const params = new URLSearchParams(apiParams);
-            try {
-                const response = await fetch(`/treasury/api/transactions/summary/?${params}`, {
-                    headers: { 'X-CSRFToken': this.getCookie('csrftoken') }
-                });
-                this.summary = await response.json();
-            } catch (error) {
-                console.error('Error loading summary:', error);
-                this.summary = { total_positive: 0, total_negative: 0, net: 0 };
             }
         },
 
@@ -122,7 +219,16 @@ document.addEventListener('alpine:init', () => {
             } finally {
                 this.loading = false;
             }
-            await this.loadSummary();
+
+            // Notify header about filter changes
+            window.dispatchEvent(new CustomEvent('transaction-refresh', {
+                detail: {
+                    period: this.filters.period,
+                    category: this.filters.category,
+                    type: this.filters.type,
+                    search: this.filters.search
+                }
+            }));
         },
 
         goToPage(page) {
@@ -156,18 +262,9 @@ document.addEventListener('alpine:init', () => {
     <div x-show="!loading" style="display: none;">
 
     <!-- Filters -->
-    <div class="bg-white rounded-lg shadow p-4 mb-6" x-data="{ filtersOpen: false }">
-        <div class="flex justify-between items-center">
-            <button @click="filtersOpen = !filtersOpen" class="flex items-center gap-2 text-gray-600 hover:text-gray-800">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
-                </svg>
-                Filtros
-                <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': filtersOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                </svg>
-            </button>
-
+    <div class="bg-white rounded-lg shadow p-4 mb-6">
+        <div class="flex justify-between items-center mb-4">
+            <span class="text-sm font-medium text-gray-700">Filtros</span>
             <a href="{% url 'treasury:transaction-create' %}" class="treasury-btn treasury-btn-primary">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
@@ -176,53 +273,33 @@ document.addEventListener('alpine:init', () => {
             </a>
         </div>
 
-        <div x-show="filtersOpen" x-collapse class="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-                <label class="treasury-label">Período</label>
-                <select x-model="filters.period" @change="loadTransactions()" class="treasury-select">
+        <div>
+            <div class="grid grid-cols-4 gap-4 text-xs text-gray-600 mb-1">
+                <span>Período</span>
+                <span>Categoria</span>
+                <span>Tipo</span>
+                <span>Buscar</span>
+            </div>
+            <div class="grid grid-cols-4 gap-4">
+                <select x-model="filters.period" @change="loadTransactions()" class="treasury-select text-sm">
                     <option value="">Todos</option>
                     <template x-for="period in periods" :key="period.id">
                         <option :value="period.id" x-text="period.month_name + '/' + period.year"></option>
                     </template>
                 </select>
-            </div>
-            <div>
-                <label class="treasury-label">Categoria</label>
-                <select x-model="filters.category" @change="loadTransactions()" class="treasury-select">
+                <select x-model="filters.category" @change="loadTransactions()" class="treasury-select text-sm">
                     <option value="">Todas</option>
                     <template x-for="cat in categories" :key="cat.id">
                         <option :value="cat.id" x-text="cat.name"></option>
                     </template>
                 </select>
-            </div>
-            <div>
-                <label class="treasury-label">Tipo</label>
-                <select x-model="filters.type" @change="loadTransactions()" class="treasury-select">
+                <select x-model="filters.type" @change="loadTransactions()" class="treasury-select text-sm">
                     <option value="">Todos</option>
                     <option value="income">Receitas</option>
                     <option value="expense">Despesas</option>
                 </select>
+                <input type="text" x-model="filters.search" @keyup.enter="loadTransactions()" placeholder="Descrição..." class="treasury-input text-sm">
             </div>
-            <div>
-                <label class="treasury-label">Buscar</label>
-                <input type="text" x-model="filters.search" @keyup.enter="loadTransactions()" placeholder="Descrição..." class="treasury-input">
-            </div>
-        </div>
-    </div>
-
-    <!-- Summary Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
-            <p class="text-sm text-green-600 font-medium">Receitas</p>
-            <p class="text-2xl font-bold text-green-700" x-text="formatBRL(summary.total_positive)"></p>
-        </div>
-        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
-            <p class="text-sm text-red-600 font-medium">Despesas</p>
-            <p class="text-2xl font-bold text-red-700" x-text="formatBRL(summary.total_negative)"></p>
-        </div>
-        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <p class="text-sm text-blue-600 font-medium">Saldo</p>
-            <p class="text-2xl font-bold" :class="summary.net >= 0 ? 'text-blue-700' : 'text-red-700'" x-text="formatBRL(summary.net)"></p>
         </div>
     </div>
 
