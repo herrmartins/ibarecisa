@@ -2,6 +2,9 @@
 
 {% load static %}
 
+{% block header_title %}Detalhes do Período{% endblock %}
+{% block header_subtitle %}Visualização e gerenciamento do período contábil{% endblock %}
+
 {% block header_back_button %}
 <div class="mb-6">
   <a href="{% url 'treasury:period-list' %}" class="inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors">
@@ -13,8 +16,120 @@
 </div>
 {% endblock %}
 
+{% block header_stats %}
+<!-- Stats Cards in Header -->
+<div class="flex justify-center gap-4 sm:gap-6 flex-wrap" x-data="periodHeaderStats()" x-init="init()" @period-refresh.window="loadPeriod($event.detail.periodId)">
+  <!-- Status -->
+  <div class="treasury-stat-card" :class="{
+    'treasury-stat-balance': period?.status === 'open',
+    'treasury-stat-income': period?.status === 'closed',
+    'treasury-stat-expense': period?.status === 'archived'
+  }">
+    <div class="flex items-center justify-center gap-3 mb-2">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      <span class="text-sm font-medium text-white/90">Status</span>
+    </div>
+    <div class="text-xl font-bold text-white" x-text="period?.status_label || '-'"></div>
+  </div>
+
+  <!-- Saldo Inicial -->
+  <div class="treasury-stat-card treasury-stat-current">
+    <div class="flex items-center justify-center gap-3 mb-2">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      <span class="text-sm font-medium text-white/90">Saldo Inicial</span>
+    </div>
+    <div class="text-3xl font-bold text-white" x-text="period ? formatBalance(period.opening_balance) : '-'"></div>
+  </div>
+
+  <!-- Receitas -->
+  <div class="treasury-stat-card treasury-stat-income">
+    <div class="flex items-center justify-center gap-3 mb-2">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12"/>
+      </svg>
+      <span class="text-sm font-medium text-white/90">Receitas</span>
+    </div>
+    <div class="text-3xl font-bold text-white" x-text="period ? formatAmount(period.transactions_summary?.total_positive) : '-'"></div>
+  </div>
+
+  <!-- Despesas -->
+  <div class="treasury-stat-card treasury-stat-expense">
+    <div class="flex items-center justify-center gap-3 mb-2">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 13l-5 5m0 0l-5-5m5 5V6"/>
+      </svg>
+      <span class="text-sm font-medium text-white/90">Despesas</span>
+    </div>
+    <div class="text-3xl font-bold text-white" x-text="period ? formatAmount(period.transactions_summary?.total_negative) : '-'"></div>
+  </div>
+
+  <!-- Saldo Final -->
+  <div class="treasury-stat-card" :class="(period?.closing_balance || calculatedBalance) >= 0 ? 'treasury-stat-monthly' : 'treasury-stat-expense'">
+    <div class="flex items-center justify-center gap-3 mb-2">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+      </svg>
+      <span class="text-sm font-medium text-white/90">Saldo Final</span>
+    </div>
+    <div class="text-3xl font-bold text-white" x-text="period ? formatBalance(period.closing_balance || calculatedBalance) : '-'"></div>
+  </div>
+</div>
+
+<script>
+function periodHeaderStats() {
+    return {
+        period: null,
+        calculatedBalance: 0,
+        loading: true,
+
+        async init() {
+            const periodId = window.location.pathname.split('/').slice(-2, -1)[0];
+            await this.loadPeriod(periodId);
+        },
+
+        async loadPeriod(id) {
+            // If no id provided, get from URL
+            if (!id) {
+                id = window.location.pathname.split('/').slice(-2, -1)[0];
+            }
+            try {
+                const response = await fetch(`/treasury/api/periods/${id}/`, {
+                    headers: { 'X-CSRFToken': this.getCookie('csrftoken') }
+                });
+                this.period = await response.json();
+                this.period.status_label = { 'open': 'Aberto', 'closed': 'Fechado', 'archived': 'Arquivado' }[this.period.status];
+                this.calculatedBalance = this.period.opening_balance + (this.period.transactions_summary?.net || 0);
+            } catch (error) {
+                console.error('Error loading period:', error);
+            }
+        },
+
+        getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        },
+
+        formatBalance(value) {
+            const numValue = value !== null && value !== undefined ? parseFloat(value) : 0;
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(numValue);
+        },
+
+        formatAmount(value) {
+            const numValue = value !== null && value !== undefined ? parseFloat(value) : 0;
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(numValue);
+        }
+    };
+}
+</script>
+{% endblock %}
+
 {% block treasury_content %}
-<div class="max-w-6xl mx-auto" x-data="periodDetail()" x-cloak>
+<div class="max-w-6xl mx-auto" x-data="periodDetailContent()" x-init="init()" @period-refresh.window="loadPeriod($event.detail.periodId)" x-cloak>
     <!-- Loading -->
     <div x-show="loading" class="flex justify-center py-12">
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -22,116 +137,101 @@
 
     <!-- Period Content -->
     <div x-show="!loading">
-        <!-- Period Actions -->
-        <div class="flex justify-end mb-6">
-            <template x-if="period && period.status === 'open'">
-                <button @click="closePeriod" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg">
-                    Fechar Período
-                </button>
-            </template>
-            <template x-if="period && period.status === 'closed'">
-                <button @click="reopenPeriod" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg">
-                        Reabrir
-                    </button>
-                </template>
-            </div>
-        </div>
-
-        <!-- Summary Cards -->
-        <template x-if="period">
-            <div>
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                    <div class="bg-white rounded-lg shadow p-4">
-                        <p class="text-sm text-gray-500">Status</p>
-                        <span class="inline-block px-3 py-1 rounded-full text-sm font-medium mt-1" :class="{
-                            'bg-green-100 text-green-800': period.status === 'open',
-                            'bg-yellow-100 text-yellow-800': period.status === 'closed',
-                            'bg-gray-100 text-gray-800': period.status === 'archived'
-                        }" x-text="period.status_label"></span>
-                    </div>
-                    <div class="bg-white rounded-lg shadow p-4">
-                        <p class="text-sm text-gray-500">Saldo Inicial</p>
-                        <p class="text-xl font-bold text-gray-800" x-text="formatBRL(period.opening_balance)"></p>
-                    </div>
-                    <div class="bg-white rounded-lg shadow p-4">
-                        <p class="text-sm text-gray-500">Saldo Final</p>
-                        <p class="text-xl font-bold" :class="(period.closing_balance || calculatedBalance) >= 0 ? 'text-green-600' : 'text-red-600'"
-                           x-text="formatBRL(period.closing_balance || calculatedBalance || 0)"></p>
-                    </div>
-                    <div class="bg-white rounded-lg shadow p-4">
-                        <p class="text-sm text-gray-500">Variação</p>
-                        <p class="text-xl font-bold" :class="(period.transactions_summary?.net || 0) >= 0 ? 'text-green-600' : 'text-red-600'"
-                           x-text="formatBRL(period.transactions_summary?.net || 0)"></p>
-                    </div>
-                </div>
-
-                <!-- Transactions Summary -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
-                        <p class="text-sm text-green-600 font-medium">Receitas</p>
-                        <p class="text-2xl font-bold text-green-700" x-text="formatBRL(period.transactions_summary?.total_positive || 0)"></p>
-                        <p class="text-sm text-green-600" x-text="(period.transactions_summary?.positive_count || 0) + ' transações'"></p>
-                    </div>
-                    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
-                        <p class="text-sm text-red-600 font-medium">Despesas</p>
-                        <p class="text-2xl font-bold text-red-700" x-text="formatBRL(period.transactions_summary?.total_negative || 0)"></p>
-                        <p class="text-sm text-red-600" x-text="(period.transactions_summary?.negative_count || 0) + ' transações'"></p>
-                    </div>
-                    <div class="bg-white border rounded-lg p-4">
-                        <p class="text-sm text-gray-500">Total de Transações</p>
-                        <p class="text-2xl font-bold text-gray-800" x-text="period.transactions_summary?.count || 0"></p>
-                    </div>
-                </div>
-            </div>
-        </template>
-
-        <!-- Transactions by Category -->
-        <div class="bg-white rounded-lg shadow p-6 mb-6">
-            <h2 class="text-lg font-bold mb-4">Transações por Categoria</h2>
-            <div class="space-y-3" x-show="categories.length > 0">
-                <template x-for="cat in categories" :key="cat.name">
-                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded">
-                        <span class="font-medium" x-text="cat.name"></span>
-                        <div class="flex items-center gap-4">
-                            <span class="text-sm text-green-600" x-show="cat.total_positive > 0" x-text="'+' + formatBRL(cat.total_positive)"></span>
-                            <span class="text-sm text-red-600" x-show="cat.total_negative > 0" x-text="'-' + formatBRL(cat.total_negative)"></span>
-                            <span class="text-sm font-bold" x-text="cat.count + ' tx'"></span>
-                        </div>
-                    </div>
-                </template>
-            </div>
-            <p x-show="categories.length === 0" class="text-gray-500 text-center py-4">Nenhuma transação neste período</p>
-        </div>
-
         <!-- Period Transactions -->
-        <div class="bg-white rounded-lg shadow">
-            <div class="p-4 border-b flex justify-between items-center">
-                <h2 class="text-lg font-bold">Transações do Período</h2>
-                <a :href="`/treasury/transacoes/?period=${period?.id}`" class="text-blue-600 hover:text-blue-800 text-sm" x-show="period">
-                    Ver todas →
-                </a>
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <!-- Card Header -->
+            <div class="px-6 py-4 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-gray-50/50">
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-800">Transações do Período</h2>
+                    <p class="text-sm text-gray-500 mt-1" x-text="filteredTransactions.length + ' transações'"></p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <!-- Close Period Button (only when open) -->
+                    <template x-if="period && period.status === 'open'">
+                        <button @click="closePeriod" class="treasury-btn treasury-btn-warning text-sm">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            Fechar
+                        </button>
+                    </template>
+                    <!-- Reopen and Report Buttons (when closed) -->
+                    <template x-if="period && period.status === 'closed'">
+                        <div class="flex items-center gap-2">
+                            <button @click="reopenPeriod" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 transition-colors text-sm font-medium">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                </svg>
+                                Reabrir
+                            </button>
+                            <a :href="`/treasury/reports/pdf/${period.month_number}/${period.year}/`" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-green-50 hover:bg-green-100 text-green-700 border border-green-200 transition-colors text-sm font-medium">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h3a2 2 0 002-2v-4m-6-4h6"/>
+                                </svg>
+                                PDF
+                            </a>
+                        </div>
+                    </template>
+                    <!-- Filter by Category -->
+                    <div class="relative">
+                        <select x-model="filters.category" @change="applyFilters" class="treasury-select">
+                            <option value="">Todas categorias</option>
+                            <template x-for="cat in availableCategories" :key="cat.id">
+                                <option :value="cat.id" x-text="cat.name"></option>
+                            </template>
+                        </select>
+                    </div>
+                    <!-- Search -->
+                    <div class="treasury-search-wrapper">
+                        <input type="text" x-model="filters.search" @keyup.enter="applyFilters" placeholder="Buscar..." class="treasury-input treasury-search-input w-48">
+                        <svg class="treasury-search-icon w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </div>
+                </div>
             </div>
+
+            <!-- Table -->
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Descrição</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Categoria</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Valor</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descrição</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoria</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Valor</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
-                        <template x-for="tx in transactions" :key="tx.id">
+                        <template x-for="tx in filteredTransactions" :key="tx.id">
                             <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm" x-text="formatDate(tx.date)"></td>
-                                <td class="px-6 py-4 text-sm" x-text="tx.description"></td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500" x-text="tx.category?.name || '-'"></td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" x-text="formatDate(tx.date)"></td>
+                                <td class="px-6 py-4 text-sm text-gray-900">
+                                    <a :href="`/treasury/transacoes/${tx.id}/`" class="text-blue-600 hover:text-blue-900 hover:underline" x-text="tx.description"></a>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <template x-if="tx.category">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800" x-text="tx.category?.name"></span>
+                                    </template>
+                                    <template x-if="!tx.category">
+                                        <span>-</span>
+                                    </template>
+                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-medium"
                                     :class="tx.is_positive ? 'text-green-600' : 'text-red-600'"
                                     x-text="formatBRL(tx.amount)"></td>
                             </tr>
                         </template>
+                        <tr x-show="filteredTransactions.length === 0">
+                            <td colspan="4" class="px-6 py-12 text-center text-gray-500">
+                                <div class="flex flex-col items-center justify-center">
+                                    <svg class="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                    </svg>
+                                    <p>Nenhuma transação encontrada</p>
+                                </div>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -189,28 +289,50 @@
 </div>
 
 <script>
-function periodDetail() {
+function periodDetailContent() {
     return {
         period: null,
         transactions: [],
-        categories: [],
+        filteredTransactions: [],
         loading: true,
         calculatedBalance: 0,
-        modalOpen: false,
-        modalNotes: '',
+        filters: {
+            category: '',
+            search: ''
+        },
+
+        get availableCategories() {
+            // Use categories from the global store (already loaded in base template)
+            const cats = this.$store.categories?.categories || [];
+            return Array.isArray(cats) ? cats : (cats.results || []);
+        },
+
+        get filteredTransactions() {
+            let result = this.transactions;
+
+            // Filter by category
+            if (this.filters.category) {
+                result = result.filter(tx => tx.category?.id == this.filters.category);
+            }
+
+            // Filter by search
+            if (this.filters.search) {
+                const searchLower = this.filters.search.toLowerCase();
+                result = result.filter(tx =>
+                    tx.description.toLowerCase().includes(searchLower) ||
+                    (tx.category?.name || '').toLowerCase().includes(searchLower)
+                );
+            }
+
+            return result;
+        },
 
         async init() {
             const periodId = window.location.pathname.split('/').slice(-2, -1)[0];
 
-            // Expose refresh function globally
+            // Expose refresh function globally - dispatches event for both header and content
             window.__refreshPeriod = async () => {
-                await this.loadPeriod(periodId);
-            };
-
-            // Expose modal open function globally
-            window.__openCloseModal = () => {
-                this.modalOpen = true;
-                this.modalNotes = '';
+                window.dispatchEvent(new CustomEvent('period-refresh', { detail: { periodId } }));
             };
 
             await this.loadPeriod(periodId);
@@ -218,6 +340,10 @@ function periodDetail() {
         },
 
         async loadPeriod(id) {
+            // If no id provided, get from URL
+            if (!id) {
+                id = window.location.pathname.split('/').slice(-2, -1)[0];
+            }
             try {
                 const response = await fetch(`/treasury/api/periods/${id}/`, {
                     headers: { 'X-CSRFToken': this.getCookie('csrftoken') }
@@ -239,27 +365,13 @@ function periodDetail() {
                 });
                 const data = await response.json();
                 this.transactions = data.results || data;
-                this.calculateCategories();
             } catch (error) {
                 console.error('Error loading transactions:', error);
             }
         },
 
-        calculateCategories() {
-            const cats = {};
-            this.transactions.forEach(tx => {
-                const name = tx.category?.name || 'Sem categoria';
-                if (!cats[name]) {
-                    cats[name] = { name, total_positive: 0, total_negative: 0, count: 0 };
-                }
-                if (tx.is_positive) {
-                    cats[name].total_positive += tx.amount;
-                } else {
-                    cats[name].total_negative += tx.amount;
-                }
-                cats[name].count++;
-            });
-            this.categories = Object.values(cats).sort((a, b) => b.count - a.count);
+        applyFilters() {
+            // Filters are reactive via getter, nothing to do here
         },
 
         closePeriod() {
@@ -286,7 +398,11 @@ function periodDetail() {
                 });
                 if (response.ok) {
                     await this.loadPeriod(this.period.id);
-                    this.$store.ui.toast('Período reaberto!');
+                    if (this.$store.ui?.notify) {
+                        this.$store.ui.notify('Período reaberto!', 'success');
+                    } else {
+                        alert('Período reaberto!');
+                    }
                 }
             } catch (error) {
                 console.error('Error reopening period:', error);

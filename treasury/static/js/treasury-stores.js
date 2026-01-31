@@ -366,7 +366,8 @@ document.addEventListener('alpine:init', () => {
 
                 if (!response.ok) throw new Error('Falha ao carregar categorias');
 
-                this.categories = await response.json();
+                const data = await response.json();
+                this.categories = data.results || data;
             } catch (err) {
                 this.error = err.message;
                 console.error('Erro ao carregar categorias:', err);
