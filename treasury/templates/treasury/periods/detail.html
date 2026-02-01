@@ -255,9 +255,14 @@ function periodHeaderStats() {
             if (response.ok) {
                 this.close();
                 window.__refreshPeriod?.();
+                Alpine.store('treasuryUi').notify('Período fechado com sucesso!', 'success');
+            } else {
+                const data = await response.json().catch(() => ({}));
+                const errorMsg = data.error || data.detail || 'Erro ao fechar período';
+                Alpine.store('treasuryUi').notify(errorMsg, 'error');
             }
         } catch (e) {
-            alert('Erro ao fechar período');
+            Alpine.store('treasuryUi').notify('Erro de conexão ao fechar período', 'error');
         }
     }
 }" x-cloak style="display: none;">
@@ -396,14 +401,15 @@ function periodDetailContent() {
                 });
                 if (response.ok) {
                     await this.loadPeriod(this.period.id);
-                    if (this.$store.ui?.notify) {
-                        this.$store.ui.notify('Período reaberto!', 'success');
-                    } else {
-                        alert('Período reaberto!');
-                    }
+                    this.$store.treasuryUi?.notify('Período reaberto com sucesso!', 'success');
+                } else {
+                    const data = await response.json().catch(() => ({}));
+                    const errorMsg = data.error || data.detail || 'Erro ao reabrir período';
+                    this.$store.treasuryUi?.notify(errorMsg, 'error');
                 }
             } catch (error) {
                 console.error('Error reopening period:', error);
+                this.$store.treasuryUi?.notify('Erro de conexão: ' + error.message, 'error');
             }
         },
 

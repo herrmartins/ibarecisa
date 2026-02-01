@@ -180,14 +180,20 @@ class AccountingPeriod(models.Model):
         self.notes = notes
         self.save(update_fields=['closing_balance', 'status', 'closed_at', 'closed_by', 'notes'])
 
-        # Criar o próximo período se não existir
+        # Atualizar ou criar o próximo período com o saldo correto
         next_month = self.get_next_month()
-        if next_month and not AccountingPeriod.objects.filter(month=next_month).exists():
-            AccountingPeriod.objects.create(
+        if next_month:
+            next_period, created = AccountingPeriod.objects.get_or_create(
                 month=next_month,
-                opening_balance=final_balance,
-                status='open'
+                defaults={
+                    'opening_balance': final_balance,
+                    'status': 'open'
+                }
             )
+            # Se já existe, atualizar o opening_balance
+            if not created:
+                next_period.opening_balance = final_balance
+                next_period.save(update_fields=['opening_balance'])
 
         return final_balance
 

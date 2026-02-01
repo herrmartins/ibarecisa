@@ -217,14 +217,15 @@ function categoryList() {
                 if (response.ok) {
                     this.closeModals();
                     await this.loadCategories();
-                    this.$store.ui.toast(this.editingId ? 'Categoria atualizada!' : 'Categoria criada!');
+                    this.$store.treasuryUi?.notify(this.editingId ? 'Categoria atualizada!' : 'Categoria criada!', 'success');
                 } else {
                     const data = await response.json();
-                    alert(Object.values(data).flat().join('\n'));
+                    const errorMsg = Object.values(data).flat().join('\n');
+                    this.$store.treasuryUi?.notify(errorMsg, 'error');
                 }
             } catch (error) {
                 console.error('Error saving category:', error);
-                alert('Erro ao salvar categoria');
+                this.$store.treasuryUi?.notify('Erro ao salvar categoria', 'error');
             }
         },
 
@@ -243,13 +244,13 @@ function categoryList() {
                     this.showDeleteModal = false;
                     this.categoryToDelete = null;
                     await this.loadCategories();
-                    this.$store.ui.toast('Categoria excluída!');
+                    this.$store.treasuryUi?.notify('Categoria excluída!', 'success');
                 } else {
-                    alert('Não foi possível excluir a categoria');
+                    this.$store.treasuryUi?.notify('Não foi possível excluir a categoria', 'error');
                 }
             } catch (error) {
                 console.error('Error deleting category:', error);
-                alert('Erro ao excluir categoria');
+                this.$store.treasuryUi?.notify('Erro ao excluir categoria', 'error');
             }
         },
 

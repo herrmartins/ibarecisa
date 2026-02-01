@@ -307,7 +307,7 @@ function reversalForm() {
                 });
 
                 if (response.ok) {
-                    this.$store.ui.toast('Estorno criado com sucesso!');
+                    this.$store.treasuryUi.notify('Estorno criado com sucesso!');
                     window.location.href = this.backLink;
                 } else {
                     const data = await response.json();

@@ -258,7 +258,7 @@ function transactionUpdate() {
                 });
 
                 if (response.ok) {
-                    this.$store.ui.toast('Transação atualizada com sucesso!');
+                    this.$store.treasuryUi.notify('Transação atualizada com sucesso!');
                     window.location.href = this.backLink;
                 } else {
                     const data = await response.json();

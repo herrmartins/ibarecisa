@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated, BasePermission
 from django.shortcuts import get_object_or_404
 from django.db.models import Q, Sum, F, DecimalField
 from django.db.models.functions import Coalesce
+from django.db import transaction
 from django.utils import timezone
 from decimal import Decimal
 
@@ -22,6 +23,8 @@ from treasury.models import (
     TransactionModel,
     ReversalTransaction,
     CategoryModel,
+    AuditLog,
+    PeriodSnapshot,
 )
 from treasury.serializers import (
     AccountingPeriodSerializer,
@@ -169,7 +172,31 @@ class AccountingPeriodViewSet(viewsets.ReadOnlyModelViewSet):
 
         try:
             notes = serializer.validated_data.get('notes', '')
+
+            # Salvar valores antigos para auditoria
+            old_values = {
+                'status': period.status,
+                'closing_balance': None,
+            }
+
             final_balance = period.close(user=request.user, notes=notes)
+
+            # Log de auditoria
+            AuditLog.log(
+                action='period_closed',
+                entity_type='AccountingPeriod',
+                entity_id=period.id,
+                user=request.user,
+                old_values=old_values,
+                new_values={
+                    'status': period.status,
+                    'closing_balance': float(final_balance),
+                    'notes': notes,
+                },
+                description=f'Período {period.month_name}/{period.year} fechado. Saldo final: R$ {final_balance:.2f}',
+                period_id=period.id,
+                request=request,
+            )
 
             return Response({
                 'message': 'Período fechado com sucesso.',
@@ -183,6 +210,7 @@ class AccountingPeriodViewSet(viewsets.ReadOnlyModelViewSet):
             )
 
     @action(detail=True, methods=['post'])
+    @transaction.atomic
     def reopen(self, request, pk=None):
         """Reabre um período fechado."""
         period = self.get_object()
@@ -201,10 +229,45 @@ class AccountingPeriodViewSet(viewsets.ReadOnlyModelViewSet):
             )
 
         try:
-            period.reopen(user=request.user)
+            # Salvar valores antigos para auditoria
+            old_values = {
+                'status': period.status,
+                'closing_balance': float(period.closing_balance) if period.closing_balance else None,
+                'closed_at': period.closed_at.isoformat() if period.closed_at else None,
+                'closed_by': period.closed_by_id,
+            }
+
+            # Criar snapshot antes de reabrir
+            service = PeriodService()
+            reason = request.data.get('reason', f'Reabertura do período {period.month_name}/{period.year}')
+            result = service.reopen_period_with_snapshot(
+                period_id=period.id,
+                user_id=request.user.id,
+                reason=reason
+            )
+
+            # Log de auditoria
+            AuditLog.log(
+                action='period_reopened',
+                entity_type='AccountingPeriod',
+                entity_id=period.id,
+                user=request.user,
+                old_values=old_values,
+                new_values={
+                    'status': period.status,
+                    'closing_balance': None,
+                },
+                description=f'Período {period.month_name}/{period.year} reaberto. Snapshot criado: {result["snapshot"].id}',
+                snapshot_id=result['snapshot'].id,
+                period_id=period.id,
+                request=request,
+            )
+
             return Response({
                 'message': 'Período reaberto com sucesso.',
                 'period': AccountingPeriodSerializer(period).data,
+                'snapshot_id': str(result['snapshot'].id),
+                'old_closing_balance': float(result['old_closing_balance']) if result['old_closing_balance'] else None,
             })
         except Exception as e:
             return Response(
@@ -231,7 +294,28 @@ class AccountingPeriodViewSet(viewsets.ReadOnlyModelViewSet):
             )
 
         try:
+            # Salvar valores antigos para auditoria
+            old_values = {
+                'status': period.status,
+            }
+
             period.archive()
+
+            # Log de auditoria
+            AuditLog.log(
+                action='period_archived',
+                entity_type='AccountingPeriod',
+                entity_id=period.id,
+                user=request.user,
+                old_values=old_values,
+                new_values={
+                    'status': period.status,
+                },
+                description=f'Período {period.month_name}/{period.year} arquivado',
+                period_id=period.id,
+                request=request,
+            )
+
             return Response({
                 'message': 'Período arquivado com sucesso.',
                 'period': AccountingPeriodSerializer(period).data,
@@ -321,6 +405,35 @@ class TransactionViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         """Define o criador da transação."""
         serializer.save(created_by=self.request.user)
+
+    def perform_destroy(self, instance):
+        """Registra log de auditoria antes de deletar transação."""
+        # Salvar valores para auditoria
+        old_values = {
+            'description': instance.description,
+            'amount': float(instance.amount),
+            'is_positive': instance.is_positive,
+            'date': str(instance.date),
+            'category_id': instance.category_id,
+        }
+
+        period_id = instance.accounting_period.id if instance.accounting_period else None
+
+        # Log de auditoria
+        AuditLog.log(
+            action='transaction_deleted',
+            entity_type='TransactionModel',
+            entity_id=instance.id,
+            user=self.request.user,
+            old_values=old_values,
+            new_values=None,
+            description=f'Transação deletada: {instance.description}',
+            period_id=period_id,
+            request=self.request,
+        )
+
+        # Deletar a transação
+        instance.delete()
 
     @action(detail=True, methods=['get'])
     def reversals(self, request, pk=None):

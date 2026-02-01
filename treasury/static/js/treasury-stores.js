@@ -8,6 +8,28 @@
  * - UI (loading, notifications, etc.)
  */
 
+// ============================================
+// Helper Functions (definidos antes dos stores)
+// ============================================
+
+/**
+ * Obtém o CSRF token do cookie
+ */
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
 document.addEventListener('alpine:init', () => {
     // ============================================
     // Store de Períodos
@@ -542,9 +564,9 @@ document.addEventListener('alpine:init', () => {
     });
 
     // ============================================
-    // Store de UI (loading, notifications, modals)
+    // Store de UI da Tesouraria (loading, notifications, modals)
     // ============================================
-    Alpine.store('ui', {
+    Alpine.store('treasuryUi', {
         notifications: [],
         loading: false,
         modalOpen: false,
@@ -555,10 +577,13 @@ document.addEventListener('alpine:init', () => {
             const id = Date.now();
             this.notifications.push({ id, message, type });
 
-            // Auto-remove após 5 segundos
-            setTimeout(() => {
-                this.removeNotification(id);
-            }, 5000);
+            // Auto-remove após diferentes tempos dependendo do tipo
+            const duration = type === 'error' ? 0 : 5000; // Erros só fecham manualmente
+            if (duration > 0) {
+                setTimeout(() => {
+                    this.removeNotification(id);
+                }, duration);
+            }
         },
 
         // Remover notificação
@@ -596,26 +621,8 @@ document.addEventListener('alpine:init', () => {
 });
 
 // ============================================
-// Helper Functions
+// Helper Functions (formatação)
 // ============================================
-
-/**
- * Obtém o CSRF token do cookie
- */
-function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
-    }
-    return cookieValue;
-}
 
 /**
  * Formata valor para BRL

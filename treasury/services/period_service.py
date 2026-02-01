@@ -4,7 +4,11 @@ from django.utils import timezone
 from decimal import Decimal
 from datetime import datetime, date
 
-from treasury.models import AccountingPeriod, TransactionModel
+from treasury.models import AccountingPeriod, TransactionModel, PeriodSnapshot, MonthlyReportModel
+from treasury.serializers import AccountingPeriodSerializer
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 
 class PeriodService:
@@ -68,16 +72,20 @@ class PeriodService:
         period.notes = notes
         period.save(update_fields=['closing_balance', 'status', 'closed_at', 'closed_by', 'notes'])
 
-        # Criar o próximo período se não existir
+        # Atualizar ou criar o próximo período com o saldo correto
         next_month = period.get_next_month()
         if next_month:
-            AccountingPeriod.objects.get_or_create(
+            next_period, created = AccountingPeriod.objects.get_or_create(
                 month=next_month,
                 defaults={
                     'opening_balance': final_balance,
                     'status': 'open'
                 }
             )
+            # Se já existe, atualizar o opening_balance
+            if not created:
+                next_period.opening_balance = final_balance
+                next_period.save(update_fields=['opening_balance'])
 
         return final_balance
 
@@ -422,3 +430,205 @@ class PeriodService:
             queryset = queryset.filter(month__year=year)
 
         return queryset.order_by('-month')
+
+    @staticmethod
+    def get_period_snapshot_data(period):
+        """
+        Retorna os dados do snapshot de um período em formato de dicionário.
+
+        Args:
+            period: Instância de AccountingPeriod
+
+        Returns:
+            Dicionário com os dados do snapshot
+        """
+        summary = period.get_transactions_summary()
+        transactions = period.transactions.filter(transaction_type='original')
+
+        return {
+            'period': AccountingPeriodSerializer(period).data,
+            'transactions': [
+                {
+                    'id': t.id,
+                    'date': str(t.date),
+                    'amount': float(t.amount),
+                    'category': t.category.name if t.category else None,
+                    'description': t.description,
+                    'is_positive': t.is_positive,
+                }
+                for t in transactions
+            ],
+            'summary': {
+                'opening_balance': float(period.opening_balance),
+                'closing_balance': float(period.closing_balance) if period.closing_balance else None,
+                'total_positive': float(summary.get('total_positive', 0)),
+                'total_negative': float(summary.get('total_negative', 0)),
+                'net': float(summary.get('net', 0)),
+                'transactions_count': summary.get('count', 0),
+            }
+        }
+
+    def create_snapshot(self, period, user, reason):
+        """
+        Cria snapshot do período antes de alterações significativas.
+
+        Args:
+            period: Instância de AccountingPeriod
+            user: Usuário que está criando o snapshot
+            reason: Motivo da criação do snapshot
+
+        Returns:
+            Instância de PeriodSnapshot criada
+        """
+        return PeriodSnapshot.create_from_period(period, user, reason)
+
+    def reopen_period_with_snapshot(self, period_id, user_id=None, reason=''):
+        """
+        Reabre um período fechado criando snapshot antes.
+
+        Args:
+            period_id: ID do período a ser reaberto
+            user_id: ID do usuário que está reabrindo
+            reason: Motivo da reabertura
+
+        Returns:
+            Dicionário com o período reaberto e informações sobre snapshot e recálculo
+
+        Raises:
+            ValueError: Se o período não puder ser reaberto
+        """
+        try:
+            period = AccountingPeriod.objects.get(id=period_id)
+        except AccountingPeriod.DoesNotExist:
+            raise ValueError('Período não encontrado.')
+
+        if not period.can_be_reopened:
+            raise ValueError('Apenas períodos fechados ou arquivados podem ser reabertos.')
+
+        user = None
+        if user_id:
+            try:
+                user = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                pass
+
+        # Criar snapshot antes de alterar
+        if not reason:
+            reason = f'Reabertura do período {period.month_name}/{period.year}'
+
+        snapshot = self.create_snapshot(period, user, reason)
+
+        # Reabrir o período
+        period.status = 'open'
+        old_closing_balance = period.closing_balance
+        period.closing_balance = None
+        period.closed_at = None
+        period.closed_by = None
+        period.notes = ''
+        period.save(update_fields=['status', 'closing_balance', 'closed_at', 'closed_by', 'notes'])
+
+        # Deletar relatório antigo
+        MonthlyReportModel.objects.filter(month=period.month).delete()
+
+        return {
+            'period': period,
+            'snapshot': snapshot,
+            'old_closing_balance': old_closing_balance,
+        }
+
+    def recalculate_subsequent_periods(self, from_period, user=None):
+        """
+        Recalcula todos os períodos após from_period em cascata.
+
+        Quando um período é alterado (estorno, adição de transação), todos
+        os períodos posteriores precisam ter seus saldos recalculados pois
+        o closing_balance de um vira o opening_balance do próximo.
+
+        Args:
+            from_period: AccountingPeriod que foi alterado (ponto de partida)
+            user: Usuário que está fazendo o recálculo (opcional, para snapshot)
+
+        Returns:
+            Dicionário com:
+            - affected_count: número de períodos recalculados
+            - periods: lista de períodos afetados
+        """
+        running_balance = from_period.get_current_balance()
+
+        # Busca todos os períodos posteriores, ordenados por data
+        subsequent_periods = AccountingPeriod.objects.filter(
+            month__gt=from_period.month
+        ).order_by('month')
+
+        affected_periods = []
+
+        for period in subsequent_periods:
+            old_closing_balance = period.closing_balance
+            was_closed = period.status == 'closed'
+
+            # Se o período estava fechado, criar snapshot
+            if was_closed and user:
+                snapshot = self.create_snapshot(
+                    period,
+                    user,
+                    f'Recálculo em cascata a partir de {from_period.month_name}/{from_period.year}'
+                )
+
+            # Atualiza o opening_balance do período
+            period.opening_balance = running_balance
+
+            # Recalcula o saldo final do período
+            summary = period.get_transactions_summary()
+            running_balance = period.opening_balance + summary['net']
+
+            # Se o período estava fechado, atualiza closing_balance
+            if was_closed:
+                period.closing_balance = running_balance
+                # Recria o MonthlyReportModel
+                self._regenerate_monthly_report(period)
+
+            period.save(update_fields=['opening_balance', 'closing_balance'])
+
+            affected_periods.append({
+                'period': period,
+                'old_closing_balance': old_closing_balance,
+                'new_closing_balance': period.closing_balance,
+                'was_closed': was_closed,
+                'snapshot': snapshot if was_closed and user else None,
+            })
+
+        return {
+            'affected_count': len(affected_periods),
+            'periods': affected_periods,
+        }
+
+    def _regenerate_monthly_report(self, period):
+        """
+        Regenera o relatório mensal ao recalcular período fechado.
+
+        Args:
+            period: AccountingPeriod fechado que foi recalculado
+        """
+        summary = period.get_transactions_summary()
+        prev_period = period.get_previous_period()
+
+        # Calcular saldo anterior acumulado
+        if prev_period and prev_period.closing_balance is not None:
+            prev_balance = prev_period.closing_balance
+        elif prev_period:
+            prev_summary = prev_period.get_transactions_summary()
+            prev_balance = prev_summary['total_positive'] - prev_summary['total_negative']
+        else:
+            prev_balance = Decimal('0.00')
+
+        # Deleta relatório antigo
+        MonthlyReportModel.objects.filter(month=period.month).delete()
+
+        # Cria novo relatório
+        MonthlyReportModel.objects.create(
+            month=period.month,
+            previous_month_balance=prev_balance,
+            total_positive_transactions=summary['total_positive'],
+            total_negative_transactions=abs(summary['total_negative']),
+            total_balance=period.closing_balance,
+        )

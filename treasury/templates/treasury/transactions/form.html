@@ -95,7 +95,7 @@ function transactionForm() {
                 });
 
                 if (response.ok) {
-                    this.$store.ui.toast('Transação criada com sucesso!');
+                    this.$store.treasuryUi.notify('Transação criada com sucesso!');
                     window.location.href = '/treasury/transacoes/';
                 } else {
                     const data = await response.json();

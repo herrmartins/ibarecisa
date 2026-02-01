@@ -152,11 +152,15 @@ function periodList() {
                 if (response.ok) {
                     this.showCloseModal = false;
                     await this.loadPeriods();
-                    alert('Período fechado com sucesso!');
+                    this.$store.treasuryUi?.notify('Período fechado com sucesso!', 'success');
+                } else {
+                    const data = await response.json().catch(() => ({}));
+                    const errorMsg = data.error || data.detail || 'Erro ao fechar período';
+                    this.$store.treasuryUi?.notify(errorMsg, 'error');
                 }
             } catch (error) {
                 console.error('Error closing period:', error);
-                alert('Erro ao fechar período');
+                this.$store.treasuryUi?.notify('Erro de conexão ao fechar período', 'error');
             }
         },
 
@@ -172,11 +176,15 @@ function periodList() {
                 });
                 if (response.ok) {
                     await this.loadPeriods();
-                    alert('Período reaberto!');
+                    this.$store.treasuryUi?.notify('Período reaberto com sucesso!', 'success');
+                } else {
+                    const data = await response.json().catch(() => ({}));
+                    const errorMsg = data.error || data.detail || 'Erro ao reabrir período';
+                    this.$store.treasuryUi?.notify(errorMsg, 'error');
                 }
             } catch (error) {
                 console.error('Error reopening period:', error);
-                alert('Erro ao reabrir período');
+                this.$store.treasuryUi?.notify('Erro de conexão: ' + error.message, 'error');
             }
         },
 

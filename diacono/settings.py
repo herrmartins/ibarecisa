@@ -90,8 +90,17 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": BASE_DIR / "db.sqlite3",
+    },
+    "audit": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "audit.sqlite3",
     }
 }
+
+# Router para direcionar models de auditoria para banco separado
+DATABASE_ROUTERS = [
+    "treasury.routers.AuditRouter",
+]
 
 
 # Password validation

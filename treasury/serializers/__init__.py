@@ -9,6 +9,7 @@ from treasury.models import (
     TransactionModel,
     ReversalTransaction,
     CategoryModel,
+    AuditLog,
 )
 
 User = get_user_model()
@@ -351,6 +352,25 @@ class TransactionCreateSerializer(serializers.ModelSerializer):
             **validated_data
         )
 
+        # Log de auditoria
+        AuditLog.log(
+            action='transaction_created',
+            entity_type='TransactionModel',
+            entity_id=transaction.id,
+            user=user,
+            old_values=None,
+            new_values={
+                'description': transaction.description,
+                'amount': float(transaction.amount),
+                'is_positive': transaction.is_positive,
+                'date': str(transaction.date),
+                'category_id': transaction.category_id,
+            },
+            description=f'Transação criada: {transaction.description}',
+            period_id=period.id,
+            request=request,
+        )
+
         return transaction
 
 
@@ -391,11 +411,44 @@ class TransactionUpdateSerializer(serializers.ModelSerializer):
                 "Utilize a funcionalidade de estorno."
             )
 
+        request = self.context['request']
+        user = request.user
+
+        # Salvar valores antigos para auditoria
+        old_values = {
+            'description': instance.description,
+            'amount': float(instance.amount),
+            'is_positive': instance.is_positive,
+            'date': str(instance.date),
+            'category_id': instance.category_id,
+        }
+
         # Atualizar os campos
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
 
         instance.save()
+
+        # Log de auditoria
+        period_id = instance.accounting_period.id if instance.accounting_period else None
+        AuditLog.log(
+            action='transaction_updated',
+            entity_type='TransactionModel',
+            entity_id=instance.id,
+            user=user,
+            old_values=old_values,
+            new_values={
+                'description': instance.description,
+                'amount': float(instance.amount),
+                'is_positive': instance.is_positive,
+                'date': str(instance.date),
+                'category_id': instance.category_id,
+            },
+            description=f'Transação atualizada: {instance.description}',
+            period_id=period_id,
+            request=request,
+        )
+
         return instance
 
 
@@ -502,6 +555,14 @@ class ReversalCreateSerializer(serializers.Serializer):
             except CategoryModel.DoesNotExist:
                 pass
 
+        # Salvar valores antigos para auditoria
+        old_values = {
+            'original_transaction_id': original_transaction.id,
+            'original_description': original_transaction.description,
+            'original_amount': float(original_transaction.amount),
+            'original_is_positive': original_transaction.is_positive,
+        }
+
         # Criar o estorno
         reversal = ReversalTransaction.create_reversal(
             original_transaction=original_transaction,
@@ -509,6 +570,26 @@ class ReversalCreateSerializer(serializers.Serializer):
             reason=validated_data['reason'],
             user=user,
             authorized_by_id=validated_data.get('authorized_by_id'),
+        )
+
+        # Log de auditoria
+        period_id = original_transaction.accounting_period.id if original_transaction.accounting_period else None
+        AuditLog.log(
+            action='transaction_reversed',
+            entity_type='TransactionModel',
+            entity_id=original_transaction.id,
+            user=user,
+            old_values=old_values,
+            new_values={
+                'reversal_description': new_data.get('description'),
+                'reversal_amount': float(new_data['amount']),
+                'reversal_is_positive': new_data['is_positive'],
+                'reason': validated_data['reason'],
+                'reversal_transaction_id': reversal.reversal_transaction.id,
+            },
+            description=f'Estorno criado: {validated_data["reason"]}',
+            period_id=period_id,
+            request=request,
         )
 
         return reversal
