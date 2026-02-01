@@ -91,12 +91,6 @@
             </svg>
             Relatório PDF
         </button>
-        <button @click="printReport" class="app-btn">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
-            </svg>
-            Imprimir
-        </button>
     </div>
 
     <!-- Loading -->
@@ -121,7 +115,7 @@
                 <div class="app-card-body">
                     <div class="flex flex-wrap items-end gap-4">
                         <!-- Ano Inicial -->
-                        <div class="flex-1 min-w-[150px]">
+                        <div class="w-40 sm:w-48">
                             <label class="block text-sm font-medium text-slate-700 mb-1">Ano Inicial</label>
                             <select x-model="$store.balanceSheet.startYear" class="app-input">
                                 <template x-for="year in availableYears" :key="year">
@@ -131,7 +125,7 @@
                         </div>
 
                         <!-- Ano Final -->
-                        <div class="flex-1 min-w-[150px]">
+                        <div class="w-40 sm:w-48">
                             <label class="block text-sm font-medium text-slate-700 mb-1">Ano Final</label>
                             <select x-model="$store.balanceSheet.endYear" class="app-input">
                                 <template x-for="year in availableYears" :key="year">
@@ -141,22 +135,37 @@
                         </div>
 
                         <!-- Status -->
-                        <div class="flex-1 min-w-[150px]">
+                        <div class="w-40 sm:w-48">
                             <label class="block text-sm font-medium text-slate-700 mb-1">Status</label>
                             <select x-model="$store.balanceSheet.statusFilter" class="app-input">
                                 <option value="all">Todos</option>
                                 <option value="open">Aberto</option>
                                 <option value="closed">Fechado</option>
-                                <option value="archived">Arquivado</option>
                             </select>
                         </div>
 
                         <!-- Result Count -->
-                        <div class="text-sm text-white/90">
+                        <div class="text-sm text-slate-600 flex items-end pb-2">
                             <span x-text="periodsWithBalance.length"></span> período(s)
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <!-- Validation Message Toast -->
+            <div x-show="$store.balanceSheet.showValidationMessage"
+                 x-transition:enter="ease-out duration-300"
+                 x-transition:enter-start="opacity-0 translate-y-2"
+                 x-transition:enter-end="opacity-100 translate-y-0"
+                 x-transition:leave="ease-in duration-200"
+                 x-transition:leave-start="opacity-100 translate-y-0"
+                 x-transition:leave-end="opacity-0 translate-y-2"
+                 class="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2"
+                 style="display: none;">
+                <svg class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                <p class="text-sm text-amber-800" x-text="$store.balanceSheet.validationMessage"></p>
             </div>
 
             <!-- Periods Table -->
@@ -373,6 +382,21 @@ document.addEventListener('alpine:init', () => {
         startYear: null,
         endYear: null,
         statusFilter: 'all',
+        validationMessage: '',
+        showValidationMessage: false,
+
+        validateYears() {
+            if (this.startYear && this.endYear && this.endYear < this.startYear) {
+                this.validationMessage = `O ano final não pode ser anterior ao ano inicial. Ajustado para ${this.startYear}.`;
+                this.showValidationMessage = true;
+                this.endYear = this.startYear;
+
+                // Esconder mensagem após 3 segundos
+                setTimeout(() => {
+                    this.showValidationMessage = false;
+                }, 3000);
+            }
+        },
 
         setPeriods(periods) {
             this.allPeriods = periods;
@@ -556,6 +580,10 @@ document.addEventListener('alpine:init', () => {
         async init() {
             await this.loadData();
 
+            // Watch para validar anos
+            this.$watch('$store.balanceSheet.startYear', () => this.$store.balanceSheet.validateYears());
+            this.$watch('$store.balanceSheet.endYear', () => this.$store.balanceSheet.validateYears());
+
             // Watch para recalcular quando os filtros mudarem
             this.$watch('$store.balanceSheet.startYear', () => this.recalculatePeriods());
             this.$watch('$store.balanceSheet.endYear', () => this.recalculatePeriods());
@@ -574,7 +602,13 @@ document.addEventListener('alpine:init', () => {
                 const data = await periodsResponse.json();
                 const periods = data.results || data;
 
-                const years = [...new Set(periods.map(p => p.year).filter(y => y))].sort();
+                // Filtrar apenas períodos com transações (count > 0)
+                const periodsWithTransactions = periods.filter(p =>
+                    p.transactions_summary && p.transactions_summary.count > 0
+                );
+
+                // Extrair anos apenas de períodos com transações
+                const years = [...new Set(periodsWithTransactions.map(p => p.year).filter(y => y))].sort();
                 this.availableYears = years;
                 this.$store.balanceSheet.setPeriods(periods);
 
@@ -665,10 +699,6 @@ document.addEventListener('alpine:init', () => {
                 status: this.$store.balanceSheet.statusFilter,
             });
             window.open(`/treasury/relatorios/balanco/pdf/?${params.toString()}`, '_blank');
-        },
-
-        printReport() {
-            window.print();
         },
 
         getCookie(name) {
