@@ -5,6 +5,7 @@ Estas views complementam a API REST Framework, fornecendo
 templates renderizados no servidor com interatividade via Alpine.js.
 """
 
+import json
 from django.views.generic import TemplateView, ListView, DetailView, CreateView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
@@ -12,7 +13,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.utils import timezone
 from datetime import datetime, timedelta
 
-from treasury.models import AccountingPeriod, TransactionModel, CategoryModel
+from treasury.models import AccountingPeriod, TransactionModel, CategoryModel, AuditLog
 
 
 class TreasuryDashboardView(LoginRequiredMixin, TemplateView):
@@ -198,4 +199,20 @@ class BalanceSheetView(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         context['page_title'] = 'Balanço Financeiro'
         context['periods'] = AccountingPeriod.objects.all().order_by('-month')[:12]
+        return context
+
+
+class AuditLogView(LoginRequiredMixin, TemplateView):
+    """Página de auditoria com filtros."""
+    template_name = 'treasury/audit.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['page_title'] = 'Auditoria'
+
+        # Opções de filtro - converter para listas (JavaScript arrays)
+        # json.dumps com ensure_ascii=False para preservar caracteres especiais
+        context['action_choices'] = json.dumps(AuditLog.ACTION_CHOICES, ensure_ascii=False)
+        context['entity_type_choices'] = json.dumps(AuditLog.ENTITY_TYPE_CHOICES, ensure_ascii=False)
+
         return context

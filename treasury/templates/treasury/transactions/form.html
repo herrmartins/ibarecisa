@@ -2,123 +2,6 @@
 
 {% load static %}
 
-{% block extra_head %}
-<script>
-function transactionForm() {
-    return {
-        form: {
-            is_positive: true,
-            date: new Date().toISOString().split('T')[0],
-            description: '',
-            amount: '',
-            category: ''
-        },
-        amountDisplay: '',
-        categories: [],
-        submitting: false,
-        errors: [],
-
-        async init() {
-            await this.loadCategories();
-        },
-
-        async loadCategories() {
-            try {
-                const response = await fetch('/treasury/api/categories/', {
-                    headers: { 'X-CSRFToken': this.getCookie('csrftoken') }
-                });
-                const data = await response.json();
-                this.categories = data.results || data;
-            } catch (error) {
-                console.error('Error loading categories:', error);
-            }
-        },
-
-        updateAmountFromDisplay() {
-            const value = this.amountDisplay.trim();
-
-            if (value.startsWith('-')) {
-                this.form.is_positive = false;
-                this.form.amount = value.substring(1);
-            } else {
-                this.form.is_positive = true;
-                this.form.amount = value;
-            }
-        },
-
-        get hasErrors() {
-            return this.errors.length > 0;
-        },
-
-        async submit() {
-            this.errors = [];
-            this.submitting = true;
-
-            // Validation
-            if (!this.form.description) {
-                this.errors.push('Descrição é obrigatória');
-            }
-            if (!this.form.amount || parseFloat(this.form.amount) <= 0) {
-                this.errors.push('Valor deve ser maior que zero');
-            }
-            if (!this.form.date) {
-                this.errors.push('Data é obrigatória');
-            }
-
-            if (this.hasErrors) {
-                this.submitting = false;
-                return;
-            }
-
-            // Prepare form data
-            const formData = new FormData();
-            formData.append('description', this.form.description);
-            formData.append('amount', this.form.amount);
-            formData.append('is_positive', this.form.is_positive);
-            formData.append('date', this.form.date);
-            if (this.form.category) {
-                formData.append('category', this.form.category);
-            }
-
-            const docFile = this.$refs.docFile?.files[0];
-            if (docFile) {
-                formData.append('acquittance_doc', docFile);
-            }
-
-            try {
-                const response = await fetch('/treasury/api/transactions/', {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': this.getCookie('csrftoken')
-                    },
-                    body: formData
-                });
-
-                if (response.ok) {
-                    this.$store.treasuryUi.notify('Transação criada com sucesso!');
-                    window.location.href = '/treasury/transacoes/';
-                } else {
-                    const data = await response.json();
-                    this.errors = Object.values(data).flat();
-                }
-            } catch (error) {
-                this.errors = ['Erro ao criar transação. Tente novamente.'];
-                console.error(error);
-            } finally {
-                this.submitting = false;
-            }
-        },
-
-        getCookie(name) {
-            const value = `; ${document.cookie}`;
-            const parts = value.split(`; ${name}=`);
-            if (parts.length === 2) return parts.pop().split(';').shift();
-        }
-    };
-}
-</script>
-{% endblock %}
-
 {% block header_back_button %}
 <div class="mb-6">
   <a href="{% url 'treasury:dashboard' %}" class="app-back-link">
@@ -131,85 +14,311 @@ function transactionForm() {
 {% endblock %}
 
 {% block header_title %}Nova Transação{% endblock %}
-{% block header_subtitle %}Adicionar nova entrada ou saída{% endblock %}
+{% block header_subtitle %}
+    Adicionar nova entrada ou saída
+{% endblock %}
 
 {% block treasury_content %}
-<div class="max-w-2xl mx-auto" x-data="transactionForm()">
-    <!-- Form -->
-    <div class="bg-white rounded-lg shadow p-6">
-        <form @submit.prevent="submit">
-            <!-- Type Toggle -->
-            <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Transação</label>
-                <div class="flex gap-4">
-                    <label class="flex items-center">
-                        <input type="radio" x-model="form.is_positive" :value="true" class="mr-2">
-                        <span class="text-green-600 font-medium">Receita</span>
-                    </label>
-                    <label class="flex items-center">
-                        <input type="radio" x-model="form.is_positive" :value="false" class="mr-2">
-                        <span class="text-red-600 font-medium">Despesa</span>
-                    </label>
+<div x-data="transactionForm()" class="max-w-7xl mx-auto">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        <!-- COLUNA ESQUERDA: Formulário -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-gray-800">Formulário</h2>
+                <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded hidden sm:inline">Ctrl+Enter para salvar</span>
+            </div>
+
+            <form @submit.prevent="submit()">
+                <!-- Type Toggle -->
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Tipo</label>
+                    <div class="flex gap-4">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" x-model="form.is_positive" :value="true" class="mr-2">
+                            <span class="text-green-600 font-medium">Entrada</span>
+                        </label>
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" x-model="form.is_positive" :value="false" class="mr-2">
+                            <span class="text-red-600 font-medium">Saída</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <!-- Date -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Data</label>
+                        <input type="date" x-model="form.date" class="app-input" required>
+                    </div>
+
+                    <!-- Amount -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Valor</label>
+                        <input type="text" x-model="amountDisplay" @input="updateAmountFromDisplay"
+                               placeholder="0,00" class="app-input" required>
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
+                    <input type="text" x-model="form.description" placeholder="Ex: Dízimo, Oferta, Salário..."
+                           class="app-input" required autofocus>
+                </div>
+
+                <!-- Category -->
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
+                    <select x-model="form.category" class="app-input">
+                        <option value="">Selecione...</option>
+                        <template x-for="cat in categories" :key="cat.id">
+                            <option :value="cat.id" x-text="cat.name"></option>
+                        </template>
+                    </select>
+                </div>
+
+                <!-- Document (optional) -->
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Comprovante (opcional)</label>
+                    <input type="file" x-ref="docFile" accept="image/*,.pdf" class="app-input text-sm">
+                </div>
+
+                <!-- Errors -->
+                <div x-show="hasErrors" x-cloak class="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+                    <template x-for="error in errors" :key="error">
+                        <p x-text="error"></p>
+                    </template>
+                </div>
+
+                <!-- Submit Buttons -->
+                <div class="flex gap-3">
+                    <button type="button" @click="submit(false)" :disabled="submitting"
+                            class="flex-1 app-btn app-btn-secondary">
+                        Salvar
+                    </button>
+                    <button type="button" @click="submit(true)" :disabled="submitting"
+                            class="flex-1 app-btn app-btn-primary">
+                        <span x-show="!submitting">Salvar e Continuar</span>
+                        <span x-show="submitting">Salvando...</span>
+                    </button>
+                </div>
+                <p class="text-xs text-gray-500 mt-2 text-center">
+                    <span x-show="todayCount > 0" x-cloak>
+                        ✓ <span x-text="todayCount"></span> transação(ões) adicionada(s) hoje
+                    </span>
+                </p>
+            </form>
+        </div>
+
+        <!-- COLUNA DIREITA: Painel de Transações -->
+        <div class="hidden md:block space-y-4">
+            <!-- Resumo do Dia -->
+            <div class="bg-white rounded-lg shadow p-4">
+                <h3 class="text-sm font-semibold text-gray-700 mb-3">
+                    Resumo de <span x-text="formatDate(form.date)"></span>
+                </h3>
+
+                <div x-show="loadingDayTransactions" class="text-center py-4 text-gray-500">
+                    <svg class="animate-spin h-5 w-5 mx-auto mb-2" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Carregando...
+                </div>
+
+                <div x-show="!loadingDayTransactions" x-cloak>
+                    <div class="grid grid-cols-2 gap-3 text-sm">
+                        <div class="bg-gray-50 rounded p-3">
+                            <p class="text-gray-500 text-xs">Saldo Inicial</p>
+                            <p class="font-semibold text-gray-800" x-text="formatAmount(dayTotals.opening_balance)"></p>
+                        </div>
+                        <div class="bg-green-50 rounded p-3">
+                            <p class="text-green-600 text-xs">Entradas</p>
+                            <p class="font-semibold text-green-700" x-text="formatAmount(dayTotals.total_positive)"></p>
+                        </div>
+                        <div class="bg-red-50 rounded p-3">
+                            <p class="text-red-600 text-xs">Saídas</p>
+                            <p class="font-semibold text-red-700" x-text="formatAmount(dayTotals.total_negative)"></p>
+                        </div>
+                        <div class="bg-blue-50 rounded p-3">
+                            <p class="text-blue-600 text-xs">Saldo Final</p>
+                            <p class="font-semibold text-blue-700" x-text="formatAmount(dayTotals.closing_balance)"></p>
+                        </div>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-3 text-center">
+                        <span x-text="dayTotals.count"></span> transação(ões)
+                    </p>
                 </div>
             </div>
 
-            <!-- Date -->
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Data</label>
-                <input type="date" x-model="form.date" class="app-input" required>
-            </div>
+            <!-- Transações do Dia -->
+            <div class="bg-white rounded-lg shadow p-4">
+                <h3 class="text-sm font-semibold text-gray-700 mb-3">Transações do Dia</h3>
 
-            <!-- Description -->
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
-                <input type="text" x-model="form.description" placeholder="Ex: Dízimo, Oferta, Salário..."
-                       class="app-input" required>
-            </div>
+                <div x-show="loadingDayTransactions" class="text-center py-4 text-gray-500">
+                    Carregando...
+                </div>
 
-            <!-- Amount -->
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Valor (R$)</label>
-                <input type="text" x-model="amountDisplay" @input="updateAmountFromDisplay" step="0.01" placeholder="0,00"
-                       class="app-input" required>
-                <p class="text-xs text-gray-500 mt-1">Digite um valor negativo (ex: -100) para despesa</p>
-            </div>
+                <div x-show="!loadingDayTransactions && dayTransactions.length === 0" x-cloak
+                     class="text-center py-6 text-gray-500 text-sm">
+                    <svg class="w-10 h-10 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    Nenhuma transação neste dia
+                </div>
 
-            <!-- Category -->
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
-                <select x-model="form.category" class="app-input">
-                    <option value="">Selecione uma categoria</option>
-                    <template x-for="cat in categories" :key="cat.id">
-                        <option :value="cat.id" x-text="cat.name"></option>
+                <div x-show="!loadingDayTransactions" class="space-y-2 max-h-80 overflow-y-auto">
+                    <template x-for="tx in dayTransactions" :key="'day-' + tx.id">
+                        <div :class="['flex items-center justify-between p-3 rounded-lg border transition-colors',
+                                       tx.temp ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200']">
+                            <div class="flex items-center gap-3 flex-1 min-w-0">
+                                <div :class="['w-2 h-2 rounded-full flex-shrink-0',
+                                               tx.is_positive ? 'bg-green-500' : 'bg-red-500']"></div>
+                                <div class="min-w-0 flex-1">
+                                    <p class="text-sm font-medium text-gray-900 truncate" x-text="tx.description"></p>
+                                    <p class="text-xs text-gray-500" x-text="formatTime(tx.created_at || tx.date)"></p>
+                                </div>
+                            </div>
+                            <p :class="['text-sm font-semibold flex-shrink-0 ml-2',
+                                          tx.is_positive ? 'text-green-600' : 'text-red-600']"
+                               x-text="formatAmount(tx.amount)"></p>
+                        </div>
                     </template>
-                </select>
+                </div>
             </div>
 
-            <!-- Document (optional) -->
-            <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Comprovante (opcional)</label>
-                <input type="file" x-ref="docFile" accept="image/*,.pdf" class="app-input">
-                <p class="text-xs text-gray-500 mt-1">Imagens ou PDF (máx. 5MB)</p>
+            <!-- Sessão Atual -->
+            <div x-show="sessionTransactions.length > 0" x-cloak
+                 class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg shadow p-4 border border-green-200">
+                <h3 class="text-sm font-semibold text-green-800 mb-3 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                    Adicionadas Agora
+                </h3>
+                <div class="space-y-2 max-h-40 overflow-y-auto">
+                    <template x-for="tx in sessionTransactions" :key="'session-' + tx.id">
+                        <div class="flex items-center justify-between p-2 bg-white rounded-lg">
+                            <div class="flex items-center gap-2 flex-1 min-w-0">
+                                <div :class="['w-1.5 h-1.5 rounded-full',
+                                               tx.is_positive ? 'bg-green-500' : 'bg-red-500']"></div>
+                                <p class="text-sm font-medium text-gray-800 truncate" x-text="tx.description"></p>
+                            </div>
+                            <p :class="['text-sm font-semibold',
+                                          tx.is_positive ? 'text-green-600' : 'text-red-600']"
+                               x-text="formatAmount(tx.amount)"></p>
+                        </div>
+                    </template>
+                </div>
             </div>
+        </div>
 
-            <!-- Errors -->
-            <div x-show="hasErrors" class="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-700">
-                <template x-for="error in errors" :key="error">
-                    <p x-text="error"></p>
-                </template>
-            </div>
+    </div>
 
-            <!-- Submit -->
-            <div class="flex gap-3">
-                <button type="submit" :disabled="submitting" class="app-btn app-btn-primary flex-1">
-                    <span x-show="!submitting">Salvar Transação</span>
-                    <span x-show="submitting">Salvando...</span>
-                </button>
-                <a href="{% url 'treasury:dashboard' %}" class="app-btn app-btn-secondary">
-                    Cancelar
-                </a>
+    <!-- BOTTOM SHEET MOBILE -->
+    <div class="md:hidden fixed bottom-0 left-0 right-0 z-40">
+        <!-- Trigger sempre visível -->
+        <div @click.outside="if ($el.contains($event.target)) mobileSheetOpen = false">
+            <!-- Trigger Bar -->
+            <button @click="mobileSheetOpen = !mobileSheetOpen"
+                    class="w-full bg-white border-t border-gray-200 px-4 py-3 flex items-center justify-between shadow-lg">
+                <div class="flex items-center gap-2">
+                    <span class="flex items-center gap-1 text-sm font-medium text-gray-700">
+                        <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        </svg>
+                        Transações
+                        <span x-show="dayTotals.count > 0" x-text="`(${dayTotals.count})`" class="text-gray-500"></span>
+                    </span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span x-show="dayTotals.count > 0" class="text-xs text-gray-500">
+                        <span class="text-green-600" x-text="formatAmount(dayTotals.total_positive)"></span>
+                        <span class="text-gray-400">|</span>
+                        <span class="text-red-600" x-text="formatAmount(dayTotals.total_negative)"></span>
+                    </span>
+                    <svg :class="['w-5 h-5 text-gray-400 transition-transform', mobileSheetOpen ? 'rotate-180' : '']"
+                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </div>
+            </button>
+
+            <!-- Sheet Content -->
+            <div x-show="mobileSheetOpen" x-collapse
+                 class="bg-white border-t border-gray-200 max-h-[60vh] overflow-y-auto">
+                <div class="p-4 space-y-4">
+                    <!-- Resumo Compacto -->
+                    <div class="grid grid-cols-4 gap-2 text-center">
+                        <div class="bg-gray-50 rounded p-2">
+                            <p class="text-[10px] text-gray-500">Inicial</p>
+                            <p class="text-xs font-semibold text-gray-800" x-text="formatAmount(dayTotals.opening_balance)"></p>
+                        </div>
+                        <div class="bg-green-50 rounded p-2">
+                            <p class="text-[10px] text-green-600">Entradas</p>
+                            <p class="text-xs font-semibold text-green-700" x-text="formatAmount(dayTotals.total_positive)"></p>
+                        </div>
+                        <div class="bg-red-50 rounded p-2">
+                            <p class="text-[10px] text-red-600">Saídas</p>
+                            <p class="text-xs font-semibold text-red-700" x-text="formatAmount(dayTotals.total_negative)"></p>
+                        </div>
+                        <div class="bg-blue-50 rounded p-2">
+                            <p class="text-[10px] text-blue-600">Final</p>
+                            <p class="text-xs font-semibold text-blue-700" x-text="formatAmount(dayTotals.closing_balance)"></p>
+                        </div>
+                    </div>
+
+                    <!-- Transações do Dia -->
+                    <div>
+                        <h4 class="text-xs font-semibold text-gray-700 mb-2">Transações do Dia</h4>
+                        <div x-show="dayTransactions.length === 0"
+                             class="text-center py-4 text-gray-400 text-xs">
+                            Nenhuma transação neste dia
+                        </div>
+                        <div class="space-y-1">
+                            <template x-for="tx in dayTransactions" :key="'mobile-day-' + tx.id">
+                                <div :class="['flex items-center justify-between p-2 rounded border text-xs',
+                                               tx.temp ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200']">
+                                    <div class="flex items-center gap-2 flex-1 min-w-0">
+                                        <div :class="['w-1.5 h-1.5 rounded-full flex-shrink-0',
+                                                       tx.is_positive ? 'bg-green-500' : 'bg-red-500']"></div>
+                                        <span class="font-medium text-gray-900 truncate" x-text="tx.description"></span>
+                                    </div>
+                                    <span :class="['font-semibold flex-shrink-0 ml-1',
+                                                   tx.is_positive ? 'text-green-600' : 'text-red-600']"
+                                          x-text="formatAmount(tx.amount)"></span>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Sessão Atual -->
+                    <div x-show="sessionTransactions.length > 0">
+                        <h4 class="text-xs font-semibold text-green-700 mb-2 flex items-center gap-1">
+                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            Adicionadas Agora
+                        </h4>
+                        <div class="space-y-1">
+                            <template x-for="tx in sessionTransactions" :key="'mobile-session-' + tx.id">
+                                <div class="flex items-center justify-between p-2 bg-green-50 border border-green-200 rounded">
+                                    <div class="flex items-center gap-2 flex-1 min-w-0">
+                                        <div :class="['w-1.5 h-1.5 rounded-full flex-shrink-0',
+                                                       tx.is_positive ? 'bg-green-500' : 'bg-red-500']"></div>
+                                        <span class="font-medium text-gray-800 truncate" x-text="tx.description"></span>
+                                    </div>
+                                    <span :class="['font-semibold',
+                                                   tx.is_positive ? 'text-green-600' : 'text-red-600']"
+                                          x-text="formatAmount(tx.amount)"></span>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </form>
+        </div>
     </div>
 </div>
 {% endblock %}

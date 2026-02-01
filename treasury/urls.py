@@ -41,6 +41,7 @@ from treasury.views.template_views import (
     MonthlyReportView,
     ReversalView,
     BalanceSheetView,
+    AuditLogView,
 )
 
 app_name = "treasury"
@@ -169,4 +170,7 @@ urlpatterns = [
 
     # Categorias (new)
     path('categorias/', TemplateCategoryListView.as_view(), name='category-list'),
+
+    # Auditoria
+    path('auditoria/', AuditLogView.as_view(), name='audit-log'),
 ]

@@ -169,15 +169,16 @@ class AuditLog(models.Model):
         user_agent = ''
 
         if request:
-            # Extrair IP
-            x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+            # Extrair IP de forma segura
+            meta = getattr(request, 'META', None) or {}
+            x_forwarded_for = meta.get('HTTP_X_FORWARDED_FOR')
             if x_forwarded_for:
                 ip_address = x_forwarded_for.split(',')[0].strip()
             else:
-                ip_address = request.META.get('REMOTE_ADDR')
+                ip_address = meta.get('REMOTE_ADDR')
 
-            # Extrair user agent
-            user_agent = request.META.get('HTTP_USER_AGENT', '')[:500]
+            # Extrair user agent de forma segura
+            user_agent = meta.get('HTTP_USER_AGENT', '')[:500]
 
         # Extrair info do usuário (sem FK)
         user_id_value = None

@@ -3,6 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, BasePermission
+from rest_framework.pagination import PageNumberPagination
 from django.shortcuts import get_object_or_404
 from django.db.models import Q, Sum, F, DecimalField
 from django.db.models.functions import Coalesce
@@ -402,10 +403,6 @@ class TransactionViewSet(viewsets.ModelViewSet):
             return TransactionUpdateSerializer
         return TransactionSerializer
 
-    def perform_create(self, serializer):
-        """Define o criador da transação."""
-        serializer.save(created_by=self.request.user)
-
     def perform_destroy(self, instance):
         """Registra log de auditoria antes de deletar transação."""
         # Salvar valores para auditoria
@@ -579,10 +576,23 @@ class MonthlyReportView(APIView):
             from datetime import datetime
             month_date = datetime(year, month, 1).date()
 
-            period = get_object_or_404(
-                AccountingPeriod,
-                month=month_date
-            )
+            # Buscar período, ou retornar dados vazios se não existir
+            try:
+                period = AccountingPeriod.objects.get(month=month_date)
+            except AccountingPeriod.DoesNotExist:
+                # Retornar dados vazios com valores zero
+                return Response({
+                    'period': None,
+                    'summary': {
+                        'opening_balance': 0.0,
+                        'total_positive': 0.0,
+                        'total_negative': 0.0,
+                        'net': 0.0,
+                        'closing_balance': None,
+                        'transaction_count': 0,
+                    },
+                    'by_category': [],
+                })
 
             service = TransactionService()
             summary = period.get_transactions_summary()
@@ -671,3 +681,85 @@ class CurrentBalanceView(APIView):
             'current_balance': float(balance),
             'current_period': period_data,
         })
+
+
+class AuditLogViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    ViewSet para visualizar logs de auditoria.
+
+    * list: Lista todos os logs com filtros
+    * retrieve: Detalhes de um log
+    """
+    queryset = AuditLog.objects.all().order_by('-timestamp')
+    permission_classes = [IsAuthenticated]
+    pagination_class = PageNumberPagination
+
+    def get_queryset(self):
+        """Retorna queryset com filtros."""
+        queryset = AuditLog.objects.all().order_by('-timestamp')
+
+        # Filtro por ação
+        action = self.request.query_params.get('action')
+        if action:
+            queryset = queryset.filter(action=action)
+
+        # Filtro por tipo de entidade
+        entity_type = self.request.query_params.get('entity_type')
+        if entity_type:
+            queryset = queryset.filter(entity_type=entity_type)
+
+        # Filtro por usuário (user_id)
+        user_id = self.request.query_params.get('user_id')
+        if user_id:
+            queryset = queryset.filter(user_id=user_id)
+
+        # Filtro por período
+        period_id = self.request.query_params.get('period_id')
+        if period_id:
+            queryset = queryset.filter(period_id=period_id)
+
+        # Filtro por data (início)
+        date_from = self.request.query_params.get('date_from')
+        if date_from:
+            queryset = queryset.filter(timestamp__gte=date_from)
+
+        # Filtro por data (fim)
+        date_to = self.request.query_params.get('date_to')
+        if date_to:
+            queryset = queryset.filter(timestamp__lte=date_to)
+
+        return queryset
+
+    def list(self, request, *args, **kwargs):
+        """Retorna lista de logs formatada com paginação."""
+        queryset = self.get_queryset()
+
+        # Configurar paginação
+        paginator = PageNumberPagination()
+        paginator.page_size = 20  # 20 logs por página
+        paginator.page_size_query_param = 'page_size'
+
+        # Paginar queryset
+        page = paginator.paginate_queryset(queryset, request)
+
+        # Formatar dados manualmente
+        logs = []
+        for log in page:
+            logs.append({
+                'id': str(log.id),
+                'timestamp': log.timestamp.isoformat(),
+                'user_name': log.user_name or 'Sistema',
+                'action': log.action,
+                'action_label': log.get_action_display(),
+                'entity_type': log.entity_type,
+                'entity_type_label': log.get_entity_type_display(),
+                'entity_id': log.entity_id,
+                'description': log.description,
+                'old_values': log.old_values,
+                'new_values': log.new_values,
+                'period_id': log.period_id,
+                'snapshot_id': str(log.snapshot_id) if log.snapshot_id else None,
+                'ip_address': log.ip_address,
+            })
+
+        return paginator.get_paginated_response(logs)

@@ -10,6 +10,7 @@ from treasury.api.views import (
     PeriodBalanceView,
     MonthlyReportView,
     CurrentBalanceView,
+    AuditLogViewSet,
 )
 
 # Router principal
@@ -18,6 +19,7 @@ router.register(r'periods', AccountingPeriodViewSet, basename='period')
 router.register(r'transactions', TransactionViewSet, basename='transaction')
 router.register(r'reversals', ReversalViewSet, basename='reversal')
 router.register(r'categories', CategoryViewSet, basename='category')
+router.register(r'audit', AuditLogViewSet, basename='audit')
 
 app_name = 'treasury-api'
 

@@ -150,6 +150,7 @@
                 <div x-show="treasuryOpen" x-transition x-cloak class="pl-10 bg-slate-50" style="display: none;">
                   <a href="{% url 'treasury:list-financial-reports' %}" class="block px-4 py-2 text-sm text-slate-600 hover:text-primary-700">Relatórios</a>
                   <a href="{% url 'treasury:financial-charts' %}" class="block px-4 py-2 text-sm text-slate-600 hover:text-primary-700">Gráficos</a>
+                  <a href="{% url 'treasury:audit-log' %}" class="block px-4 py-2 text-sm text-slate-600 hover:text-primary-700">Auditoria</a>
                 </div>
               </div>
             </div>
@@ -272,6 +273,7 @@
                 <div x-show="treasuryMobOpen" x-transition x-cloak class="pl-4 space-y-1 mt-1" style="display: none;">
                   <a href="{% url 'treasury:list-financial-reports' %}" class="block px-4 py-2 text-sm text-white/80 hover:text-white">Relatórios</a>
                   <a href="{% url 'treasury:financial-charts' %}" class="block px-4 py-2 text-sm text-white/80 hover:text-white">Gráficos</a>
+                  <a href="{% url 'treasury:audit-log' %}" class="block px-4 py-2 text-sm text-white/80 hover:text-white">Auditoria</a>
                 </div>
               </div>
             </div>

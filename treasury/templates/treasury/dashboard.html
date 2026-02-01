@@ -10,7 +10,7 @@
 
 {% block header_stats %}
 <!-- Stats Cards no Header -->
-<div class="flex justify-center gap-4 sm:gap-6 flex-wrap" x-data="dashboardStats()">
+<div class="flex justify-center gap-4 sm:gap-6 flex-wrap" x-data="dashboardStats()" x-init="init()">
   <!-- Saldo Atual -->
   <div class="app-header-card app-header-current">
     <div class="flex items-center justify-center gap-3 mb-2">
@@ -50,7 +50,7 @@
       <svg class="w-6 h-6" fill="none" stroke="currentColor" class="text-slate-700" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
       </svg>
-      <span class="text-sm font-medium text-white/90">Resultado Mensal</span>
+      <span class="text-sm font-medium text-white/90">Variação</span>
     </div>
     <div class="text-3xl font-bold text-white" x-text="formatAmount(monthlySummary.net)"></div>
   </div>
@@ -59,24 +59,17 @@
 <script>
 function dashboardStats() {
     return {
-        currentBalance: 0,
+        _initialized: false,
+        get currentBalance() {
+            // Use the store's current balance to avoid duplicate API calls
+            return this.$store.reports?.currentBalance?.current_balance || 0;
+        },
         monthlySummary: { total_positive: 0, total_negative: 0, net: 0 },
 
         init() {
-            this.loadCurrentBalance();
+            if (this._initialized) return;
+            this._initialized = true;
             this.loadMonthlySummary();
-        },
-
-        async loadCurrentBalance() {
-            try {
-                const response = await fetch('/treasury/api/reports/current-balance/', {
-                    headers: { 'X-CSRFToken': this.getCookie('csrftoken') }
-                });
-                const data = await response.json();
-                this.currentBalance = data.current_balance || 0;
-            } catch (e) {
-                console.error('Error loading balance:', e);
-            }
         },
 
         async loadMonthlySummary() {
@@ -89,9 +82,15 @@ function dashboardStats() {
                 });
                 if (response.ok) {
                     const data = await response.json();
-                    this.monthlySummary = data.summary || { total_positive: 0, total_negative: 0, net: 0 };
+                    this.monthlySummary.total_positive = data.summary.total_positive || 0;
+                    this.monthlySummary.total_negative = data.summary.total_negative || 0;
+                    this.monthlySummary.net = data.summary.net || 0;
+                    console.log('Monthly summary loaded:', this.monthlySummary);
                 } else {
                     console.error('Monthly report not found (404)');
+                    this.monthlySummary.total_positive = 0;
+                    this.monthlySummary.total_negative = 0;
+                    this.monthlySummary.net = 0;
                 }
             } catch (e) {
                 console.error('Error loading monthly summary:', e);
@@ -219,10 +218,13 @@ function dashboardStats() {
 <script>
 function dashboardContent() {
     return {
+        _initialized: false,
         recentPeriods: [],
         recentTransactions: [],
 
         async init() {
+            if (this._initialized) return;
+            this._initialized = true;
             await Promise.all([
                 this.loadRecentPeriods(),
                 this.loadRecentTransactions()
