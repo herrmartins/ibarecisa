@@ -445,7 +445,7 @@ document.addEventListener('alpine:init', () => {
                 this.totalNegative += summary.total_negative || 0;
             });
 
-            this.totalNet = this.totalPositive - this.totalNegative;
+            this.totalNet = this.totalPositive + this.totalNegative;
             this.totalBalance = periods.length > 0 ? periods[periods.length - 1].closing_balance || 0 : 0;
             this.calculateFiltered();
         },
@@ -461,7 +461,7 @@ document.addEventListener('alpine:init', () => {
                 this.filteredNegative += summary.total_negative || 0;
             });
 
-            this.filteredNet = this.filteredPositive - this.filteredNegative;
+            this.filteredNet = this.filteredPositive + this.filteredNegative;
             this.filteredBalance = filtered.length > 0 ? filtered[filtered.length - 1].closing_balance || 0 : 0;
         },
 
@@ -582,7 +582,7 @@ document.addEventListener('alpine:init', () => {
                 const summary = period.transactions_summary || {};
                 const totalPositive = summary.total_positive || 0;
                 const totalNegative = summary.total_negative || 0;
-                const net = totalPositive - totalNegative;
+                const net = totalPositive + totalNegative;
                 const closingBalance = period.closing_balance || (runningBalance + net);
 
                 const item = {
