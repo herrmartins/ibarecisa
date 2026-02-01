@@ -27,6 +27,7 @@ from treasury.views import (
     FinancialChartsView,
     FinancialAnalysisView,
 )
+from treasury.views.generate_balance_sheet_pdf_view import GenerateBalanceSheetPDFView
 
 # New template-based views
 from treasury.views.template_views import (
@@ -167,6 +168,7 @@ urlpatterns = [
     # Relatórios
     path('relatorios/mensal/<int:year>/<int:month>/', MonthlyReportView.as_view(), name='monthly-report-new'),
     path('relatorios/balanco/', BalanceSheetView.as_view(), name='balance-sheet'),
+    path('relatorios/balanco/pdf/', GenerateBalanceSheetPDFView, name='balance-sheet-pdf'),
 
     # Categorias (new)
     path('categorias/', TemplateCategoryListView.as_view(), name='category-list'),

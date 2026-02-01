@@ -10,3 +10,4 @@ from .reversal_transaction import ReversalTransaction
 # Models no banco de auditoria (audit.sqlite3)
 from .period_snapshot import PeriodSnapshot
 from .audit_log import AuditLog
+from .frozen_report import FrozenReport

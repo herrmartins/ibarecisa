@@ -85,14 +85,14 @@
 <div x-data="balanceSheet">
     <!-- Actions -->
     <div class="flex justify-end gap-2 mb-6">
-        <button @click="exportCSV" class="app-btn app-btn-secondary">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" class="text-slate-700" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        <button @click="generatePDF" class="app-btn app-btn-primary">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
             </svg>
-            Exportar CSV
+            Relatório PDF
         </button>
-        <button @click="printReport" class="app-btn app-btn-secondary">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" class="text-slate-700" viewBox="0 0 24 24">
+        <button @click="printReport" class="app-btn">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
             </svg>
             Imprimir
@@ -152,7 +152,7 @@
 
                         <!-- Result Count -->
                         <div class="text-sm text-white/90">
-                            <span x-text="filteredPeriodsWithBalance.length"></span> período(s)
+                            <span x-text="periodsWithBalance.length"></span> período(s)
                         </div>
                     </div>
                 </div>
@@ -178,7 +178,7 @@
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-slate-200">
-                            <template x-for="item in filteredPeriodsWithBalance" :key="item.period.id">
+                            <template x-for="item in periodsWithBalance" :key="item.period.id">
                                 <tr class="hover:bg-slate-50">
                                     <td class="px-4 py-3 text-sm font-medium text-slate-900">
                                         <a :href="`/treasury/periodos/${item.period.id}/`" class="text-blue-600 hover:text-blue-800">
@@ -209,7 +209,7 @@
                                     </td>
                                 </tr>
                             </template>
-                            <tr x-show="filteredPeriodsWithBalance.length === 0">
+                            <tr x-show="periodsWithBalance.length === 0">
                                 <td colspan="8" class="px-4 py-8 text-center text-slate-500">
                                     Nenhum período encontrado com os filtros selecionados
                                 </td>
@@ -346,7 +346,7 @@
                                     </a>
 
                                     <!-- Ver Período (online) -->
-                                    <a :href="`/treasury/periodos/${reportsModal.periodId}/`" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors">
+                                    <a :href="`/treasury/periodos/${reportsModal.periodId}/`" class="app-btn">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
@@ -446,7 +446,8 @@ document.addEventListener('alpine:init', () => {
             });
 
             this.totalNet = this.totalPositive + this.totalNegative;
-            this.totalBalance = periods.length > 0 ? periods[periods.length - 1].closing_balance || 0 : 0;
+            // Períodos vêm em ordem decrescente, então o mais recente é o primeiro
+            this.totalBalance = periods.length > 0 ? periods[0].closing_balance || 0 : 0;
             this.calculateFiltered();
         },
 
@@ -462,7 +463,8 @@ document.addEventListener('alpine:init', () => {
             });
 
             this.filteredNet = this.filteredPositive + this.filteredNegative;
-            this.filteredBalance = filtered.length > 0 ? filtered[filtered.length - 1].closing_balance || 0 : 0;
+            // Períodos vêm em ordem decrescente, então o mais recente é o primeiro
+            this.filteredBalance = filtered.length > 0 ? filtered[0].closing_balance || 0 : 0;
         },
 
         get hasActiveFilters() {
@@ -482,10 +484,7 @@ document.addEventListener('alpine:init', () => {
     Alpine.data('balanceSheet', () => ({
         loading: true,
         availableYears: [],
-
-        get filteredPeriodsWithBalance() {
-            return this.calculatePeriodsWithBalance(this.$store.balanceSheet.filteredPeriods);
-        },
+        periodsWithBalance: [],
 
         get hasActiveFilters() {
             return this.$store.balanceSheet.hasActiveFilters();
@@ -554,6 +553,14 @@ document.addEventListener('alpine:init', () => {
 
         async init() {
             await this.loadData();
+
+            // Watch para recalcular quando os filtros mudarem
+            this.$watch('$store.balanceSheet.startYear', () => this.recalculatePeriods());
+            this.$watch('$store.balanceSheet.endYear', () => this.recalculatePeriods());
+            this.$watch('$store.balanceSheet.statusFilter', () => this.recalculatePeriods());
+
+            // Calcular inicialmente
+            await this.recalculatePeriods();
         },
 
         async loadData() {
@@ -576,14 +583,55 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
-        calculatePeriodsWithBalance(periods) {
+        async recalculatePeriods() {
+            const filtered = this.$store.balanceSheet.filteredPeriods;
+            this.periodsWithBalance = await this.calculatePeriodsWithBalance(filtered);
+        },
+
+        async calculatePeriodsWithBalance(periods) {
+            if (periods.length === 0) return [];
+
+            // Ordenar períodos em ordem CRESCENTE para o cálculo (do mais antigo para o mais novo)
+            const sortedPeriods = [...periods].sort((a, b) => new Date(a.month) - new Date(b.month));
+
+            // Buscar o saldo acumulado antes do primeiro período (o mais antigo)
             let runningBalance = 0;
-            return periods.map(period => {
+            const firstPeriod = sortedPeriods[0];
+            const firstMonth = new Date(firstPeriod.month);
+            const year = firstMonth.getFullYear();
+            const month = firstMonth.getMonth() + 1;
+
+            try {
+                const response = await fetch(`/treasury/api/reports/accumulated-balance-before/${year}/${month}/`, {
+                    headers: { 'X-CSRFToken': this.getCookie('csrftoken') }
+                });
+                const data = await response.json();
+                runningBalance = data.accumulated_balance || 0;
+            } catch (error) {
+                console.error('Error fetching accumulated balance:', error);
+                runningBalance = 0;
+            }
+
+            // Calcular saldos em ordem crescente e criar um mapa por ID
+            const balanceMap = new Map();
+            for (const period of sortedPeriods) {
                 const summary = period.transactions_summary || {};
                 const totalPositive = summary.total_positive || 0;
                 const totalNegative = summary.total_negative || 0;
-                const net = totalPositive + totalNegative;
-                const closingBalance = period.closing_balance || (runningBalance + net);
+                // Arredondar para evitar problemas de precisão do JS
+                const net = Math.round((totalPositive + totalNegative) * 100) / 100;
+
+                // Converter para número se vier como string
+                const openingBalanceNum = typeof period.opening_balance === 'string'
+                    ? parseFloat(period.opening_balance)
+                    : (period.opening_balance || 0);
+                const closingBalanceNum = period.closing_balance !== null && period.closing_balance !== ''
+                    ? (typeof period.closing_balance === 'string'
+                        ? parseFloat(period.closing_balance)
+                        : period.closing_balance)
+                    : null;
+
+                const closingBalance = closingBalanceNum || (runningBalance + net);
 
                 const item = {
                     period: period,
@@ -595,39 +643,26 @@ document.addEventListener('alpine:init', () => {
                     status_label: { 'open': 'Aberto', 'closed': 'Fechado', 'archived': 'Arquivado' }[period.status]
                 };
 
+                balanceMap.set(period.id, item);
                 runningBalance = closingBalance;
-                return item;
-            });
+            }
+
+            // Retornar na ordem original (decrescente para exibição)
+            return periods.map(period => balanceMap.get(period.id));
         },
 
         clearFilters() {
             this.$store.balanceSheet.clearFilters();
         },
 
-        exportCSV() {
-            const filteredData = this.filteredPeriodsWithBalance;
-            const headers = ['Período', 'Saldo Inicial', 'Receitas', 'Despesas', 'Variação', 'Saldo Final', 'Status'];
-            let csv = headers.join(',') + '\n';
-
-            filteredData.forEach(item => {
-                csv += [
-                    item.period.month_name + '/' + item.period.year,
-                    (item.opening_balance || 0).toFixed(2),
-                    (item.total_positive || 0).toFixed(2),
-                    (item.total_negative || 0).toFixed(2),
-                    (item.net || 0).toFixed(2),
-                    (item.closing_balance || 0).toFixed(2),
-                    item.status_label
-                ].join(',') + '\n';
+        generatePDF() {
+            // Abre o PDF em nova aba com os filtros atuais
+            const params = new URLSearchParams({
+                start_year: this.$store.balanceSheet.startYear,
+                end_year: this.$store.balanceSheet.endYear,
+                status: this.$store.balanceSheet.statusFilter,
             });
-
-            const blob = new Blob([csv], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `balanco_${new Date().toISOString().split('T')[0]}.csv`;
-            a.click();
-            window.URL.revokeObjectURL(url);
+            window.open(`/treasury/relatorios/balanco/pdf/?${params.toString()}`, '_blank');
         },
 
         printReport() {

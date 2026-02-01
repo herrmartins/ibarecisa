@@ -96,6 +96,7 @@ class AccountingPeriodSerializer(serializers.ModelSerializer):
             'is_closed',
             'is_archived',
             'can_be_closed',
+            'is_first_month',
             'closed_at',
             'closed_by',
             'closed_by_name',

@@ -22,6 +22,12 @@ class AccountingPeriod(models.Model):
     # Primeiro dia do mês (ex: 2024-01-01 para janeiro de 2024)
     month = models.DateField(unique=True, help_text="Primeiro dia do mês de referência")
 
+    # Marca se este é o primeiro período (saldo inicial de importação)
+    is_first_month = models.BooleanField(
+        default=False,
+        help_text="Marca se este é o período inicial com saldo de importação"
+    )
+
     # Status do período
     status = models.CharField(
         max_length=20,
@@ -149,6 +155,33 @@ class AccountingPeriod(models.Model):
                 'month': 'Não é permitido criar períodos futuros.'
             })
 
+        # Validações para is_first_month
+        if self.is_first_month:
+            # Não permitir períodos anteriores ao first_month
+            previous_periods = AccountingPeriod.objects.filter(
+                month__lt=self.month
+            ).exclude(pk=self.pk)
+
+            if previous_periods.exists():
+                raise ValidationError({
+                    'is_first_month': 'Não pode marcar como first_month se existem períodos anteriores. '
+                                    'Este campo deve ser usado apenas no primeiro período do sistema '
+                                    '(geralmente um mês de importação de saldo inicial).'
+                })
+
+        # Se não é first_month, verificar se já existe um first_month anterior
+        # (para garantir consistência)
+        if not self.is_first_month:
+            first_month = AccountingPeriod.objects.filter(
+                is_first_month=True
+            ).exclude(pk=self.pk).first()
+
+            if first_month and self.month < first_month.month:
+                raise ValidationError({
+                    'month': f'Já existe um período inicial ({first_month.month_name}/{first_month.year}). '
+                             'Não é permitido criar períodos antes do período inicial.'
+                })
+
     def close(self, user=None, notes=''):
         """
         Fecha o período contábil.
@@ -194,6 +227,9 @@ class AccountingPeriod(models.Model):
 
         # Criar automaticamente o MonthlyReportModel para o PDF analítico
         self._create_monthly_report()
+
+        # Criar FrozenReport com o PDF analítico para auditoria
+        self._create_frozen_reports(user)
 
         # Atualizar ou criar o próximo período com o saldo correto
         next_month = self.get_next_month()
@@ -291,6 +327,105 @@ class AccountingPeriod(models.Model):
             report.monthly_result = monthly_result
             report.total_balance = total_balance
             report.save()
+
+    def _create_frozen_reports(self, user=None):
+        """
+        Cria FrozenReports com PDFs para auditoria.
+
+        Gera os PDFs (analítico e extrato) e os armazena com hash SHA256
+        para garantir integridade.
+        """
+        from treasury.models import FrozenReport
+        from django.template.loader import render_to_string
+        import weasyprint
+
+        year = self.month.year
+        month = self.month.month
+
+        # Preparar contexto para os PDFs
+        from treasury.utils import get_aggregate_transactions_by_category, get_last_day_of_month
+        from core.core_context_processor import context_user_data
+        from decimal import Decimal
+
+        # Dados do relatório
+        an_report = MonthlyReportModel.objects.filter(month=self.month).first()
+        if not an_report:
+            return
+
+        last_day = get_last_day_of_month(year, month)
+
+        positive_transactions_dict = get_aggregate_transactions_by_category(year, month, True)
+        negative_transactions_dict = get_aggregate_transactions_by_category(year, month, False)
+
+        m_result = an_report.total_positive_transactions + an_report.total_negative_transactions
+
+        # Contexto básico (sem request, então sem church_info)
+        context = {
+            "date": last_day,
+            "year": year,
+            "month": month,
+            "pm_balance": an_report.previous_month_balance,
+            "report": an_report,
+            "p_transactions": positive_transactions_dict,
+            "n_transactions": negative_transactions_dict,
+            "total_p": an_report.total_positive_transactions,
+            "total_n": an_report.total_negative_transactions,
+            "m_result": m_result,
+            "balance": Decimal(an_report.total_balance),
+        }
+
+        # Gerar PDF Analítico
+        try:
+            html_analytical = render_to_string("treasury/export_analytical_report.html", context)
+            pdf_analytical = weasyprint.HTML(string=html_analytical).write_pdf()
+
+            FrozenReport.create_from_period(
+                period=self,
+                pdf_bytes=pdf_analytical,
+                report_type='analytical',
+                user=user
+            )
+        except Exception as e:
+            # Log mas não falha o fechamento
+            import logging
+            logging.getLogger(__name__).error(f"Erro ao criar FrozenReport analítico: {e}")
+
+        # Gerar PDF Extrato
+        try:
+            from treasury.models import TransactionModel
+
+            # Buscar todas as transações do período
+            transactions = TransactionModel.objects.filter(
+                accounting_period=self,
+                transaction_type='original'
+            ).order_by('date', 'created_at')
+
+            # Contexto para o extrato
+            extract_context = {
+                "date": last_day,
+                "year": year,
+                "month": month,
+                "pm_balance": an_report.previous_month_balance,
+                "total_p": an_report.total_positive_transactions,
+                "total_n": an_report.total_negative_transactions,
+                "m_result": m_result,
+                "balance": Decimal(an_report.total_balance),
+                "transactions": transactions,
+                "transaction_count": transactions.count(),
+            }
+
+            html_extract = render_to_string("treasury/export_extract_report.html", extract_context)
+            pdf_extract = weasyprint.HTML(string=html_extract).write_pdf()
+
+            FrozenReport.create_from_period(
+                period=self,
+                pdf_bytes=pdf_extract,
+                report_type='extract',
+                user=user
+            )
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(f"Erro ao criar FrozenReport extrato: {e}")
 
     def reopen(self, user=None):
         """

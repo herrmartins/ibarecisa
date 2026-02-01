@@ -26,6 +26,7 @@ from treasury.models import (
     CategoryModel,
     AuditLog,
     PeriodSnapshot,
+    FrozenReport,
 )
 from treasury.serializers import (
     AccountingPeriodSerializer,
@@ -674,6 +675,42 @@ class CurrentBalanceView(APIView):
         })
 
 
+class AccumulatedBalanceBeforeView(APIView):
+    """
+    API para consultar o saldo acumulado antes de um período.
+
+    GET /api/treasury/reports/accumulated-balance-before/<year>/<month>/
+    """
+
+    def get(self, request, year, month):
+        """Retorna o saldo acumulado antes do período especificado."""
+        from datetime import date
+
+        target_month = date(year, month, 1)
+
+        # Buscar todos os períodos anteriores ao mês alvo
+        previous_periods = AccountingPeriod.objects.filter(
+            month__lt=target_month
+        ).order_by('month')
+
+        # Calcular saldo acumulado
+        accumulated = Decimal('0.00')
+        for period in previous_periods:
+            summary = period.get_transactions_summary()
+            total_pos = Decimal(str(summary.get('total_positive', 0)))
+            total_neg = Decimal(str(summary.get('total_negative', 0)))
+            net = total_pos + total_neg
+            # Se tem closing_balance, usa ele
+            if period.closing_balance is not None:
+                accumulated = period.closing_balance
+            else:
+                accumulated += net
+
+        return Response({
+            'accumulated_balance': float(accumulated),
+        })
+
+
 class AuditLogViewSet(viewsets.ReadOnlyModelViewSet):
     """
     ViewSet para visualizar logs de auditoria.
@@ -754,3 +791,136 @@ class AuditLogViewSet(viewsets.ReadOnlyModelViewSet):
             })
 
         return paginator.get_paginated_response(logs)
+
+
+class FrozenReportViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    ViewSet para FrozenReports (relatórios congelados).
+
+    Apenas leitura - relatórios não podem ser alterados ou deletados.
+    """
+    permission_classes = [IsAuthenticated]
+    serializer_class = None  # Usaremos formatação manual
+
+    def get_queryset(self):
+        """Retorna FrozenReports filtráveis."""
+        queryset = FrozenReport.objects.select_related('period', 'created_by').all()
+
+        # Filtros
+        period_id = self.request.query_params.get('period_id')
+        report_type = self.request.query_params.get('report_type')
+
+        if period_id:
+            queryset = queryset.filter(period_id=period_id)
+        if report_type:
+            queryset = queryset.filter(report_type=report_type)
+
+        return queryset
+
+    def list(self, request, *args, **kwargs):
+        """Lista relatórios congelados."""
+        queryset = self.get_queryset()
+
+        # Paginação
+        paginator = PageNumberPagination()
+        paginator.page_size = 20
+        page = paginator.paginate_queryset(queryset, request)
+
+        reports = []
+        for report in page:
+            reports.append({
+                'id': str(report.id),
+                'period': {
+                    'id': report.period.id,
+                    'month_name': report.period.month_name,
+                    'year': report.period.year,
+                },
+                'report_type': report.report_type,
+                'report_type_label': report.get_report_type_display(),
+                'pdf_file': report.pdf_file.url if report.pdf_file else None,
+                'pdf_hash': report.pdf_hash,
+                'closing_balance': float(report.closing_balance),
+                'total_positive': float(report.total_positive),
+                'total_negative': float(report.total_negative),
+                'transaction_count': report.transaction_count,
+                'created_at': report.created_at.isoformat(),
+                'created_by': report.created_by.get_full_name() if report.created_by else 'Sistema',
+                'is_recovered': report.is_recovered,
+                'replaces_report_id': str(report.replaces_report.id) if report.replaces_report else None,
+            })
+
+        return paginator.get_paginated_response(reports)
+
+    def retrieve(self, request, *args, **kwargs):
+        """Detalhes de um relatório congelado."""
+        report = self.get_object()
+
+        verification = report.verify()
+
+        return Response({
+            'id': str(report.id),
+            'period': {
+                'id': report.period.id,
+                'month_name': report.period.month_name,
+                'year': report.period.year,
+                'status': report.period.status,
+            },
+            'report_type': report.report_type,
+            'report_type_label': report.get_report_type_display(),
+            'pdf_file': report.pdf_file.url if report.pdf_file else None,
+            'pdf_hash': report.pdf_hash,
+            'verification': verification,
+            'closing_balance': float(report.closing_balance),
+            'total_positive': float(report.total_positive),
+            'total_negative': float(report.total_negative),
+            'transaction_count': report.transaction_count,
+            'created_at': report.created_at.isoformat(),
+            'created_by': report.created_by.get_full_name() if report.created_by else 'Sistema',
+            'is_recovered': report.is_recovered,
+            'replaces_report_id': str(report.replaces_report.id) if report.replaces_report else None,
+        })
+
+    @action(detail=True, methods=['get'])
+    def verify(self, request, *args, **kwargs):
+        """
+        Verifica integridade do PDF.
+
+        Retorna:
+        - valid: True se hash confere
+        - stored_hash: Hash armazenado
+        - current_hash: Hash atual do PDF
+        """
+        report = self.get_object()
+        verification = report.verify()
+        return Response(verification)
+
+    @action(detail=True, methods=['post'])
+    def recover(self, request, *args, **kwargs):
+        """
+        Recupera PDF original a partir do AuditLog.
+
+        Cria um novo FrozenReport marcado como recuperado.
+        """
+        report = self.get_object()
+
+        # Verificar primeiro
+        verification = report.verify()
+        if verification['valid']:
+            return Response({
+                'message': 'PDF íntegro, não é necessário recuperar.',
+                'verification': verification
+            }, status=400)
+
+        # Recuperar
+        try:
+            recovered = report.recover_from_audit()
+            return Response({
+                'message': 'PDF recuperado com sucesso.',
+                'recovered_id': str(recovered.id),
+                'original_verification': verification
+            })
+        except Exception as e:
+            return Response({
+                'message': 'Erro ao recuperar PDF.',
+                'error': str(e)
+            }, status=500)
