@@ -49,14 +49,14 @@
                     <!-- Date -->
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Data</label>
-                        <input type="date" x-model="form.date" class="app-input" required>
+                        <input type="date" x-model="form.date" class="app-input-fw" required>
                     </div>
 
                     <!-- Amount -->
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700 mb-1">Valor</label>
                         <input type="text" x-model="amountDisplay" @input="updateAmountFromDisplay"
-                               placeholder="0,00" class="app-input" required>
+                               placeholder="0,00" class="app-input-fw" required>
                     </div>
                 </div>
 
@@ -64,13 +64,13 @@
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
                     <input type="text" x-model="form.description" placeholder="Ex: Dízimo, Oferta, Salário..."
-                           class="app-input" required autofocus>
+                           class="app-input-fw" required autofocus>
                 </div>
 
                 <!-- Category -->
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
-                    <select x-model="form.category" class="app-input">
+                    <select x-model="form.category" class="app-input-fw">
                         <option value="">Selecione...</option>
                         <template x-for="cat in categories" :key="cat.id">
                             <option :value="cat.id" x-text="cat.name"></option>
@@ -81,7 +81,7 @@
                 <!-- Document (optional) -->
                 <div class="mb-6">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Comprovante (opcional)</label>
-                    <input type="file" x-ref="docFile" accept="image/*,.pdf" class="app-input text-sm">
+                    <input type="file" x-ref="docFile" accept="image/*,.pdf" class="app-input-fw text-sm">
                 </div>
 
                 <!-- Errors -->
