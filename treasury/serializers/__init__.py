@@ -180,8 +180,8 @@ class AccountingPeriodSimpleSerializer(serializers.ModelSerializer):
             total=models.Sum('amount')
         )['total'] or 0
 
-        # Net = positivas - negativas (amount é sempre positivo, is_positive define o sinal)
-        net = positive - negative
+        # Net = positivas + negativas (negative já é negativo)
+        net = positive + negative
 
         return {
             'total_positive': positive,

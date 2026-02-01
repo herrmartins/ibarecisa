@@ -124,7 +124,7 @@ function periodList() {
                 this.periods = data.results || data;
                 this.periods.forEach(p => {
                     p.status_label = { 'open': 'Aberto', 'closed': 'Fechado', 'archived': 'Arquivado' }[p.status];
-                    p.calculated_balance = p.opening_balance + (p.transactions_summary?.net || 0);
+                    p.calculated_balance = parseFloat(p.opening_balance) + (p.transactions_summary?.net || 0);
                 });
             } catch (error) {
                 console.error('Error loading periods:', error);

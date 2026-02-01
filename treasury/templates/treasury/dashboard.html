@@ -261,7 +261,7 @@ function dashboardContent() {
                 return period.closing_balance;
             }
             // Senão, calcula: opening_balance + net do transactions_summary
-            const opening = period.opening_balance || 0;
+            const opening = parseFloat(period.opening_balance) || 0;
             const net = period.transactions_summary?.net || 0;
             return opening + net;
         },

@@ -460,8 +460,8 @@ class TransactionViewSet(viewsets.ModelViewSet):
             total=Coalesce(Sum('amount'), Decimal('0.00'), output_field=DecimalField())
         )['total']
 
-        # Net: positivas - negativas (amount é sempre positivo, is_positive define o sinal)
-        net = positive - negative
+        # Net: positivas + negativas (negative já é negativo)
+        net = positive + negative
 
         count = queryset.count()
 
@@ -619,7 +619,7 @@ class MonthlyReportView(APIView):
                     'name': name,
                     'total_positive': float(data['positive']),
                     'total_negative': float(data['negative']),
-                    'net': float(data['positive'] - data['negative']),
+                    'net': float(data['positive'] + data['negative']),  # negative já é negativo
                     'count': data['count'],
                 })
 

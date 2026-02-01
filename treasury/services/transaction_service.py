@@ -243,13 +243,13 @@ class TransactionService:
             total=Coalesce(Sum('amount'), Decimal('0.00'))
         )['total'] or Decimal('0.00')
 
-        # Somar negativas (são armazenadas com amount positivo, mas is_positive=False)
+        # Somar negativas (amount já é negativo para transações negativas)
         negative = transactions.filter(is_positive=False).aggregate(
             total=Coalesce(Sum('amount'), Decimal('0.00'))
         )['total'] or Decimal('0.00')
 
-        # Net = positivas - negativas
-        return positive - negative
+        # Net = positivas + negativas (negative já é negativo)
+        return positive + negative
 
     def get_transactions_summary(self, period):
         """
@@ -278,7 +278,7 @@ class TransactionService:
         return {
             'total_positive': positive['total'] or Decimal('0.00'),
             'total_negative': negative['total'] or Decimal('0.00'),
-            'net': (positive['total'] or Decimal('0.00')) - (negative['total'] or Decimal('0.00')),
+            'net': (positive['total'] or Decimal('0.00')) + (negative['total'] or Decimal('0.00')),  # negative já é negativo
             'positive_count': positive['count'] or 0,
             'negative_count': negative['count'] or 0,
             'total_count': transactions.count(),

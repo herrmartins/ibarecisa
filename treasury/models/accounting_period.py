@@ -156,6 +156,10 @@ class AccountingPeriod(models.Model):
         Calcula o saldo final com base nas transações do período
         e fixa o valor para que não possa mais ser alterado.
 
+        Cria automaticamente:
+        - Um snapshot para preservar o relatório analítico
+        - O MonthlyReportModel para gerar o PDF analítico
+
         Args:
             user: Usuário que está fechando o período
             notes: Observações sobre o fechamento
@@ -180,6 +184,17 @@ class AccountingPeriod(models.Model):
         self.notes = notes
         self.save(update_fields=['closing_balance', 'status', 'closed_at', 'closed_by', 'notes'])
 
+        # Criar snapshot automaticamente para preservar o relatório analítico
+        from treasury.models.period_snapshot import PeriodSnapshot
+        PeriodSnapshot.create_from_period(
+            self,
+            created_by=user,
+            reason=f'Fechamento do período {self.month_name}/{self.year}'
+        )
+
+        # Criar automaticamente o MonthlyReportModel para o PDF analítico
+        self._create_monthly_report()
+
         # Atualizar ou criar o próximo período com o saldo correto
         next_month = self.get_next_month()
         if next_month:
@@ -196,6 +211,86 @@ class AccountingPeriod(models.Model):
                 next_period.save(update_fields=['opening_balance'])
 
         return final_balance
+
+    def _create_monthly_report(self):
+        """
+        Cria o MonthlyReportModel automaticamente ao fechar o período.
+        """
+        from treasury.models import MonthlyReportModel, TransactionModel
+        from decimal import Decimal
+
+        year = self.month.year
+        month = self.month.month
+
+        # Buscar período anterior para obter o saldo inicial
+        prev_period = self.get_previous_period()
+        previous_balance = Decimal('0.00')
+        if prev_period:
+            if prev_period.closing_balance:
+                previous_balance = prev_period.closing_balance
+            else:
+                previous_balance = prev_period.get_current_balance()
+
+        # Calcular totais das transações
+        transactions = TransactionModel.objects.filter(
+            accounting_period=self,
+            transaction_type='original'
+        )
+
+        positive = transactions.filter(is_positive=True).aggregate(
+            total=models.Sum('amount')
+        )['total'] or Decimal('0.00')
+
+        negative = transactions.filter(is_positive=False).aggregate(
+            total=models.Sum('amount')
+        )['total'] or Decimal('0.00')
+
+        # Calcular totais por categoria (para o relatório)
+        positive_by_category = {}
+        for tx in transactions.filter(is_positive=True):
+            cat_name = tx.category.name if tx.category else 'outros'
+            positive_by_category[cat_name] = positive_by_category.get(cat_name, Decimal('0.00')) + tx.amount
+
+        negative_by_category = {}
+        for tx in transactions.filter(is_positive=False):
+            cat_name = tx.category.name if tx.category else 'outros'
+            negative_by_category[cat_name] = negative_by_category.get(cat_name, Decimal('0.00')) + tx.amount
+
+        # Calcular campos específicos (ajuste conforme necessário)
+        in_cash = Decimal('0.00')  # TODO: calcular com base nas transações
+        in_current_account = Decimal('0.00')  # TODO: calcular com base nas transações
+        in_savings_account = Decimal('0.00')  # TODO: calcular com base nas transações
+
+        # negative já é negativo (amount armazena valores com sinal)
+        monthly_result = positive + negative
+        total_balance = previous_balance + monthly_result
+
+        # Criar ou atualizar o MonthlyReportModel
+        report, created = MonthlyReportModel.objects.get_or_create(
+            month=self.month,
+            defaults={
+                'previous_month_balance': previous_balance,
+                'total_positive_transactions': positive,
+                'total_negative_transactions': negative,
+                'in_cash': in_cash,
+                'in_current_account': in_current_account,
+                'in_savings_account': in_savings_account,
+                'monthly_result': monthly_result,
+                'total_balance': total_balance,
+            }
+        )
+
+        # Se já existe, atualizar
+        if not created:
+            report.previous_month_balance = previous_balance
+            report.total_positive_transactions = positive
+            report.total_negative_transactions = negative
+            report.in_cash = in_cash
+            report.in_current_account = in_current_account
+            report.in_savings_account = in_savings_account
+            report.monthly_result = monthly_result
+            report.total_balance = total_balance
+            report.save()
 
     def reopen(self, user=None):
         """
@@ -285,13 +380,13 @@ class AccountingPeriod(models.Model):
             total=models.Sum('amount')
         )['total'] or Decimal('0.00')
 
-        # Somar negativas (amount é positivo, mas is_positive=False)
+        # Somar negativas (amount já é negativo para transações negativas)
         negative = transactions.filter(is_positive=False).aggregate(
             total=models.Sum('amount')
         )['total'] or Decimal('0.00')
 
-        # Net = positivas - negativas
-        net = positive - negative
+        # Net = positivas + negativas (negative já é negativo)
+        net = positive + negative
 
         return {
             'total_positive': positive,

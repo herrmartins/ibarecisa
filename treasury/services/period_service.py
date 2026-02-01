@@ -270,8 +270,8 @@ class PeriodService:
             total=Coalesce(Sum('amount'), Decimal('0.00'), output_field=DecimalField())
         )['total'] or Decimal('0.00')
 
-        # Net = positivas - negativas
-        return positive - negative
+        # Net = positivas + negativas (negative já é negativo)
+        return positive + negative
 
     def can_edit_transaction(self, transaction):
         """
@@ -401,8 +401,8 @@ class PeriodService:
             count=Count('id')
         )
 
-        # Net = positivas - negativas
-        net = (positive['total'] or Decimal('0.00')) - (negative['total'] or Decimal('0.00'))
+        # Net = positivas + negativas (negative já é negativo)
+        net = (positive['total'] or Decimal('0.00')) + (negative['total'] or Decimal('0.00'))
 
         return {
             'period': period,
@@ -620,7 +620,7 @@ class PeriodService:
             prev_balance = prev_period.closing_balance
         elif prev_period:
             prev_summary = prev_period.get_transactions_summary()
-            prev_balance = prev_summary['total_positive'] - prev_summary['total_negative']
+            prev_balance = prev_summary['net']  # Já calculado como positive + negative
         else:
             prev_balance = Decimal('0.00')
 

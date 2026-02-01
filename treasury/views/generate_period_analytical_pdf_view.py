@@ -33,14 +33,22 @@ def GeneratePeriodAnalyticalPDFView(request, period_id):
     except AccountingPeriod.DoesNotExist:
         return HttpResponseForbidden("Período contábil não encontrado.")
 
-    # Buscar o relatório analítico correspondente
-    try:
+    # Buscar ou criar o relatório analítico correspondente
+    an_report, created = MonthlyReportModel.objects.get_or_create(
+        month=period.month,
+        defaults={
+            'previous_month_balance': Decimal('0.00'),
+            'total_positive_transactions': Decimal('0.00'),
+            'total_negative_transactions': Decimal('0.00'),
+            'monthly_result': Decimal('0.00'),
+            'total_balance': Decimal('0.00'),
+        }
+    )
+
+    # Se foi criado agora ou está com valores zerados, recalcular
+    if created or (an_report.total_positive_transactions == 0 and an_report.total_negative_transactions == 0):
+        period._create_monthly_report()
         an_report = MonthlyReportModel.objects.get(month=period.month)
-    except MonthlyReportModel.DoesNotExist:
-        return HttpResponseForbidden(
-            "Relatório analítico não encontrado para este período. "
-            "Gere o relatório primeiro."
-        )
 
     reports_month = an_report.month.month
     reports_year = an_report.month.year
@@ -69,8 +77,8 @@ def GeneratePeriodAnalyticalPDFView(request, period_id):
         "report": an_report,
         "p_transactions": positive_transactions_dict,
         "n_transactions": negative_transactions_dict,
-        "total_p": "{:.2f}".format(an_report.total_positive_transactions),
-        "total_n": "{:.2f}".format(an_report.total_negative_transactions),
+        "total_p": an_report.total_positive_transactions,
+        "total_n": an_report.total_negative_transactions,
         "m_result": m_result,
         "balance": Decimal(an_report.total_balance),
     }
@@ -78,13 +86,7 @@ def GeneratePeriodAnalyticalPDFView(request, period_id):
     base_url = request.build_absolute_uri('/')
     weasyprint_html = weasyprint.HTML(
         string=html_index, base_url=base_url)
-    pdf = weasyprint_html.write_pdf(
-        stylesheets=[
-            weasyprint.CSS(
-                string="body { font-family: serif} img {margin: 10px; width: 40px;}"
-            )
-        ]
-    )
+    pdf = weasyprint_html.write_pdf()
 
     response = HttpResponse(content_type="application/pdf")
     response["Content-Disposition"] = (
