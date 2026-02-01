@@ -97,12 +97,21 @@ function periodHeaderStats() {
                 id = window.location.pathname.split('/').slice(-2, -1)[0];
             }
             try {
-                const response = await fetch(`/treasury/api/periods/${id}/`, {
+                // Add cache-buster
+                const bust = Date.now();
+                const response = await fetch(`/treasury/api/periods/${id}/?_=${bust}`, {
                     headers: { 'X-CSRFToken': this.getCookie('csrftoken') }
                 });
                 this.period = await response.json();
                 this.period.status_label = { 'open': 'Aberto', 'closed': 'Fechado', 'archived': 'Arquivado' }[this.period.status];
-                this.calculatedBalance = this.period.opening_balance + (this.period.transactions_summary?.net || 0);
+                const net = this.period.transactions_summary?.net || 0;
+                this.calculatedBalance = parseFloat(this.period.opening_balance) + net;
+                console.debug('Period loaded:', {
+                    opening: this.period.opening_balance,
+                    net: net,
+                    calculated: this.calculatedBalance,
+                    closing: this.period.closing_balance
+                });
             } catch (error) {
                 console.error('Error loading period:', error);
             }
@@ -348,12 +357,21 @@ function periodDetailContent() {
                 id = window.location.pathname.split('/').slice(-2, -1)[0];
             }
             try {
-                const response = await fetch(`/treasury/api/periods/${id}/`, {
+                // Add cache-buster
+                const bust = Date.now();
+                const response = await fetch(`/treasury/api/periods/${id}/?_=${bust}`, {
                     headers: { 'X-CSRFToken': this.getCookie('csrftoken') }
                 });
                 this.period = await response.json();
                 this.period.status_label = { 'open': 'Aberto', 'closed': 'Fechado', 'archived': 'Arquivado' }[this.period.status];
-                this.calculatedBalance = this.period.opening_balance + (this.period.transactions_summary?.net || 0);
+                const net = this.period.transactions_summary?.net || 0;
+                this.calculatedBalance = parseFloat(this.period.opening_balance) + net;
+                console.debug('Content period loaded:', {
+                    opening: this.period.opening_balance,
+                    net: net,
+                    calculated: this.calculatedBalance,
+                    closing: this.period.closing_balance
+                });
             } catch (error) {
                 console.error('Error loading period:', error);
             } finally {

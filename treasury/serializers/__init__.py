@@ -180,16 +180,12 @@ class AccountingPeriodSimpleSerializer(serializers.ModelSerializer):
             total=models.Sum('amount')
         )['total'] or 0
 
-        # Para negativas, pegar o valor absoluto (já que armazenamos como negativo)
-        negative_abs = abs(negative) if negative else 0
-
-        net = transactions.aggregate(
-            total=models.Sum('amount')
-        )['total'] or 0
+        # Net = positivas - negativas (amount é sempre positivo, is_positive define o sinal)
+        net = positive - negative
 
         return {
             'total_positive': positive,
-            'total_negative': negative_abs,
+            'total_negative': negative,
             'net': net,
             'count': transactions.count(),
             'positive_count': transactions.filter(is_positive=True).count(),
@@ -339,10 +335,34 @@ class TransactionCreateSerializer(serializers.ModelSerializer):
         from treasury.models import AccountingPeriod
         period_month = validated_data['date'].replace(day=1)
 
-        period, created = AccountingPeriod.objects.get_or_create(
-            month=period_month,
-            defaults={'status': 'open', 'opening_balance': Decimal('0.00')}
-        )
+        # Se o período ainda não existe, calcular o opening_balance correto
+        if not AccountingPeriod.objects.filter(month=period_month).exists():
+            # Buscar período anterior
+            if period_month.month == 1:
+                prev_month = period_month.replace(year=period_month.year - 1, month=12, day=1)
+            else:
+                prev_month = period_month.replace(month=period_month.month - 1, day=1)
+
+            opening_balance = Decimal('0.00')
+            try:
+                prev_period = AccountingPeriod.objects.get(month=prev_month)
+                # Usar closing_balance se existir (período fechado)
+                if prev_period.closing_balance is not None:
+                    opening_balance = prev_period.closing_balance
+                else:
+                    # Período anterior aberto - usar saldo atual
+                    opening_balance = prev_period.get_current_balance()
+            except AccountingPeriod.DoesNotExist:
+                # Sem período anterior, abre com 0
+                opening_balance = Decimal('0.00')
+
+            period = AccountingPeriod.objects.create(
+                month=period_month,
+                status='open',
+                opening_balance=opening_balance
+            )
+        else:
+            period = AccountingPeriod.objects.get(month=period_month)
 
         # Criar a transação
         transaction = TransactionModel.objects.create(

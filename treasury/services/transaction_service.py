@@ -225,26 +225,31 @@ class TransactionService:
         Calcula o valor líquido das transações de um período.
 
         Considera apenas transações originais (não estornos).
-        NOTA: Transações negativas já são armazenadas com amount negativo,
-        então somamos diretamente.
+        NOTA: amount é sempre positivo, o sinal vem de is_positive.
 
         Args:
             period: Instância de AccountingPeriod
 
         Returns:
-            O valor líquido (positivas + negativas, onde negativas já são negativas)
+            O valor líquido (positivas + negativas)
         """
         transactions = TransactionModel.objects.filter(
             accounting_period=period,
             transaction_type='original'
         )
 
-        # Somar todas as transações diretamente (já inclui o sinal)
-        net = transactions.aggregate(
+        # Somar positivas
+        positive = transactions.filter(is_positive=True).aggregate(
             total=Coalesce(Sum('amount'), Decimal('0.00'))
         )['total'] or Decimal('0.00')
 
-        return net
+        # Somar negativas (são armazenadas com amount positivo, mas is_positive=False)
+        negative = transactions.filter(is_positive=False).aggregate(
+            total=Coalesce(Sum('amount'), Decimal('0.00'))
+        )['total'] or Decimal('0.00')
+
+        # Net = positivas - negativas
+        return positive - negative
 
     def get_transactions_summary(self, period):
         """

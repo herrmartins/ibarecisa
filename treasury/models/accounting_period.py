@@ -271,7 +271,7 @@ class AccountingPeriod(models.Model):
         """
         Retorna um resumo das transações do período.
 
-        Nota: As transações negativas têm amount armazenado como valor negativo.
+        Nota: amount é sempre positivo, o sinal é determinado por is_positive.
         """
         from treasury.models.transaction import TransactionModel
 
@@ -280,21 +280,18 @@ class AccountingPeriod(models.Model):
             transaction_type='original'
         )
 
-        # Somar positivas e negativas separadamente (valores absolutos para exibição)
+        # Somar positivas
         positive = transactions.filter(is_positive=True).aggregate(
             total=models.Sum('amount')
         )['total'] or Decimal('0.00')
 
-        # Para negativas, pegar o valor absoluto dos amounts (que são armazenados como negativos)
-        negative_abs = transactions.filter(is_positive=False).aggregate(
+        # Somar negativas (amount é positivo, mas is_positive=False)
+        negative = transactions.filter(is_positive=False).aggregate(
             total=models.Sum('amount')
         )['total'] or Decimal('0.00')
-        negative = abs(negative_abs) if negative_abs else Decimal('0.00')
 
-        # Net é a soma real (já inclui sinais)
-        net = transactions.aggregate(
-            total=models.Sum('amount')
-        )['total'] or Decimal('0.00')
+        # Net = positivas - negativas
+        net = positive - negative
 
         return {
             'total_positive': positive,

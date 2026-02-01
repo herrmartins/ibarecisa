@@ -247,26 +247,31 @@ class PeriodService:
         """
         Calcula o valor líquido das transações de um período.
 
-        Nota: As transações negativas têm amount armazenado como valor negativo,
-        então somamos diretamente positivo + negativo.
+        Nota: amount é sempre positivo, o sinal é determinado por is_positive.
 
         Args:
             period: Instância de AccountingPeriod
 
         Returns:
-            O valor líquido (positivas + negativas, onde negativas já são negativas)
+            O valor líquido (positivas - negativas)
         """
         transactions = TransactionModel.objects.filter(
             accounting_period=period,
             transaction_type='original'
         )
 
-        # Somar todas as transações diretamente (já inclui o sinal)
-        net = transactions.aggregate(
+        # Somar positivas
+        positive = transactions.filter(is_positive=True).aggregate(
             total=Coalesce(Sum('amount'), Decimal('0.00'), output_field=DecimalField())
         )['total'] or Decimal('0.00')
 
-        return net
+        # Somar negativas
+        negative = transactions.filter(is_positive=False).aggregate(
+            total=Coalesce(Sum('amount'), Decimal('0.00'), output_field=DecimalField())
+        )['total'] or Decimal('0.00')
+
+        # Net = positivas - negativas
+        return positive - negative
 
     def can_edit_transaction(self, transaction):
         """
@@ -374,7 +379,7 @@ class PeriodService:
         """
         Retorna um resumo detalhado do período.
 
-        Nota: As transações negativas têm amount armazenado como valor negativo.
+        Nota: amount é sempre positivo, o sinal é determinado por is_positive.
 
         Args:
             period: Instância de AccountingPeriod
@@ -391,15 +396,13 @@ class PeriodService:
             total=Coalesce(Sum('amount'), Decimal('0.00')),
             count=Count('id')
         )
-        negative_abs = transactions.filter(is_positive=False).aggregate(
+        negative = transactions.filter(is_positive=False).aggregate(
             total=Coalesce(Sum('amount'), Decimal('0.00')),
             count=Count('id')
         )
 
-        # Net é a soma real (já inclui sinais)
-        net = transactions.aggregate(
-            total=Coalesce(Sum('amount'), Decimal('0.00'))
-        )['total'] or Decimal('0.00')
+        # Net = positivas - negativas
+        net = (positive['total'] or Decimal('0.00')) - (negative['total'] or Decimal('0.00'))
 
         return {
             'period': period,
@@ -407,10 +410,10 @@ class PeriodService:
             'closing_balance': period.closing_balance,
             'current_balance': self.calculate_period_balance(period),
             'total_positive': positive['total'] or Decimal('0.00'),
-            'total_negative': abs(negative_abs['total'] or Decimal('0.00')),
+            'total_negative': negative['total'] or Decimal('0.00'),
             'net': net,
             'positive_count': positive['count'] or 0,
-            'negative_count': negative_abs['count'] or 0,
+            'negative_count': negative['count'] or 0,
             'total_transactions': transactions.count(),
         }
 

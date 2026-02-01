@@ -460,17 +460,14 @@ class TransactionViewSet(viewsets.ModelViewSet):
             total=Coalesce(Sum('amount'), Decimal('0.00'), output_field=DecimalField())
         )['total']
 
-        # Net: receitas + despesas (despesas já são negativas no aggregate)
-        net = positive + negative
+        # Net: positivas - negativas (amount é sempre positivo, is_positive define o sinal)
+        net = positive - negative
 
         count = queryset.count()
 
-        # Para exibição, usar valor absoluto das despesas
-        negative_display = abs(negative)
-
         return Response({
             'total_positive': float(positive),
-            'total_negative': float(negative_display),
+            'total_negative': float(negative),
             'net': float(net),
             'count': count,
         })
@@ -627,15 +624,9 @@ class MonthlyReportView(APIView):
                 })
 
             # Calcular saldo inicial acumulado (soma de todos os períodos anteriores)
-            accumulated_balance = 0
-            previous_period = period.get_previous_period()
-            if previous_period:
-                if previous_period.closing_balance is not None:
-                    accumulated_balance = previous_period.closing_balance
-                else:
-                    # Se período anterior não tem closing_balance, calcula
-                    prev_summary = previous_period.get_transactions_summary()
-                    accumulated_balance = prev_summary['total_positive'] - prev_summary['total_negative']
+            accumulated_balance = float(period.opening_balance)
+            # Nota: O opening_balance do período já deve herdar do período anterior
+            # quando é criado automaticamente pelo TransactionCreateSerializer
 
             return Response({
                 'period': AccountingPeriodSerializer(period).data,
