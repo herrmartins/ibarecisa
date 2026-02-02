@@ -59,6 +59,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "reversion.middleware.RevisionMiddleware",
     "core.middleware.ApprovalMiddleware",
+    "treasury.middleware.AccountingPeriodMiddleware",
 ]
 
 ROOT_URLCONF = "diacono.urls"

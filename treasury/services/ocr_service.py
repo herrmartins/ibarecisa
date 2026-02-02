@@ -35,6 +35,13 @@ class ReceiptOCRService:
         # Forçar Mistral mesmo em dev (para testes)
         self.force_mistral = getattr(settings, 'USE_MISTRAL_OCR', False)
 
+    @property
+    def ocr_timeout(self) -> int:
+        """Retorna o timeout de OCR baseado no ambiente."""
+        # Em desenvolvimento (DEBUG=True): 360 segundos (6 minutos)
+        # Em produção (DEBUG=False): 60 segundos
+        return 360 if self.debug_mode else 60
+
     def extract_from_receipt(self, image_file) -> Dict[str, Any]:
         """
         Extrai dados de um comprovante de pagamento.
@@ -188,7 +195,7 @@ class ReceiptOCRService:
             response = requests.post(
                 f'{ollama_host}/api/generate',
                 json=payload,
-                timeout=360
+                timeout=self.ocr_timeout
             )
             response.raise_for_status()
 
@@ -342,7 +349,7 @@ RETORNE APENAS O ARRAY JSON. COMECE COM [ E TERMINA COM ]."""
             response = requests.post(
                 f'{ollama_host}/api/generate',
                 json=payload,
-                timeout=360
+                timeout=self.ocr_timeout
             )
             response.raise_for_status()
 

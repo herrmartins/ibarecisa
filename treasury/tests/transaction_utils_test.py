@@ -3,7 +3,7 @@ from decimal import Decimal
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from django.utils import timezone
-from treasury.models import TransactionModel, CategoryModel, MonthlyBalance
+from treasury.models import TransactionModel, CategoryModel, AccountingPeriod
 from treasury.utils import (
     get_aggregate_transactions_by_category,
     get_total_transactions_amount,
@@ -25,7 +25,8 @@ class TestTransactionUtils(TestCase):
         self.now = timezone.now().date().replace(day=1)
         self.one_month_ago = timezone.now().date().replace(day=1) - \
             relativedelta(months=1)
-        baker.make(MonthlyBalance, month=self.one_month_ago,
+        # Create accounting period (replaces MonthlyBalance)
+        baker.make(AccountingPeriod, month=self.one_month_ago,
                    is_first_month=True)
 
         self.category1 = baker.make(CategoryModel, name="Category 1")

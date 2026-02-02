@@ -74,6 +74,7 @@ exec_sql "   - tabela criada" \
         notes TEXT NULL,
         created_at TIMESTAMP NULL,
         updated_at TIMESTAMP NULL,
+        is_first_month BOOLEAN DEFAULT 0,
         FOREIGN KEY (closed_by_id) REFERENCES users_customuser(id)
     );"
 

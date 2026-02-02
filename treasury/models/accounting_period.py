@@ -129,9 +129,21 @@ class AccountingPeriod(models.Model):
         return self.status == 'archived'
 
     @property
+    def is_current_month(self):
+        """Verifica se este é o mês corrente (hoje)."""
+        today = timezone.now().date()
+        current_month = today.replace(day=1)
+        return self.month == current_month
+
+    @property
     def can_be_closed(self):
         """Verifica se o período pode ser fechado."""
-        return self.status == 'open'
+        if self.status != 'open':
+            return False
+        # Mês corrente não pode ser fechado (ainda em andamento)
+        if self.is_current_month:
+            return False
+        return True
 
     @property
     def can_be_reopened(self):

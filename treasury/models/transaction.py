@@ -19,8 +19,9 @@ class TransactionModel(BaseModel):
     date = models.DateField()
 
     # FileField simples para aceitar PDF e imagens
+    # Nota: usa string literal para evitar problemas com migrations no SQLite
     acquittance_doc = models.FileField(
-        upload_to=custom_upload_to,
+        upload_to='treasury/receipts/',
         blank=True, null=True
     )
 

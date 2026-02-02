@@ -73,6 +73,7 @@ class AccountingPeriodSerializer(serializers.ModelSerializer):
     is_open = serializers.BooleanField(read_only=True)
     is_closed = serializers.BooleanField(read_only=True)
     is_archived = serializers.BooleanField(read_only=True)
+    is_current_month = serializers.BooleanField(read_only=True)
     can_be_closed = serializers.BooleanField(read_only=True)
     closed_by_name = serializers.CharField(source='closed_by.get_full_name', read_only=True, allow_null=True)
 
@@ -95,6 +96,7 @@ class AccountingPeriodSerializer(serializers.ModelSerializer):
             'is_open',
             'is_closed',
             'is_archived',
+            'is_current_month',
             'can_be_closed',
             'is_first_month',
             'closed_at',
@@ -147,6 +149,15 @@ class AccountingPeriodCloseSerializer(serializers.Serializer):
     def validate(self, attrs):
         period = self.context['period']
         if not period.can_be_closed:
+            if period.is_current_month:
+                raise serializers.ValidationError(
+                    f"O período {period.month_name}/{period.year} não pode ser fechado "
+                    "porque é o mês corrente. Aguarde o mês terminar."
+                )
+            if period.status == 'closed':
+                raise serializers.ValidationError("Este período já está fechado.")
+            if period.status == 'archived':
+                raise serializers.ValidationError("Este período está arquivado e não pode ser fechado novamente.")
             raise serializers.ValidationError("Apenas períodos abertos podem ser fechados.")
         return attrs
 
@@ -364,6 +375,13 @@ class TransactionCreateSerializer(serializers.ModelSerializer):
             )
         else:
             period = AccountingPeriod.objects.get(month=period_month)
+
+        # Verificar se o período está fechado
+        if period.is_closed:
+            raise serializers.ValidationError(
+                f"Não é possível criar transações no período {period.month_name}/{period.year} "
+                "porque ele está fechado. Reabra o período primeiro ou utilize a funcionalidade de estorno."
+            )
 
         # Criar a transação
         transaction = TransactionModel.objects.create(
