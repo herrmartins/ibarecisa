@@ -128,11 +128,13 @@ class ReceiptOCRService:
         categories = list(CategoryModel.objects.values_list('name', flat=True))
 
         # Chamar OCR apropriado
-        if self.force_mistral or not self.debug_mode:
-            # Produção ou forçado: Mistral
+        # Produção (DEBUG=False): SEMPRE Mistral
+        # Desenvolvimento (DEBUG=True): Ollama, a menos que USE_MISTRAL_OCR=True
+        use_mistral = (not self.debug_mode) or self.force_mistral
+
+        if use_mistral:
             result = self._extract_with_mistral(file_base64, 'image/png', categories)
         else:
-            # Desenvolvimento: Ollama
             result = self._extract_with_ollama(file_base64, 'image/png', categories)
 
         return result
@@ -159,28 +161,28 @@ class ReceiptOCRService:
 
         prompt = f"""Extraia as informações deste comprovante de pagamento e retorne APENAS no formato JSON especificado.
 
-Categorias disponíveis:
-{categories_formatted}
+            Categorias disponíveis:
+            {categories_formatted}
 
-Retorne EXATAMENTE este JSON (substitua os valores):
-{{
-  "description": "Nome da Loja - tipo de produtos (quantidade itens)",
-  "amount": 0.00,
-  "date": "2026-01-15",
-  "category": "nome da categoria",
-  "is_positive": false,
-  "confidence": 80
-}}
+            Retorne EXATAMENTE este JSON (substitua os valores):
+            {{
+            "description": "Nome da Loja - tipo de produtos (quantidade itens)",
+            "amount": 0.00,
+            "date": "2026-01-15",
+            "category": "nome da categoria",
+            "is_positive": false,
+            "confidence": 80
+            }}
 
-Regras:
-- description: Formato "Loja - tipo de itens (X itens)" ou apenas nome da loja
-- amount: Valor TOTAL em decimal (ex: 123.45)
-- date: Data no formato YYYY-MM-DD
-- category: Escolha UMA categoria da lista acima
-- is_positive: false (comprovantes são despesas)
-- confidence: 0-100 baseado na clareza da imagem
+            Regras:
+            - description: Formato "Loja - tipo de itens (X itens)" ou apenas nome da loja
+            - amount: Valor TOTAL em decimal (ex: 123.45)
+            - date: Data no formato YYYY-MM-DD
+            - category: Escolha UMA categoria da lista acima
+            - is_positive: false (comprovantes são despesas)
+            - confidence: 0-100 baseado na clareza da imagem
 
-Retorne APENAS o JSON, sem texto adicional."""
+            Retorne APENAS o JSON, sem texto adicional."""
 
         try:
             print(f"[OCR] Enviando para Ollama (modelo: {ollama_model})...")
@@ -239,6 +241,342 @@ Retorne APENAS o JSON, sem texto adicional."""
                 'category_id': None,
                 'is_positive': True,
                 'confidence': 0,
+            }
+
+    def extract_multiple_from_receipt(self, image_file) -> Dict[str, Any]:
+        """
+        Extrai múltiplas transações de uma imagem (lista, envelopes, urna, etc).
+
+        Args:
+            image_file: Arquivo de imagem (JPEG, PNG, PDF)
+
+        Returns:
+            Dict com: transactions (array), error (opcional)
+        """
+        # Ler arquivo
+        file_content = image_file.read()
+        file_name = getattr(image_file, 'name', 'receipt.jpg')
+
+        # Detectar tipo de arquivo
+        is_pdf = file_name.lower().endswith('.pdf')
+
+        if is_pdf:
+            # Converter PDF para imagem
+            try:
+                images = convert_from_bytes(file_content, dpi=200, fmt='png')
+                if not images:
+                    return {
+                        'error': 'PDF vazio ou não foi possível converter.',
+                        'transactions': []
+                    }
+                img = images[0]
+            except Exception as e:
+                return {
+                    'error': f'Erro ao converter PDF: {str(e)}',
+                    'transactions': []
+                }
+        else:
+            try:
+                img = Image.open(io.BytesIO(file_content))
+            except Exception as e:
+                return {
+                    'error': f'Erro ao ler imagem: {str(e)}',
+                    'transactions': []
+                }
+
+        # Validar tamanho
+        width, height = img.size
+        if width < 50 or height < 50:
+            return {
+                'error': f'Imagem muito pequena ({width}x{height}).',
+                'transactions': []
+            }
+
+        # Converter para PNG e depois base64
+        img_buffer = io.BytesIO()
+        img.save(img_buffer, format='PNG')
+        img_buffer.seek(0)
+        file_base64 = base64.b64encode(img_buffer.read()).decode('utf-8')
+
+        # Buscar categorias
+        categories = list(CategoryModel.objects.values_list('name', flat=True))
+
+        # Chamar OCR múltiplo
+        # Produção (DEBUG=False): SEMPRE Mistral
+        # Desenvolvimento (DEBUG=True): Ollama, a menos que USE_MISTRAL_OCR=True
+        use_mistral = (not self.debug_mode) or self.force_mistral
+
+        if use_mistral:
+            return self._extract_multiple_with_mistral(file_base64, 'image/png', categories)
+        else:
+            return self._extract_multiple_with_ollama(file_base64, 'image/png', categories)
+
+    def _extract_multiple_with_ollama(self, file_base64: str, file_type: str, categories: list) -> Dict[str, Any]:
+        """
+        Extrai múltiplas transações usando Ollama.
+
+        Args:
+            file_base64: Arquivo em base64
+            file_type: Tipo MIME do arquivo
+            categories: Lista de categorias disponíveis
+
+        Returns:
+            Dict com: transactions (array), error (opcional)
+        """
+        ollama_host = getattr(settings, 'OLLAMA_HOST', 'http://localhost:11434')
+        ollama_model = getattr(settings, 'OLLAMA_OCR_MODEL', 'qwen3-vl:8b')
+
+        categories_formatted = "\n".join([f"- {cat}" for cat in categories]) if categories else "- Outros"
+
+        prompt = f"""Analise esta imagem e retorne APENAS um array JSON com todas as transações.
+
+Categorias: {categories_formatted}
+
+Formato OBRIGATÓRIO (retorne EXATAMENTE isto):
+[
+  {{"description": "Envelope 895 - Dízimo", "amount": 2.50, "date": "2026-02-02", "category": "Dízimos", "is_positive": true, "confidence": 90}},
+  {{"description": "Envelope 895 - Missões", "amount": 50.00, "date": "2026-02-02", "category": "Missões", "is_positive": true, "confidence": 90}},
+  {{"description": "Envelope 895 - Urna", "amount": 60.00, "date": "2026-02-02", "category": "Ofertas", "is_positive": true, "confidence": 90}}
+]
+
+Regras:
+- NÃO explique, NÃO use tabelas, NÃO use markdown
+- Retorne APENAS o array JSON entre colchetes
+- description: "Envelope X - Categoria" ou "Nome - Categoria"
+- amount: número decimal (ex: 2.50)
+- date: YYYY-MM-DD (ou data de hoje: {datetime.now().strftime('%Y-%m-%d')})
+- category: use exatamente o nome da categoria da lista
+- is_positive: SEMPRE true para dízimos, ofertas, envelope, urna, contribuições. Use false APENAS para despesas/notas de compra.
+- confidence: 70 a 90
+
+COMECE O JSON COM [ e TERMINA COM ]"""
+
+        try:
+            print(f"[OCR Múltiplo] Enviando para Ollama (modelo: {ollama_model})...")
+            print(f"[OCR Múltiplo] Tamanho do base64: {len(file_base64)} chars")
+
+            payload = {
+                'model': ollama_model,
+                'prompt': prompt,
+                'images': [file_base64],
+                'stream': False
+            }
+
+            response = requests.post(
+                f'{ollama_host}/api/generate',
+                json=payload,
+                timeout=360
+            )
+            print(f"[OCR Múltiplo] Status code: {response.status_code}")
+            response.raise_for_status()
+
+            result = response.json()
+            ocr_text = result.get('response', '')
+
+            print(f"[OCR Múltiplo] Resposta recebida ({len(ocr_text)} chars):")
+            print(f"[OCR Múltiplo] {ocr_text[:1000]}...")
+
+            # Tentar parsear array JSON
+            transactions = self._parse_multiple_json(ocr_text, categories)
+
+            print(f"[OCR Múltiplo] {len(transactions)} transações extraídas")
+
+            return {'transactions': transactions}
+
+        except Exception as e:
+            print(f"[OCR Múltiplo] Erro: {type(e).__name__}: {e}")
+            import traceback
+            traceback.print_exc()
+            return {
+                'error': f'Erro ao comunicar com Ollama: {str(e)}',
+                'transactions': []
+            }
+
+    def _parse_multiple_json(self, text: str, categories: list) -> list:
+        """Parseia array JSON de múltiplas transações."""
+        # Tentar encontrar array JSON entre ```
+        array_match = re.search(r'```(?:json)?\s*(\[.*?\])\s*```', text, re.DOTALL)
+        if array_match:
+            try:
+                raw_data = json.loads(array_match.group(1))
+                if isinstance(raw_data, list):
+                    return [self._normalize_extracted_data(item, categories) for item in raw_data]
+            except json.JSONDecodeError:
+                pass
+
+        # Tentar encontrar o primeiro [
+        start = text.find('[')
+        if start != -1:
+            # Tentar encontrar o fechamento balanceado
+            bracket_count = 0
+            for i in range(start, len(text)):
+                if text[i] == '[':
+                    bracket_count += 1
+                elif text[i] == ']':
+                    bracket_count -= 1
+                    if bracket_count == 0:
+                        try:
+                            raw_data = json.loads(text[start:i+1])
+                            if isinstance(raw_data, list):
+                                return [self._normalize_extracted_data(item, categories) for item in raw_data]
+                        except json.JSONDecodeError:
+                            pass
+
+        # Se falhou, tentar parsing de texto livre para múltiplas entradas
+        return self._parse_multiple_text(text, categories)
+
+    def _parse_multiple_text(self, text: str, categories: list) -> list:
+        """Parseia texto livre para extrair múltiplas transações."""
+        transactions = []
+        lines = text.split('\n')
+
+        current_tx = {
+            'description': '',
+            'amount': None,
+            'date': datetime.now().strftime('%Y-%m-%d'),
+            'category': 'Dízimos',
+            'is_positive': True,
+            'confidence': 60
+        }
+
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+
+            # Procurar padrões de valor
+            amount_match = re.search(r'R?\$\s*([\d.,]+)', line)
+            if amount_match:
+                amount_str = amount_match.group(1).replace('.', '').replace(',', '.')
+                try:
+                    amount = float(amount_str)
+                    if amount > 0:
+                        # Salvar transação anterior se tiver valor
+                        if current_tx['amount']:
+                            transactions.append({**current_tx})
+
+                        # Nova transação
+                        current_tx = {
+                            'description': line[:50],
+                            'amount': amount,
+                            'date': datetime.now().strftime('%Y-%m-%d'),
+                            'category': 'Dízimos',
+                            'is_positive': True,
+                            'confidence': 50
+                        }
+                except ValueError:
+                    pass
+
+        # Adicionar última transação
+        if current_tx['amount']:
+            transactions.append(current_tx)
+
+        return [self._normalize_extracted_data(tx, categories) for tx in transactions]
+
+    def _extract_multiple_with_mistral(self, file_base64: str, file_type: str, categories: list) -> Dict[str, Any]:
+        """
+        Extrai múltiplas transações usando Mistral OCR (produção).
+        """
+        if not MISTRAL_SDK_AVAILABLE:
+            return {
+                'error': 'SDK Mistral não instalado.',
+                'transactions': []
+            }
+
+        if not hasattr(settings, 'MISTRAL_API_KEY') or not settings.MISTRAL_API_KEY:
+            return {
+                'error': 'MISTRAL_API_KEY não configurado',
+                'transactions': []
+            }
+
+        client = Mistral(api_key=settings.MISTRAL_API_KEY)
+
+        # Prompt para múltiplas transações
+        categories_formatted = ", ".join(categories)
+
+        prompt = f"""Extraia TODAS as transações desta imagem de envelopes/lista.
+
+Categorias disponíveis: {categories_formatted}
+
+Retorne APENAS este array JSON:
+[
+  {{"description": "Envelope X - Categoria", "amount": 100.00, "date": "2026-02-02", "category": "Dízimos", "is_positive": true, "confidence": 90}}
+]
+
+Regras:
+- Cada envelope com múltiplas categorias = múltiplas transações
+- is_positive: SEMPRE true para envelopes/dízimos/ofertas. Use false APENAS para despesas.
+- amount: número decimal
+- date: YYYY-MM-DD ou data de hoje
+- Retorne APENAS o array JSON"""
+
+        try:
+            # Usar OCR do Mistral
+            ocr_response = client.ocr.process(
+                document={
+                    "type": "image_url",
+                    "image_url": f"data:{file_type};base64,{file_base64}"
+                },
+                model="mistral-ocr-latest"
+            )
+
+            # Extrair texto do OCR
+            ocr_text = ""
+            if hasattr(ocr_response, 'pages') and ocr_response.pages:
+                for page in ocr_response.pages:
+                    if hasattr(page, 'markdown') and page.markdown:
+                        ocr_text += page.markdown + "\n"
+            elif hasattr(ocr_response, 'markdown'):
+                ocr_text = ocr_response.markdown
+
+            # Usar modelo para extrair array JSON
+            model = getattr(settings, 'MISTRAL_MODEL', 'mistral-small-latest')
+
+            chat_response = client.chat.complete(
+                model=model,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "Você é um assistente especializado em extrair dados de listas de transações. Responda APENAS com um array JSON válido, sem qualquer texto adicional."
+                    },
+                    {
+                        "role": "user",
+                        "content": f"{prompt}\n\nTexto extraído:\n{ocr_text}"
+                    }
+                ],
+                response_format={"type": "json_object"},
+                max_tokens=2000,
+                temperature=0.1
+            )
+
+            response_text = chat_response.choices[0].message.content
+            print(f"[OCR Múltiplo Mistral] Resposta: {response_text[:500]}...")
+
+            # A resposta pode ter um wrapper, tentar extrair o array
+            result = json.loads(response_text)
+
+            # Se result for um objeto com uma propriedade array, extrair
+            if isinstance(result, dict):
+                for key in ['transactions', 'data', 'results', 'items']:
+                    if key in result and isinstance(result[key], list):
+                        result = result[key]
+                        break
+
+            if not isinstance(result, list):
+                # Tentar parsear o texto para encontrar array
+                transactions = self._parse_multiple_json(response_text, categories)
+            else:
+                transactions = [self._normalize_extracted_data(tx, categories) for tx in result]
+
+            return {'transactions': transactions}
+
+        except Exception as e:
+            print(f"[OCR Múltiplo Mistral] Erro: {e}")
+            import traceback
+            traceback.print_exc()
+            return {
+                'error': f'Erro ao processar com Mistral: {str(e)}',
+                'transactions': []
             }
 
     def _extract_with_mistral(self, file_base64: str, file_type: str, categories: list) -> Dict[str, Any]:

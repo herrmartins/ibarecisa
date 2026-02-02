@@ -1098,3 +1098,104 @@ class ReceiptTransactionCreateView(APIView):
                 {'error': f'Erro ao processar: {str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+
+class ReceiptMultipleOCRView(APIView):
+    """
+    API para extrair múltiplas transações de uma imagem (listas, envelopes, urna).
+
+    POST /api/treasury/ocr/receipt-multiple/
+    """
+    permission_classes = [IsAuthenticated, IsTreasuryUser]
+
+    def post(self, request):
+        """Processa uma imagem e extrai múltiplas transações."""
+        from treasury.services.ocr_service import ReceiptOCRService
+
+        # Verificar se foi enviado arquivo
+        if 'receipt' not in request.FILES:
+            return Response(
+                {'error': 'Envie o arquivo no campo "receipt".'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        receipt_file = request.FILES['receipt']
+
+        # Validar tamanho (10MB)
+        if receipt_file.size > 10 * 1024 * 1024:
+            return Response(
+                {'error': 'Arquivo muito grande. Tamanho máximo: 10MB.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            # Processar OCR múltiplo
+            service = ReceiptOCRService()
+            result = service.extract_multiple_from_receipt(receipt_file)
+
+            # Verificar se houve erro
+            if 'error' in result:
+                return Response(
+                    {'error': result['error']},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Retornar transações extraídas
+            return Response({
+                'transactions': result['transactions'],
+                'count': len(result['transactions']),
+            })
+
+        except Exception as e:
+            return Response(
+                {'error': f'Erro ao processar: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class BatchTransactionCreateView(APIView):
+    """
+    API para criar múltiplas transações em lote.
+
+    POST /api/treasury/transactions/batch/
+    Body: { "transactions": [...] }
+    """
+    permission_classes = [IsAuthenticated, IsTreasuryUser]
+
+    def post(self, request):
+        """Cria múltiplas transações."""
+        from treasury.serializers import TransactionCreateSerializer
+
+        transactions_data = request.data.get('transactions', [])
+
+        if not transactions_data:
+            return Response(
+                {'error': 'Envie pelo menos uma transação.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        created_transactions = []
+        errors = []
+
+        for idx, tx_data in enumerate(transactions_data):
+            try:
+                serializer = TransactionCreateSerializer(
+                    data=tx_data,
+                    context={'request': request}
+                )
+                serializer.is_valid(raise_exception=True)
+                transaction = serializer.save()
+                created_transactions.append(TransactionSerializer(transaction).data)
+            except Exception as e:
+                errors.append({
+                    'index': idx,
+                    'error': str(e),
+                    'data': tx_data
+                })
+
+        return Response({
+            'created': created_transactions,
+            'created_count': len(created_transactions),
+            'errors': errors,
+            'errors_count': len(errors),
+        }, status=status.HTTP_201_CREATED if created_transactions else status.HTTP_400_BAD_REQUEST)

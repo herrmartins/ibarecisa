@@ -284,6 +284,35 @@ document.addEventListener('alpine:init', () => {
             const value = `; ${document.cookie}`;
             const parts = value.split(`; ${name}=`);
             if (parts.length === 2) return parts.pop().split(';').shift();
+        },
+
+        openMultipleOcr() {
+            // Criar input de arquivo temporário
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*,.pdf';
+
+            input.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                // Validar tamanho (10MB)
+                if (file.size > 10 * 1024 * 1024) {
+                    this.$store.treasuryUi?.notify?.('Arquivo muito grande. Máximo: 10MB', 'error');
+                    return;
+                }
+
+                // Converter para base64 e salvar no sessionStorage
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    sessionStorage.setItem('ocrMultipleImage', event.target.result);
+                    // Ir para página de revisão
+                    window.location.href = '/treasury/transacoes/importacao-multipla/';
+                };
+                reader.readAsDataURL(file);
+            };
+
+            input.click();
         }
     }));
 });

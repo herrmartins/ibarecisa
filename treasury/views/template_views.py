@@ -131,6 +131,16 @@ class TransactionUpdateView(LoginRequiredMixin, UpdateView):
         return reverse_lazy('treasury:transaction-detail-new', kwargs={'pk': self.object.pk})
 
 
+class BatchTransactionReviewView(LoginRequiredMixin, TemplateView):
+    """Página para revisar múltiplas transações extraídas via OCR."""
+    template_name = 'treasury/transactions/batch-review.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['page_title'] = 'Revisar Transações'
+        return context
+
+
 class CategoryListView(LoginRequiredMixin, ListView):
     """Lista de categorias."""
     model = CategoryModel

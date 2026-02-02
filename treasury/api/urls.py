@@ -15,6 +15,8 @@ from treasury.api.views import (
     FrozenReportViewSet,
     ReceiptOCRView,
     ReceiptTransactionCreateView,
+    ReceiptMultipleOCRView,
+    BatchTransactionCreateView,
 )
 
 # Router principal
@@ -32,7 +34,9 @@ urlpatterns = [
     # Rotas personalizadas (PRIMEIRO para ter precedência sobre o router)
     path('reversals/create/', ReversalCreateView.as_view(), name='reversal-create'),
     path('ocr/receipt/', ReceiptOCRView.as_view(), name='ocr-receipt'),
+    path('ocr/receipt-multiple/', ReceiptMultipleOCRView.as_view(), name='ocr-receipt-multiple'),
     path('transactions/from-receipt/', ReceiptTransactionCreateView.as_view(), name='transaction-from-receipt'),
+    path('transactions/batch/', BatchTransactionCreateView.as_view(), name='transaction-batch'),
     path('reports/balance/<int:year>/<int:month>/', PeriodBalanceView.as_view(), name='period-balance'),
     path('reports/monthly/<int:year>/<int:month>/', MonthlyReportView.as_view(), name='monthly-report'),
     path('reports/current-balance/', CurrentBalanceView.as_view(), name='current-balance'),

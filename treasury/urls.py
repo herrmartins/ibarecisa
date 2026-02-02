@@ -38,6 +38,7 @@ from treasury.views.template_views import (
     TransactionDetailView as TemplateTransactionDetailView,
     TransactionCreateView,
     TransactionUpdateView as TemplateTransactionUpdateView,
+    BatchTransactionReviewView,
     CategoryListView as TemplateCategoryListView,
     MonthlyReportView,
     ReversalView,
@@ -162,6 +163,7 @@ urlpatterns = [
     path('transacoes/', TemplateTransactionListView.as_view(), name='transaction-list'),
     path('transacoes/<int:pk>/', TemplateTransactionDetailView.as_view(), name='transaction-detail-new'),
     path('transacoes/nova/', TransactionCreateView.as_view(), name='transaction-create'),
+    path('transacoes/importacao-multipla/', BatchTransactionReviewView.as_view(), name='batch-review'),
     path('transacoes/<int:pk>/editar/', TemplateTransactionUpdateView.as_view(), name='transaction-update-new'),
     path('transacoes/<int:pk>/estornar/', ReversalView.as_view(), name='transaction-reversal'),
 
