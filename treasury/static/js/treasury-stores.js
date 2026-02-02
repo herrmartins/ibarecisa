@@ -572,6 +572,14 @@ document.addEventListener('alpine:init', () => {
         modalOpen: false,
         modalContent: null,
 
+        // OCR Modal state
+        ocrModalOpen: false,
+        ocrProcessing: false,
+        ocrResult: null,
+        ocrError: null,
+        ocrPreviewImage: null,
+        ocrFile: null,  // Arquivo original para anexar ao formulário
+
         // Mostrar notificação
         notify(message, type = 'info') {
             const id = Date.now();
@@ -616,6 +624,24 @@ document.addEventListener('alpine:init', () => {
         // Esconder loading
         hideLoading() {
             this.loading = false;
+        },
+
+        // Open OCR modal
+        openOcrModal() {
+            this.ocrModalOpen = true;
+            this.ocrResult = null;
+            this.ocrError = null;
+            this.ocrPreviewImage = null;
+        },
+
+        // Close OCR modal
+        closeOcrModal() {
+            this.ocrModalOpen = false;
+            this.ocrResult = null;
+            this.ocrError = null;
+            this.ocrPreviewImage = null;
+            this.ocrProcessing = false;
+            this.ocrFile = null;  // Limpar arquivo
         },
     });
 });

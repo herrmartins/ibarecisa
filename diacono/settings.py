@@ -255,6 +255,10 @@ CAPTCHA_TEST_MODE = True
 MISTRAL_API_KEY = config("MISTRAL_API_KEY", default="")
 MISTRAL_MODEL = config("MISTRAL_MODEL", default="mistral-small-latest")
 
+# Ollama Configuration (desenvolvimento)
+OLLAMA_HOST = config("OLLAMA_HOST", default="http://localhost:11434")
+OLLAMA_OCR_MODEL = config("OLLAMA_OCR_MODEL", default="qwen3-vl:4b")
+
 if not DEBUG:
     sentry_sdk.init(
         dsn="https://56e7c96aedf9c170eeb59c9b515f6ef4@o4509815595597824.ingest.us.sentry.io/4509815598678016",

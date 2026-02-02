@@ -924,3 +924,177 @@ class FrozenReportViewSet(viewsets.ReadOnlyModelViewSet):
                 'message': 'Erro ao recuperar PDF.',
                 'error': str(e)
             }, status=500)
+
+
+class ReceiptOCRView(APIView):
+    """
+    API para extrair dados de comprovantes usando OCR/LLM.
+
+    POST /api/treasury/ocr/receipt/
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        """Processa um comprovante e extrai os dados."""
+        from treasury.services.ocr_service import ReceiptOCRService
+
+        # Verificar se foi enviado arquivo
+        if 'receipt' not in request.FILES:
+            return Response(
+                {'error': 'Envie o arquivo no campo "receipt".'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        receipt_file = request.FILES['receipt']
+
+        # Validar tipo de arquivo
+        allowed_extensions = ['.jpg', '.jpeg', '.png', '.pdf']
+        file_name = receipt_file.name.lower()
+        if not any(file_name.endswith(ext) for ext in allowed_extensions):
+            return Response(
+                {'error': 'Tipo de arquivo não suportado. Use: JPG, PNG ou PDF.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Validar tamanho (máximo 10MB)
+        max_size = 10 * 1024 * 1024
+        if receipt_file.size > max_size:
+            return Response(
+                {'error': 'Arquivo muito grande. Tamanho máximo: 10MB.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            # Processar OCR
+            service = ReceiptOCRService()
+            result = service.extract_from_receipt(receipt_file)
+
+            # Verificar se houve erro
+            if 'error' in result:
+                return Response(
+                    {'error': result['error']},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+
+            # Retornar dados extraídos
+            return Response({
+                'description': result['description'],
+                'amount': result['amount'],
+                'date': result['date'],
+                'category_name': result['category_name'],
+                'category_id': result['category_id'],
+                'is_positive': result['is_positive'],
+                'confidence': result['confidence'],
+                'raw_data': result.get('raw_data', {}),
+            })
+
+        except Exception as e:
+            return Response(
+                {'error': f'Erro ao processar comprovante: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class ReceiptTransactionCreateView(APIView):
+    """
+    API para criar transação a partir de comprovante com OCR.
+
+    POST /api/treasury/transactions/from-receipt/
+    """
+    permission_classes = [IsAuthenticated, IsTreasuryUser]
+
+    def post(self, request):
+        """Cria uma transação processando o comprovante e permitindo edição."""
+        from treasury.services.ocr_service import ReceiptOCRService
+
+        # Verificar se foi enviado arquivo
+        if 'receipt' not in request.FILES:
+            return Response(
+                {'error': 'Envie o arquivo no campo "receipt".'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        receipt_file = request.FILES['receipt']
+
+        # Validar tipo de arquivo
+        allowed_extensions = ['.jpg', '.jpeg', '.png', '.pdf']
+        file_name = receipt_file.name.lower()
+        if not any(file_name.endswith(ext) for ext in allowed_extensions):
+            return Response(
+                {'error': 'Tipo de arquivo não suportado. Use: JPG, PNG ou PDF.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Validar tamanho (máximo 10MB)
+        max_size = 10 * 1024 * 1024
+        if receipt_file.size > max_size:
+            return Response(
+                {'error': 'Arquivo muito grande. Tamanho máximo: 10MB.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Verificar se deve criar diretamente ou apenas extrair
+        create_directly = request.data.get('create', 'false') == 'true'
+
+        try:
+            # Processar OCR
+            service = ReceiptOCRService()
+            result = service.extract_from_receipt(receipt_file)
+
+            # Verificar se houve erro
+            if 'error' in result:
+                return Response(
+                    {'error': result['error']},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+
+            # Se create_directly=True, criar a transação
+            if create_directly:
+                # Preparar dados para criação
+                transaction_data = {
+                    'description': request.data.get('description', result['description']),
+                    'amount': request.data.get('amount', result['amount']),
+                    'is_positive': request.data.get('is_positive', result['is_positive']),
+                    'date': request.data.get('date', result['date']),
+                    'category_id': request.data.get('category_id', result['category_id']),
+                }
+
+                # Validar dados
+                from treasury.serializers import TransactionCreateSerializer
+                serializer = TransactionCreateSerializer(
+                    data=transaction_data,
+                    context={'request': request}
+                )
+                serializer.is_valid(raise_exception=True)
+
+                # Criar transação
+                transaction = serializer.save()
+
+                # Adicionar o comprovante como acquittance_doc
+                if 'acquittance_doc' in request.FILES:
+                    transaction.acquittance_doc = request.FILES['acquittance_doc']
+                    transaction.save()
+
+                return Response({
+                    'message': 'Transação criada com sucesso.',
+                    'transaction': TransactionSerializer(transaction).data,
+                }, status=status.HTTP_201_CREATED)
+
+            else:
+                # Retornar dados extraídos para preview/edição
+                return Response({
+                    'description': result['description'],
+                    'amount': result['amount'],
+                    'date': result['date'],
+                    'category_name': result['category_name'],
+                    'category_id': result['category_id'],
+                    'is_positive': result['is_positive'],
+                    'confidence': result['confidence'],
+                    'preview_mode': True,
+                })
+
+        except Exception as e:
+            return Response(
+                {'error': f'Erro ao processar: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

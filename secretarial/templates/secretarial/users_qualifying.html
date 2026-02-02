@@ -1,113 +1,735 @@
 {% extends 'core/base.html' %}
-{% block content %}
 {% load static %}
-<link rel="stylesheet" type="text/css" href="{% static 'css/styles.css'%}">
 
-<div class="container">
-  <div class="container text-center">
-    <p class="fs-3 fw-light">Sessão de usuários</p>
-  </div>
+{% block content %}
+<div class="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+  <!-- Header Section -->
+  <div class="minutes-list-header relative">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
+      <!-- Back Button -->
+      <div class="mb-6">
+        <a href="{% url 'secretarial:home' %}" class="inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+          Voltar para Secretaria
+        </a>
+      </div>
 
-  <div class="container mb-4">
-    <div class="d-flex justify-content-between align-items-center">
-      <h6 class="fw-light mb-0">Lista de Membros</h6>
-      <a href="{% url 'secretarial:member-registration' %}" class="btn btn-primary">
-        <i class="fas fa-user-plus"></i> Cadastrar Novo Membro
-      </a>
+      <div class="text-center mb-4">
+        <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">
+          Gestão de Usuários
+        </h1>
+        <p class="text-white/90 text-lg">
+          Gerencie membros, funções e permissões de acesso
+        </p>
+      </div>
+
+      <!-- Stats -->
+      <div class="flex justify-center gap-4 sm:gap-6 flex-wrap mt-8">
+        <div class="text-center">
+          <p class="text-3xl font-bold text-white" id="members-count">{{ members|length }}</p>
+          <p class="text-white/80 text-sm">Membros</p>
+        </div>
+        <div class="text-center">
+          <p class="text-3xl font-bold text-white" id="users-count">{{ users|length }}</p>
+          <p class="text-white/80 text-sm">Outros Usuários</p>
+        </div>
+      </div>
     </div>
   </div>
 
-  <div class="container">
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Nome</th>
-          <th>Funções</th>
-          <th>Telefone</th>
-          <th>E-mail</th>
-          <th>Ações</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for m in members %}
-        <tr>
-          <td><a href="{% url 'users:user-profile' m.pk %}">{{ m.first_name }} {{ m.last_name }}</a></td>
-          <td>
-            {% if m.is_pastor %}
-            <p>Pastor</p>
-            {% endif %}
-            {% if m.is_secretary %}
-            <p>Secretário</p>
-            {% endif %}
-            {% if m.is_treasurer %}
-            <p>Tesoureiro</p>
-            {% endif %}
-            {% if not m.is_pastor and not m.is_secretary and not m.is_treasurer %}
-              <p>{{m.type}}</p>
-            {% endif %}
-          </td>
-          <td>
-            {{m.phone_number}}
-          </td>
-          <td>
-            {{m.email}}
-          </td>
-          <td>
-            <div class="btn-group" role="group">
-              <a href="{% url 'secretarial:user-qualify' m.id %}" class="btn btn-sm btn-outline-primary" title="Editar">
-                <i class="fas fa-edit"></i>
-              </a>
-              {% if m.is_approved %}
-              <span class="badge bg-success">Aprovado</span>
-              {% else %}
-              <span class="badge bg-warning">Pendente</span>
-              {% endif %}
-              {% if m.email and not m.has_usable_password %}
-              <form method="post" action="{% url 'secretarial:send-password-email' m.id %}" style="display: inline;">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-sm btn-outline-success" title="Enviar senha por e-mail"
-                        onclick="return confirm('Enviar e-mail de definição de senha para {{ m.first_name }}?')">
-                  <i class="fas fa-envelope"></i> Enviar Senha
-                </button>
-              </form>
-              {% elif m.has_usable_password %}
-              <span class="badge bg-success">Usuário ativo</span>
-              {% else %}
-              <span class="badge bg-warning">Sem e-mail</span>
-              {% endif %}
-            </div>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-  <div class="container">
-    <div class="row">
-    <div class="col-8 mx-auto">
-    <h6 class="fw-light"> Lista de usuários simples, contratos e congregados...</h6>
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Nome</th>
-          <th>Ação</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for u in users %}
-        <tr>
-          <td><a href="{% url 'users:user-profile' u.pk %}">{{ u.first_name }} {{ u.last_name }}</a></td>
-          <td>
-            <a href="{% url 'secretarial:user-qualify' u.id %}">
-              <img src="{% static 'img/edit-black.svg' %}" class="">
-            </a>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+  <!-- Main Content -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Members Section -->
+    <div class="mb-8">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+        <div class="flex items-center gap-3">
+          <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+          </svg>
+          <h2 class="text-xl font-bold text-slate-800">Lista de Membros</h2>
+        </div>
+        <a href="{% url 'secretarial:member-registration' %}" class="minute-create-btn">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+          </svg>
+          Cadastrar Novo Membro
+        </a>
+      </div>
+
+      <!-- Search and Filters -->
+      <div class="minute-create-editor-card mb-4">
+        <div class="flex flex-col sm:flex-row gap-4 p-4">
+          <!-- Search -->
+          <div class="flex-1 relative">
+            <svg class="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+            <input type="text" id="search-input" placeholder="Buscar por nome ou email..."
+                   class="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all">
+          </div>
+
+          <!-- Filters -->
+          <div class="flex flex-wrap gap-2">
+            <select id="filter-approval" class="px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all bg-white">
+              <option value="">Todos os Status</option>
+              <option value="approved">Aprovados</option>
+              <option value="pending">Pendentes</option>
+            </select>
+            <select id="filter-function" class="px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all bg-white">
+              <option value="">Todas as Funções</option>
+              <option value="pastor">Pastores</option>
+              <option value="secretary">Secretários</option>
+              <option value="treasurer">Tesoureiros</option>
+              <option value="none">Sem Função</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Results count -->
+        <div class="px-4 pb-3">
+          <p class="text-sm text-slate-500">
+            Mostrando <span id="showing-count">0</span> de <span id="total-count">{{ members|length }}</span> membros
+          </p>
+        </div>
+      </div>
+
+      {% if members %}
+      <!-- Members Table -->
+      <div class="minute-create-editor-card overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="border-b border-slate-200 bg-slate-50">
+                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Nome</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Funções</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Status</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider hidden sm:table-cell">Contato</th>
+                <th class="px-4 py-3 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="members-table-body" class="divide-y divide-slate-100">
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="flex items-center justify-between px-4 py-3 border-t border-slate-100">
+          <p class="text-sm text-slate-500">
+            Página <span id="current-page">1</span> de <span id="total-pages">1</span>
+          </p>
+          <div class="flex items-center gap-2">
+            <button id="prev-page" class="px-3 py-1.5 text-sm border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+              Anterior
+            </button>
+            <button id="next-page" class="px-3 py-1.5 text-sm border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+              Próxima
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hidden member data for JavaScript -->
+      <script id="members-data" type="application/json">
+        {
+          "members": [
+            {% for m in members %}
+            {
+              "id": {{ m.id }},
+              "pk": {{ m.pk }},
+              "first_name": "{{ m.first_name|escapejs }}",
+              "last_name": "{{ m.last_name|escapejs }}",
+              "email": "{{ m.email|escapejs }}",
+              "phone_number": "{{ m.phone_number|escapejs }}",
+              "type": "{{ m.type|escapejs }}",
+              "type_display": "{{ m.get_type_display|escapejs }}",
+              "is_approved": {{ m.is_approved|lower }},
+              "is_pastor": {{ m.is_pastor|lower }},
+              "is_secretary": {{ m.is_secretary|lower }},
+              "is_treasurer": {{ m.is_treasurer|lower }},
+              "has_usable_password": {{ m.has_usable_password|lower }}
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+          ]
+        }
+      </script>
+      {% else %}
+      <div class="minute-create-editor-card max-w-2xl mx-auto">
+        <div class="p-8 text-center text-slate-500">
+          <svg class="w-16 h-16 mx-auto mb-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+          </svg>
+          <p class="text-lg font-medium">Nenhum membro cadastrado ainda.</p>
+          <p class="text-sm mt-2">Comece cadastrando novos membros.</p>
+        </div>
+      </div>
+      {% endif %}
     </div>
-  </div>
+
+    <!-- Simple Users Section -->
+    {% if users %}
+    <div>
+      <div class="flex items-center gap-3 mb-6">
+        <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+        </svg>
+        <h2 class="text-xl font-bold text-slate-800">Usuários Simples, Contratos e Congregados</h2>
+      </div>
+
+      <div class="minute-create-editor-card overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="border-b border-slate-200 bg-slate-50">
+                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Nome</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Tipo</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider hidden sm:table-cell">Contato</th>
+                <th class="px-4 py-3 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">Ações</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              {% for u in users %}
+              <tr class="hover:bg-slate-50 transition-colors">
+                <td class="px-4 py-3">
+                  <a href="{% url 'users:user-profile' u.pk %}" class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 font-semibold text-sm flex-shrink-0">
+                      {{ u.first_name|first }}{{ u.last_name|first }}
+                    </div>
+                    <div>
+                      <p class="font-medium text-slate-800 hover:text-primary-600 transition-colors">{{ u.first_name }} {{ u.last_name }}</p>
+                      <p class="text-xs text-slate-500 sm:hidden">{{ u.email|default:"Sem e-mail" }}</p>
+                    </div>
+                  </a>
+                </td>
+                <td class="px-4 py-3">
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600">
+                    {{ u.type|default:"Usuário" }}
+                  </span>
+                </td>
+                <td class="px-4 py-3 hidden sm:table-cell">
+                  <p class="text-sm text-slate-600">{{ u.email|default:"—" }}</p>
+                </td>
+                <td class="px-4 py-3">
+                  <div class="flex items-center justify-end gap-2">
+                    <a href="{% url 'secretarial:user-qualify' u.id %}" class="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                      </svg>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    {% endif %}
   </div>
 </div>
+
+<script>
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+}
+
+// State
+let allMembers = [];
+let filteredMembers = [];
+let currentPage = 1;
+const itemsPerPage = 20;
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    const dataElement = document.getElementById('members-data');
+    if (dataElement) {
+        const data = JSON.parse(dataElement.textContent);
+        allMembers = data.members;
+        filteredMembers = [...allMembers];
+        renderTable();
+        setupEventListeners();
+    }
+});
+
+function setupEventListeners() {
+    // Search
+    document.getElementById('search-input').addEventListener('input', debounce(function() {
+        currentPage = 1;
+        filterMembers();
+    }, 300));
+
+    // Filters
+    document.getElementById('filter-approval').addEventListener('change', function() {
+        currentPage = 1;
+        filterMembers();
+    });
+
+    document.getElementById('filter-function').addEventListener('change', function() {
+        currentPage = 1;
+        filterMembers();
+    });
+
+    // Pagination
+    document.getElementById('prev-page').addEventListener('click', function() {
+        if (currentPage > 1) {
+            currentPage--;
+            renderTable();
+        }
+    });
+
+    document.getElementById('next-page').addEventListener('click', function() {
+        const totalPages = Math.ceil(filteredMembers.length / itemsPerPage);
+        if (currentPage < totalPages) {
+            currentPage++;
+            renderTable();
+        }
+    });
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('[onclick^="toggleQuickActions"]')) {
+            document.querySelectorAll('[id^="quick-actions-"]').forEach(el => {
+                el.classList.add('hidden');
+            });
+        }
+    });
+}
+
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+function filterMembers() {
+    const searchTerm = document.getElementById('search-input').value.toLowerCase();
+    const approvalFilter = document.getElementById('filter-approval').value;
+    const functionFilter = document.getElementById('filter-function').value;
+
+    filteredMembers = allMembers.filter(member => {
+        // Search
+        const matchesSearch = !searchTerm ||
+            member.first_name.toLowerCase().includes(searchTerm) ||
+            member.last_name.toLowerCase().includes(searchTerm) ||
+            (member.email && member.email.toLowerCase().includes(searchTerm));
+
+        // Approval filter
+        let matchesApproval = true;
+        if (approvalFilter === 'approved') {
+            matchesApproval = member.is_approved;
+        } else if (approvalFilter === 'pending') {
+            matchesApproval = !member.is_approved;
+        }
+
+        // Function filter
+        let matchesFunction = true;
+        if (functionFilter === 'pastor') {
+            matchesFunction = member.is_pastor;
+        } else if (functionFilter === 'secretary') {
+            matchesFunction = member.is_secretary;
+        } else if (functionFilter === 'treasurer') {
+            matchesFunction = member.is_treasurer;
+        } else if (functionFilter === 'none') {
+            matchesFunction = !member.is_pastor && !member.is_secretary && !member.is_treasurer;
+        }
+
+        return matchesSearch && matchesApproval && matchesFunction;
+    });
+
+    currentPage = 1;
+    renderTable();
+}
+
+function renderTable() {
+    const tbody = document.getElementById('members-table-body');
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    const pageMembers = filteredMembers.slice(start, end);
+
+    tbody.innerHTML = pageMembers.map(member => createMemberRow(member)).join('');
+    updatePagination();
+}
+
+function createMemberRow(member) {
+    const initials = (member.first_name[0] + member.last_name[0]).toUpperCase();
+    const email = member.email || '—';
+    const phone = member.phone_number || '';
+
+    let rolesHtml = '';
+    if (member.is_pastor) {
+        rolesHtml += `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-700">
+            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+            Pastor
+        </span>`;
+    }
+    if (member.is_secretary) {
+        rolesHtml += `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">
+            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
+            </svg>
+            Secretário
+        </span>`;
+    }
+    if (member.is_treasurer) {
+        rolesHtml += `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">
+            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/>
+            </svg>
+            Tesoureiro
+        </span>`;
+    }
+    if (!member.is_pastor && !member.is_secretary && !member.is_treasurer) {
+        rolesHtml += `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600">
+            ${member.type_display || 'Membro'}
+        </span>`;
+    }
+
+    const statusHtml = member.is_approved
+        ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700 cursor-pointer hover:bg-green-200 transition-colors" onclick="toggleApproval(${member.id}, this)">
+            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+            Aprovado
+        </span>`
+        : `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-700 cursor-pointer hover:bg-yellow-200 transition-colors" onclick="toggleApproval(${member.id}, this)">
+            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+            </svg>
+            Pendente
+        </span>`;
+
+    const phoneHtml = phone ? `<p class="text-xs text-slate-500">${phone}</p>` : '';
+
+    const sendPasswordBtn = (member.email && !member.has_usable_password)
+        ? `<form method="post" action="/secretarial/send-password-email/${member.id}/" class="contents">
+            {% csrf_token %}
+            <button type="submit" class="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors text-left"
+                    onclick="return confirm('Enviar e-mail de definição de senha para ${member.first_name}?')">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+                Enviar Senha
+            </button>
+        </form>`
+        : '';
+
+    return `
+        <tr class="hover:bg-slate-50 transition-colors" data-user-id="${member.id}">
+            <td class="px-4 py-3">
+                <a href="/users/profile/${member.pk}/" class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-primary-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
+                        ${initials}
+                    </div>
+                    <div>
+                        <p class="font-medium text-slate-800 hover:text-primary-600 transition-colors">${member.first_name} ${member.last_name}</p>
+                        <p class="text-xs text-slate-500 sm:hidden">${email}</p>
+                    </div>
+                </a>
+            </td>
+            <td class="px-4 py-3">
+                <div class="flex flex-wrap gap-1.5">
+                    ${rolesHtml}
+                </div>
+            </td>
+            <td class="px-4 py-3">
+                ${statusHtml}
+            </td>
+            <td class="px-4 py-3 hidden sm:table-cell">
+                <p class="text-sm text-slate-600">${email}</p>
+                ${phoneHtml}
+            </td>
+            <td class="px-4 py-3">
+                <div class="flex items-center justify-end gap-2">
+                    <div class="relative">
+                        <button onclick="toggleQuickActions(${member.id})" class="p-2 text-slate-400 hover:text-primary-600 hover:bg-slate-100 rounded-lg transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/>
+                            </svg>
+                        </button>
+                        <div id="quick-actions-${member.id}" class="hidden absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-slate-200 py-2 z-50">
+                            <a href="/secretarial/qualify/${member.id}/" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                                Editar Completo
+                            </a>
+                            ${sendPasswordBtn}
+                            ${sendPasswordBtn ? '<div class="border-t border-slate-100 my-1"></div>' : ''}
+                            ${!member.is_approved ? '<p class="px-4 py-2 text-xs text-yellow-600 bg-yellow-50 flex items-center gap-1"><svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>Aprovação pendente</p>' : ''}
+                            <p class="px-4 py-2 text-xs font-semibold text-slate-500 uppercase">Cargo/Função</p>
+                            <button onclick="setFunction(${member.id}, 'pastor', ${member.is_pastor})" ${!member.is_approved ? 'disabled class="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-400 cursor-not-allowed text-left opacity-60"' : 'class="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors text-left"'}>
+                                <svg class="w-4 h-4 text-purple-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                                <span class="${member.is_pastor ? 'text-purple-600 font-medium' : ''}">Pastor</span>
+                                ${member.is_pastor ? '<span class="ml-auto text-xs text-purple-600">✓</span>' : ''}
+                            </button>
+                            <button onclick="setFunction(${member.id}, 'secretary', ${member.is_secretary})" ${!member.is_approved ? 'disabled class="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-400 cursor-not-allowed text-left opacity-60"' : 'class="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors text-left"'}>
+                                <svg class="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
+                                </svg>
+                                <span class="${member.is_secretary ? 'text-blue-600 font-medium' : ''}">Secretário</span>
+                                ${member.is_secretary ? '<span class="ml-auto text-xs text-blue-600">✓</span>' : ''}
+                            </button>
+                            <button onclick="setFunction(${member.id}, 'treasurer', ${member.is_treasurer})" ${!member.is_approved ? 'disabled class="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-400 cursor-not-allowed text-left opacity-60"' : 'class="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors text-left"'}>
+                                <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/>
+                                </svg>
+                                <span class="${member.is_treasurer ? 'text-green-600 font-medium' : ''}">Tesoureiro</span>
+                                ${member.is_treasurer ? '<span class="ml-auto text-xs text-green-600">✓</span>' : ''}
+                            </button>
+                            <div class="border-t border-slate-100 my-1"></div>
+                            <p class="px-4 py-2 text-xs font-semibold text-slate-500 uppercase">Tipo de Usuário</p>
+                            <button onclick="setUserType(${member.id}, 'REGULAR')" ${!member.is_approved ? 'disabled class="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-400 cursor-not-allowed text-left opacity-60"' : 'class="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors text-left"'}>
+                                <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                </svg>
+                                <span class="${member.type === 'REGULAR' ? 'text-slate-800 font-semibold' : ''}">Membro</span>
+                                ${member.type === 'REGULAR' ? '<span class="ml-auto text-xs text-slate-600">✓</span>' : ''}
+                            </button>
+                            <button onclick="setUserType(${member.id}, 'STAFF')" ${!member.is_approved ? 'disabled class="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-400 cursor-not-allowed text-left opacity-60"' : 'class="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors text-left"'}>
+                                <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 100-14 7 7 0 000 14zm0 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <span class="${member.type === 'STAFF' ? 'text-orange-600 font-semibold' : ''}">Equipe</span>
+                                ${member.type === 'STAFF' ? '<span class="ml-auto text-xs text-orange-600">✓</span>' : ''}
+                            </button>
+                            <button onclick="setUserType(${member.id}, 'ONLY_WORKER')" ${!member.is_approved ? 'disabled class="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-400 cursor-not-allowed text-left opacity-60"' : 'class="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors text-left"'}>
+                                <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                                <span class="${member.type === 'ONLY_WORKER' ? 'text-amber-600 font-semibold' : ''}">Contratado</span>
+                                ${member.type === 'ONLY_WORKER' ? '<span class="ml-auto text-xs text-amber-600">✓</span>' : ''}
+                            </button>
+                        </div>
+                    </div>
+                    <a href="/secretarial/qualify/${member.id}/" class="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors" title="Editar">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                    </a>
+                </div>
+            </td>
+        </tr>
+    `;
+}
+
+function updatePagination() {
+    const totalPages = Math.ceil(filteredMembers.length / itemsPerPage) || 1;
+    const start = (currentPage - 1) * itemsPerPage + 1;
+    const end = Math.min(currentPage * itemsPerPage, filteredMembers.length);
+
+    document.getElementById('showing-count').textContent = filteredMembers.length > 0 ? `${start}-${end}` : '0';
+    document.getElementById('total-count').textContent = allMembers.length;
+    document.getElementById('current-page').textContent = currentPage;
+    document.getElementById('total-pages').textContent = totalPages;
+
+    document.getElementById('prev-page').disabled = currentPage === 1;
+    document.getElementById('next-page').disabled = currentPage === totalPages;
+}
+
+function toggleQuickActions(userId) {
+    event.stopPropagation();
+    const dropdown = document.getElementById('quick-actions-' + userId);
+    document.querySelectorAll('[id^="quick-actions-"]').forEach(el => {
+        if (el.id !== 'quick-actions-' + userId) {
+            el.classList.add('hidden');
+        }
+    });
+    dropdown.classList.toggle('hidden');
+}
+
+async function toggleApproval(userId, element) {
+    event.preventDefault();
+
+    const currentStatus = element.textContent.includes('Aprovado');
+
+    // Show loading state
+    element.style.opacity = '0.5';
+
+    try {
+        const formData = new FormData();
+        formData.append('is_approved', !currentStatus);
+        formData.append('submit', 'submit');
+
+        const response = await fetch(`/user/update/function/${userId}`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: formData
+        });
+
+        if (response.ok) {
+            // Update local data
+            const member = allMembers.find(m => m.id === userId);
+            if (member) {
+                member.is_approved = !currentStatus;
+            }
+            filterMembers(); // Re-render table
+
+            // Show notification
+            showNotification(member.is_approved ? 'Usuário aprovado!' : 'Aprovação removida!', 'success');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        element.style.opacity = '1';
+        showNotification('Erro ao alterar status', 'error');
+    }
+}
+
+async function setFunction(userId, funcType, currentValue) {
+    event.preventDefault();
+
+    // Check if user is approved
+    const member = allMembers.find(m => m.id === userId);
+    if (!member.is_approved) {
+        showNotification('Usuário pendente não pode ter funções alteradas', 'error');
+        return;
+    }
+
+    try {
+        const formData = new FormData();
+        formData.append('is_' + funcType, !currentValue);
+        formData.append('submit', 'submit');
+
+        const response = await fetch(`/user/update/function/${userId}`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: formData
+        });
+
+        if (response.ok) {
+            // Update local data
+            const member = allMembers.find(m => m.id === userId);
+            if (member) {
+                member['is_' + funcType] = !currentValue;
+            }
+            filterMembers(); // Re-render table
+
+            // Close dropdown
+            document.querySelectorAll('[id^="quick-actions-"]').forEach(el => {
+                el.classList.add('hidden');
+            });
+
+            // Show notification
+            const funcNames = { pastor: 'Pastor', secretary: 'Secretário', treasurer: 'Tesoureiro' };
+            showNotification(`Função "${funcNames[funcType]}" ${!currentValue ? 'adicionada' : 'removida'}!`, 'success');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showNotification('Erro ao alterar função', 'error');
+    }
+}
+
+async function setUserType(userId, newType) {
+    event.preventDefault();
+
+    // Check if user is approved
+    const member = allMembers.find(m => m.id === userId);
+    if (!member.is_approved) {
+        showNotification('Usuário pendente não pode ter tipo alterado', 'error');
+        return;
+    }
+
+    try {
+        const formData = new FormData();
+        formData.append('type', newType);
+        formData.append('submit', 'submit');
+
+        const response = await fetch(`/user/update/${userId}`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: formData
+        });
+
+        if (response.ok) {
+            // Update local data
+            const member = allMembers.find(m => m.id === userId);
+            if (member) {
+                member.type = newType;
+                // Update type_display
+                const typeNames = {
+                    'REGULAR': 'Membro',
+                    'STAFF': 'Equipe',
+                    'ONLY_WORKER': 'Contratado',
+                    'CONGREGATED': 'Congregado',
+                    'SIMPLE_USER': 'Usuário'
+                };
+                member.type_display = typeNames[newType] || newType;
+            }
+            filterMembers(); // Re-render table
+
+            // Close dropdown
+            document.querySelectorAll('[id^="quick-actions-"]').forEach(el => {
+                el.classList.add('hidden');
+            });
+
+            // Show notification
+            const typeNames = {
+                'REGULAR': 'Membro',
+                'STAFF': 'Equipe',
+                'ONLY_WORKER': 'Contratado',
+                'CONGREGATED': 'Congregado',
+                'SIMPLE_USER': 'Usuário'
+            };
+            showNotification(`Tipo alterado para "${typeNames[newType]}"!`, 'success');
+        } else {
+            const errorData = await response.json();
+            showNotification(errorData.error || 'Erro ao alterar tipo', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showNotification('Erro ao alterar tipo', 'error');
+    }
+}
+
+function showNotification(message, type) {
+    // Simple notification
+    const notification = document.createElement('div');
+    notification.className = `fixed bottom-4 right-4 px-4 py-2 rounded-lg text-white text-sm z-50 transition-opacity ${
+        type === 'success' ? 'bg-green-500' : 'bg-red-500'
+    }`;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        setTimeout(() => notification.remove(), 300);
+    }, 2000);
+}
+</script>
+
+<!-- Add CSRF token to forms dynamically -->
+<script>
+    // Ensure all forms have CSRF token
+    document.addEventListener('DOMContentLoaded', function() {
+        const csrfToken = getCookie('csrftoken');
+        document.querySelectorAll('form').forEach(form => {
+            if (!form.querySelector('input[name="csrfmiddlewaretoken"]')) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'csrfmiddlewaretoken';
+                input.value = csrfToken;
+                form.appendChild(input);
+            }
+        });
+    });
+</script>
 {% endblock %}
