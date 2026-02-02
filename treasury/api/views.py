@@ -1197,7 +1197,6 @@ class BatchTransactionCreateView(APIView):
             from django.core.files.storage import default_storage
             # Salvar e obter o caminho
             receipt_path = default_storage.save(f'treasury/receipts/batch_{receipt_file.name}', receipt_file)
-            print(f"[Batch] Comprovante salvo em: {receipt_path}")
 
         created_transactions = []
         errors = []

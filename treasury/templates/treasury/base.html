@@ -2,6 +2,8 @@
 
 {% load static %}
 
+{% block extra_head %}{% endblock %}
+
 {% block pre_alpine_scripts %}
 <!-- Alpine Collapse Plugin -->
 <script defer src="{% static 'js/alpine-collapse.min.js' %}"></script>
@@ -223,9 +225,9 @@
 </div>
 
 <!-- Treasury Components -->
-<script src="{% static 'js/treasury-components.js' %}?v=3"></script>
+<script src="{% static 'js/treasury-components.js' %}?v=4"></script>
 <!-- Transaction Form Component -->
-<script src="{% static 'js/treasury-transaction-form.js' %}?v=3"></script>
+<script src="{% static 'js/treasury-transaction-form.js' %}?v=4"></script>
 <!-- Page-specific scripts -->
 {% block page_scripts %}{% endblock %}
 

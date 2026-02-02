@@ -13,7 +13,7 @@
 </div>
 {% endblock %}
 
-{% block header_title %}Revisar Transações{% endblock %}
+{% block header_title %}Tesouraria{% endblock %}
 {% block header_subtitle %}
     Valide e edite as transações antes de salvar
 {% endblock %}
@@ -207,7 +207,7 @@ function batchReview() {
         categories: [],
         transactions: [],
         allSelected: false,
-        saveReceipt: false,
+        saveReceipt: true,  // Marcado por padrão
         receiptData: null,  // Guarda a imagem base64 para anexar
 
         get selectedCount() {
@@ -242,6 +242,9 @@ function batchReview() {
 
             // Process OCR
             await this.processOCR(imageData);
+
+            // Atualizar estado do allSelected após carregar transações
+            this.updateAllSelected();
         },
 
         async loadCategories() {
@@ -277,9 +280,10 @@ function batchReview() {
                 } else {
                     this.transactions = data.transactions.map((tx, i) => ({
                         ...tx,
+                        category: tx.category_name || tx.category || '',  // Usar category_name normalizado
                         _id: Date.now() + i,
                         selected: true,
-                        is_positive: tx.is_positive !== false
+                        is_positive: true  // Forçar positivo por padrão
                     }));
                 }
             } catch (e) {

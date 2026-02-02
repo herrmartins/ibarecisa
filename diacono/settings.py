@@ -253,7 +253,7 @@ CAPTCHA_FONT_SIZE = 40
 CAPTCHA_TEST_MODE = True
 
 MISTRAL_API_KEY = config("MISTRAL_API_KEY", default="")
-USE_MISTRAL_OCR = False
+USE_MISTRAL_OCR = True
 MISTRAL_MODEL = config("MISTRAL_MODEL", default="mistral-small-latest")
 
 # Ollama Configuration (desenvolvimento)

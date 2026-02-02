@@ -116,14 +116,6 @@ class ReceiptOCRService:
         img_buffer.seek(0)
         file_base64 = base64.b64encode(img_buffer.read()).decode('utf-8')
 
-        print(f"[OCR] Imagem convertida: {width}x{height}, tamanho base64: {len(file_base64)} chars")
-
-        # Debug: salvar imagem temporária para inspeção
-        import tempfile
-        with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as f:
-            img.save(f.name)
-            print(f"[OCR] Imagem salva em: {f.name}")
-
         # Buscar categorias disponíveis
         categories = list(CategoryModel.objects.values_list('name', flat=True))
 
@@ -185,9 +177,6 @@ class ReceiptOCRService:
             Retorne APENAS o JSON, sem texto adicional."""
 
         try:
-            print(f"[OCR] Enviando para Ollama (modelo: {ollama_model})...")
-            print(f"[OCR] Tamanho do base64: {len(file_base64)} chars")
-
             # Usar API HTTP do Ollama
             payload = {
                 'model': ollama_model,
@@ -201,16 +190,10 @@ class ReceiptOCRService:
                 json=payload,
                 timeout=360
             )
-            print(f"[OCR] Status code: {response.status_code}")
             response.raise_for_status()
 
             result = response.json()
-            print(f"[OCR] JSON completo recebido: {json.dumps(result, indent=2)}...")
-
             ocr_text = result.get('response', '')
-
-            print(f"[OCR] Resposta recebida ({len(ocr_text)} chars):")
-            print(f"[OCR] {ocr_text[:500]}...")
 
             # Tentar parsear JSON da resposta
             extracted = self._parse_fallback_json(ocr_text)
@@ -220,18 +203,10 @@ class ReceiptOCRService:
 
             extracted['raw_text'] = ocr_text
 
-            print(f"[OCR] Dados extraídos:")
-            for key, value in extracted.items():
-                if key != 'raw_text':
-                    print(f"[OCR]   {key}: {value}")
-
             normalized = self._normalize_extracted_data(extracted, categories)
             return normalized
 
         except Exception as e:
-            print(f"[OCR] Erro: {type(e).__name__}: {e}")
-            import traceback
-            traceback.print_exc()
             return {
                 'error': f'Erro ao comunicar com Ollama: {str(e)}',
                 'description': '',
@@ -328,33 +303,35 @@ class ReceiptOCRService:
 
         categories_formatted = "\n".join([f"- {cat}" for cat in categories]) if categories else "- Outros"
 
-        prompt = f"""Analise esta imagem e retorne APENAS um array JSON com todas as transações.
+        prompt = f"""Analise esta imagem de lista/envelopes e retorne APENAS um array JSON.
 
-Categorias: {categories_formatted}
+CATEGORIAS DISPONÍVEIS (use EXATAMENTE estes nomes, com a mesma grafia):
+{categories_formatted}
+
+EXEMPLOS DE NORMALIZAÇÃO:
+- "Dízimo" no header → use "dízimo"
+- "Missões" no header → use "missões"
+- "Oferta" ou "Ofertas" → use "oferta voluntária"
+- "Urnas" ou "Urna" → use "ofertas"
 
 Formato OBRIGATÓRIO (retorne EXATAMENTE isto):
 [
-  {{"description": "Envelope 895 - Dízimo", "amount": 2.50, "date": "2026-02-02", "category": "Dízimos", "is_positive": true, "confidence": 90}},
-  {{"description": "Envelope 895 - Missões", "amount": 50.00, "date": "2026-02-02", "category": "Missões", "is_positive": true, "confidence": 90}},
-  {{"description": "Envelope 895 - Urna", "amount": 60.00, "date": "2026-02-02", "category": "Ofertas", "is_positive": true, "confidence": 90}}
+  {{"description": "Envelope 895 - dízimo", "amount": 2.50, "date": "2026-02-02", "category": "dízimo", "is_positive": true, "confidence": 90}},
+  {{"description": "Envelope 895 - missões", "amount": 50.00, "date": "2026-02-02", "category": "missões", "is_positive": true, "confidence": 90}}
 ]
 
-Regras:
-- NÃO explique, NÃO use tabelas, NÃO use markdown
-- Retorne APENAS o array JSON entre colchetes
-- description: "Envelope X - Categoria" ou "Nome - Categoria"
-- amount: número decimal (ex: 2.50)
-- date: YYYY-MM-DD (ou data de hoje: {datetime.now().strftime('%Y-%m-%d')})
-- category: use exatamente o nome da categoria da lista
-- is_positive: SEMPRE true para dízimos, ofertas, envelope, urna, contribuições. Use false APENAS para despesas/notas de compra.
+Regras IMPORTANTES:
+- NÃO explique, NÃO use tabelas markdown
+- Tabelas: cada coluna = uma transação. Use o NOME DO HEADER como categoria.
+- NORMALIZE: use o nome EXATO da lista acima (ex: "dízimo" não "Dízimo")
+- amount: número decimal positivo (ex: 2.50)
+- date: YYYY-MM-DD ou hoje: {datetime.now().strftime('%Y-%m-%d')}
+- is_positive: SEMPRE true. NUNCA false.
 - confidence: 70 a 90
 
-COMECE O JSON COM [ e TERMINA COM ]"""
+RETORNE APENAS O ARRAY JSON. COMECE COM [ E TERMINA COM ]."""
 
         try:
-            print(f"[OCR Múltiplo] Enviando para Ollama (modelo: {ollama_model})...")
-            print(f"[OCR Múltiplo] Tamanho do base64: {len(file_base64)} chars")
-
             payload = {
                 'model': ollama_model,
                 'prompt': prompt,
@@ -367,26 +344,17 @@ COMECE O JSON COM [ e TERMINA COM ]"""
                 json=payload,
                 timeout=360
             )
-            print(f"[OCR Múltiplo] Status code: {response.status_code}")
             response.raise_for_status()
 
             result = response.json()
             ocr_text = result.get('response', '')
 
-            print(f"[OCR Múltiplo] Resposta recebida ({len(ocr_text)} chars):")
-            print(f"[OCR Múltiplo] {ocr_text[:1000]}...")
-
             # Tentar parsear array JSON
             transactions = self._parse_multiple_json(ocr_text, categories)
-
-            print(f"[OCR Múltiplo] {len(transactions)} transações extraídas")
 
             return {'transactions': transactions}
 
         except Exception as e:
-            print(f"[OCR Múltiplo] Erro: {type(e).__name__}: {e}")
-            import traceback
-            traceback.print_exc()
             return {
                 'error': f'Erro ao comunicar com Ollama: {str(e)}',
                 'transactions': []
@@ -550,7 +518,6 @@ Regras:
             )
 
             response_text = chat_response.choices[0].message.content
-            print(f"[OCR Múltiplo Mistral] Resposta: {response_text[:500]}...")
 
             # A resposta pode ter um wrapper, tentar extrair o array
             result = json.loads(response_text)
@@ -571,9 +538,6 @@ Regras:
             return {'transactions': transactions}
 
         except Exception as e:
-            print(f"[OCR Múltiplo Mistral] Erro: {e}")
-            import traceback
-            traceback.print_exc()
             return {
                 'error': f'Erro ao processar com Mistral: {str(e)}',
                 'transactions': []
@@ -759,8 +723,6 @@ Retorne APENAS este JSON:
         text = text.replace('\n', ' ').replace('\r', ' ')
         text = re.sub(r'\s+', ' ', text).strip()
 
-        print(f"[OCR] Parseando texto ({len(text)} chars): {text}")
-
         # Tentar extrair do formato estruturado (TOTAL: | DATE: | DESC: |)
         total_match = re.search(r'TOTAL:\s*([^\n]+?)(?=DATE:|DESC:|$)', text, re.IGNORECASE)
         date_match = re.search(r'DATE:\s*([^\n]+?)(?=TOTAL:|DESC:|$)', text, re.IGNORECASE)
@@ -771,14 +733,11 @@ Retorne APENAS este JSON:
             if date_match:
                 date_str = date_match.group(1).strip()
                 result['date'] = self._parse_date(date_str)
-                print(f"[OCR] Data estruturada: {result['date']}")
             if desc_match:
                 result['description'] = desc_match.group(1).strip()
-                print(f"[OCR] Descrição estruturada: {result['description']}")
             if total_match:
                 amount_str = total_match.group(1).strip()
                 result['amount'] = self._parse_amount(amount_str)
-                print(f"[OCR] Valor estruturado: {result['amount']}")
 
             return result
 
@@ -799,7 +758,6 @@ Retorne APENAS este JSON:
             if matches:
                 # Pegar o último match (geralmente o total é o último valor)
                 amount_str = matches[-1].group(1) if matches[-1].lastindex else matches[-1].group(0)
-                print(f"[OCR] Match encontrado: '{amount_str}' (padrão: {pattern})")
 
                 # Limpar e converter - preservar formato brasileiro
                 amount_str = re.sub(r'[^\d.,]', '', amount_str)
@@ -818,14 +776,12 @@ Retorne APENAS este JSON:
                     # Mas também ignorar muito pequenos (< 0.01)
                     if 0.01 <= val < 100000:
                         result['amount'] = val
-                        print(f"[OCR] Valor encontrado: {result['amount']}")
                         break
                 except ValueError:
                     pass
 
         # Se não achou TOTAL, tentar somar todos os valores positivos encontrados
         if not result['amount']:
-            print(f"[OCR] TOTAL não encontrado, somando valores positivos...")
             # Encontrar todos os valores monetários
             all_values = re.findall(r'-?\s*R?\$?\s*([\d.]+,\d{2})', text)
             total_sum = 0
@@ -835,12 +791,10 @@ Retorne APENAS este JSON:
                     # Somar apenas valores positivos razoáveis (ignorar descontos negativos)
                     if 0.50 < val < 10000:  # Valores razoáveis de item
                         total_sum += val
-                        print(f"[OCR]  + {val}")
                 except ValueError:
                     pass
             if total_sum > 1:
                 result['amount'] = total_sum
-                print(f"[OCR] Soma dos valores: {result['amount']}")
 
         # Extrair data (DD/MM/AAAA, DD-MM-AAAA, etc.)
         date_patterns = [
@@ -867,7 +821,6 @@ Retorne APENAS este JSON:
                             result['date'] = date_str
                         else:  # DD-MM-AAAA
                             result['date'] = f'{parts[2]}-{parts[1]}-{parts[0]}'
-                    print(f"[OCR] Data encontrada: {result['date']}")
                     break
                 except Exception:
                     pass
@@ -909,7 +862,6 @@ Retorne APENAS este JSON:
                 # Usar se for razoável
                 if 8 <= len(potential_desc) < 80:
                     result['description'] = potential_desc
-                    print(f"[OCR] Descrição encontrada: {result['description']}")
                     break
 
         # Se não achou descrição adequada, usar padrão
@@ -962,16 +914,13 @@ Retorne APENAS este JSON:
                 if keyword.lower() in combined:
                     # Verificar se a categoria existe
                     if category in categories:
-                        print(f"[OCR] Categoria inferida: {category} (keyword: {keyword})")
                         return category
 
         # Se não achou, tentar categoria mais próxima
         for category in categories:
             if category.lower() in combined:
-                print(f"[OCR] Categoria encontrada no texto: {category}")
                 return category
 
-        print(f"[OCR] Nenhuma categoria inferida, usando 'Outros'")
         return 'Outros'
 
     def _normalize_extracted_data(self, data: Dict, categories: list) -> Dict[str, Any]:
@@ -1011,12 +960,28 @@ Retorne APENAS este JSON:
         # Categoria - usar a que veio do JSON se existir no BD
         category_name = data.get('category', 'Outros')
 
-        # Se a categoria do JSON existe no BD, usar ela
-        if category_name and category_name in categories:
-            print(f"[OCR] Categoria do JSON válida: {category_name}")
+        # Função helper para match case-insensitive
+        def find_category_match(name_to_find):
+            if not name_to_find:
+                return None
+            # Primeiro tenta match exato case-insensitive
+            name_lower = name_to_find.lower()
+            for cat in categories:
+                if cat.lower() == name_lower:
+                    return cat
+            # Depois tenta partial match (para casos como Dízimos -> dízimo)
+            for cat in categories:
+                cat_lower = cat.lower()
+                if name_lower in cat_lower or cat_lower in name_lower:
+                    return cat
+            return None
+
+        # Se a categoria do JSON existe no BD (case-insensitive), usar ela
+        matched_category = find_category_match(category_name)
+        if matched_category:
+            category_name = matched_category
         else:
-            # Categoria não existe ou é Outros - tentar inferir
-            print(f"[OCR] Categoria '{category_name}' não encontrada no BD, tentando inferir...")
+            # Categoria não existe - tentar inferir
             raw_text = data.get('raw_text', '')
             category_name = self._infer_category(description, raw_text, categories)
 
@@ -1026,11 +991,7 @@ Retorne APENAS este JSON:
             category = CategoryModel.objects.filter(name=category_name).first()
             if category:
                 category_id = category.id
-                print(f"[OCR] Categoria encontrada no BD: {category.name} (id: {category.id})")
-            else:
-                print(f"[OCR] Categoria '{category_name}' não existe no BD, deixando como None")
-        except Exception as e:
-            print(f"[OCR] Erro ao buscar categoria: {e}")
+        except Exception:
             pass
 
         # is_positive
