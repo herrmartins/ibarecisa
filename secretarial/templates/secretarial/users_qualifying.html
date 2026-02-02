@@ -4,8 +4,8 @@
 {% block content %}
 <div class="min-h-screen bg-gradient-to-b from-slate-50 to-white">
   <!-- Header Section -->
-  <div class="minutes-list-header relative">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
+  <div class="secretarial-home-header">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <!-- Back Button -->
       <div class="mb-6">
         <a href="{% url 'secretarial:home' %}" class="inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors">
@@ -16,24 +16,45 @@
         </a>
       </div>
 
-      <div class="text-center mb-4">
-        <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">
+      <div class="text-center mb-8">
+        <h1 class="secretarial-home-title">
           Gestão de Usuários
         </h1>
-        <p class="text-white/90 text-lg">
-          Gerencie membros, funções e permissões de acesso
+        <p class="secretarial-home-subtitle">
+          Gerencie usuários, funções e permissões de acesso
         </p>
       </div>
 
-      <!-- Stats -->
-      <div class="flex justify-center gap-4 sm:gap-6 flex-wrap mt-8">
-        <div class="text-center">
-          <p class="text-3xl font-bold text-white" id="members-count">{{ members|length }}</p>
-          <p class="text-white/80 text-sm">Membros</p>
+      <!-- Stats Cards -->
+      <div class="flex justify-center gap-4 sm:gap-6 flex-wrap">
+        <div class="app-header-card app-header-members">
+          <div class="flex items-center justify-center gap-3 mb-2">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+            </svg>
+            <span class="text-sm font-medium text-white/90">Usuários Comuns</span>
+          </div>
+          <div class="text-3xl font-bold text-white" id="members-count">{{ members|length }}</div>
         </div>
-        <div class="text-center">
-          <p class="text-3xl font-bold text-white" id="users-count">{{ users|length }}</p>
-          <p class="text-white/80 text-sm">Outros Usuários</p>
+
+        <div class="app-header-card app-header-visitors">
+          <div class="flex items-center justify-center gap-3 mb-2">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+            </svg>
+            <span class="text-sm font-medium text-white/90">Outros Usuários</span>
+          </div>
+          <div class="text-3xl font-bold text-white" id="users-count">{{ users|length }}</div>
+        </div>
+
+        <div class="app-header-card app-header-total">
+          <div class="flex items-center justify-center gap-3 mb-2">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+            <span class="text-sm font-medium text-white/90">Total</span>
+          </div>
+          <div class="text-3xl font-bold text-white" id="total-count-header">{{ members|length|add:users|length }}</div>
         </div>
       </div>
     </div>
@@ -48,13 +69,13 @@
           <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
           </svg>
-          <h2 class="text-xl font-bold text-slate-800">Lista de Membros</h2>
+          <h2 class="text-xl font-bold text-slate-800">Lista de Usuários Comuns</h2>
         </div>
         <a href="{% url 'secretarial:member-registration' %}" class="minute-create-btn">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
           </svg>
-          Cadastrar Novo Membro
+          Cadastrar Novo Usuário
         </a>
       </div>
 
@@ -90,7 +111,7 @@
         <!-- Results count -->
         <div class="px-4 pb-3">
           <p class="text-sm text-slate-500">
-            Mostrando <span id="showing-count">0</span> de <span id="total-count">{{ members|length }}</span> membros
+            Mostrando <span id="showing-count">0</span> de <span id="total-count">{{ members|length }}</span> usuários
           </p>
         </div>
       </div>
@@ -160,8 +181,8 @@
           <svg class="w-16 h-16 mx-auto mb-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
           </svg>
-          <p class="text-lg font-medium">Nenhum membro cadastrado ainda.</p>
-          <p class="text-sm mt-2">Comece cadastrando novos membros.</p>
+          <p class="text-lg font-medium">Nenhum usuário comum cadastrado ainda.</p>
+          <p class="text-sm mt-2">Comece cadastrando novos usuários.</p>
         </div>
       </div>
       {% endif %}
@@ -212,11 +233,16 @@
                 </td>
                 <td class="px-4 py-3">
                   <div class="flex items-center justify-end gap-2">
-                    <a href="{% url 'secretarial:user-qualify' u.id %}" class="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors">
+                    <a href="{% url 'secretarial:user-qualify' u.id %}" class="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors" title="Editar">
                       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                       </svg>
                     </a>
+                    <button onclick="openDeleteModal({{ u.id }}, '{{ u.first_name }} {{ u.last_name }}')" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Excluir">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                      </svg>
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -229,6 +255,51 @@
     {% endif %}
   </div>
 </div>
+
+<!-- Delete Confirmation Modal -->
+<div id="delete-modal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+  <div class="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 overflow-hidden">
+    <div class="bg-red-600 px-6 py-4">
+      <div class="flex items-center gap-3">
+        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+        <h3 class="text-lg font-bold text-white">Excluir Usuário</h3>
+      </div>
+    </div>
+    <div class="p-6">
+      <p class="text-slate-700 mb-4">
+        Tem certeza que deseja excluir <strong id="delete-user-name">o usuário</strong>?
+      </p>
+      <p class="text-red-600 text-sm font-medium mb-4">
+        Esta ação não pode ser desfeita.
+      </p>
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-slate-700 mb-2">
+          Digite <code class="bg-slate-100 px-2 py-0.5 rounded text-red-600 font-bold">CONFIRMAR</code> para prosseguir:
+        </label>
+        <input type="text" id="delete-confirm-input"
+               class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all"
+               placeholder="Digite CONFIRMAR">
+        <p id="delete-error" class="text-red-500 text-sm mt-2 hidden">Por favor, digite CONFIRMAR para confirmar.</p>
+      </div>
+      <div class="flex gap-3">
+        <button onclick="closeDeleteModal()" class="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors font-medium">
+          Cancelar
+        </button>
+        <button onclick="confirmDelete()" id="delete-confirm-btn" disabled
+                class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+          Excluir
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Hidden form for delete -->
+<form id="delete-form" method="post" action="" style="display: none;">
+  {% csrf_token %}
+</form>
 
 <script>
 function getCookie(name) {
@@ -392,23 +463,34 @@ function createMemberRow(member) {
     }
     if (!member.is_pastor && !member.is_secretary && !member.is_treasurer) {
         rolesHtml += `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600">
-            ${member.type_display || 'Membro'}
+            ${member.type_display || 'Usuário Comum'}
         </span>`;
     }
 
-    const statusHtml = member.is_approved
-        ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700 cursor-pointer hover:bg-green-200 transition-colors" onclick="toggleApproval(${member.id}, this)">
+    // REGULAR e STAFF sempre aprovados e não podem ter status alterado
+    let statusHtml;
+    if (member.type === 'REGULAR' || member.type === 'STAFF') {
+        statusHtml = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">
             <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
             </svg>
             Aprovado
-        </span>`
-        : `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-700 cursor-pointer hover:bg-yellow-200 transition-colors" onclick="toggleApproval(${member.id}, this)">
+        </span>`;
+    } else if (member.is_approved) {
+        statusHtml = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700 cursor-pointer hover:bg-green-200 transition-colors" onclick="toggleApproval(${member.id}, this)">
+            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+            Aprovado
+        </span>`;
+    } else {
+        statusHtml = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-700 cursor-pointer hover:bg-yellow-200 transition-colors" onclick="toggleApproval(${member.id}, this)">
             <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
             </svg>
             Pendente
         </span>`;
+    }
 
     const phoneHtml = phone ? `<p class="text-xs text-slate-500">${phone}</p>` : '';
 
@@ -459,7 +541,7 @@ function createMemberRow(member) {
                             </svg>
                         </button>
                         <div id="quick-actions-${member.id}" class="hidden absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-slate-200 py-2 z-50">
-                            <a href="/secretarial/qualify/${member.id}/" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
+                            <a href="/secretarial/user/${member.id}/" class="flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                 </svg>
@@ -496,7 +578,7 @@ function createMemberRow(member) {
                                 <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
                                 </svg>
-                                <span class="${member.type === 'REGULAR' ? 'text-slate-800 font-semibold' : ''}">Membro</span>
+                                <span class="${member.type === 'REGULAR' ? 'text-slate-800 font-semibold' : ''}">Usuário Comum</span>
                                 ${member.type === 'REGULAR' ? '<span class="ml-auto text-xs text-slate-600">✓</span>' : ''}
                             </button>
                             <button onclick="setUserType(${member.id}, 'STAFF')" ${!member.is_approved ? 'disabled class="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-400 cursor-not-allowed text-left opacity-60"' : 'class="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors text-left"'}>
@@ -513,9 +595,10 @@ function createMemberRow(member) {
                                 <span class="${member.type === 'ONLY_WORKER' ? 'text-amber-600 font-semibold' : ''}">Contratado</span>
                                 ${member.type === 'ONLY_WORKER' ? '<span class="ml-auto text-xs text-amber-600">✓</span>' : ''}
                             </button>
+                            ${member.type === 'ONLY_WORKER' ? '<div class="border-t border-slate-100 my-1"></div><button onclick="openDeleteModal(' + member.id + ', \'' + member.first_name + ' ' + member.last_name + '\')" class="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors text-left"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>Excluir Usuário</button>' : ''}
                         </div>
                     </div>
-                    <a href="/secretarial/qualify/${member.id}/" class="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors" title="Editar">
+                    <a href="/secretarial/user/${member.id}/" class="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors" title="Editar">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                         </svg>
@@ -567,7 +650,8 @@ async function toggleApproval(userId, element) {
         const response = await fetch(`/user/update/function/${userId}`, {
             method: 'POST',
             headers: {
-                'X-CSRFToken': getCookie('csrftoken')
+                'X-CSRFToken': getCookie('csrftoken'),
+                'X-Requested-With': 'XMLHttpRequest'
             },
             body: formData
         });
@@ -608,7 +692,8 @@ async function setFunction(userId, funcType, currentValue) {
         const response = await fetch(`/user/update/function/${userId}`, {
             method: 'POST',
             headers: {
-                'X-CSRFToken': getCookie('csrftoken')
+                'X-CSRFToken': getCookie('csrftoken'),
+                'X-Requested-With': 'XMLHttpRequest'
             },
             body: formData
         });
@@ -618,6 +703,11 @@ async function setFunction(userId, funcType, currentValue) {
             const member = allMembers.find(m => m.id === userId);
             if (member) {
                 member['is_' + funcType] = !currentValue;
+                // If a function was added, update type to STAFF
+                if (!currentValue) {
+                    member.type = 'STAFF';
+                    member.type_display = 'Equipe';
+                }
             }
             filterMembers(); // Re-render table
 
@@ -654,7 +744,8 @@ async function setUserType(userId, newType) {
         const response = await fetch(`/user/update/${userId}`, {
             method: 'POST',
             headers: {
-                'X-CSRFToken': getCookie('csrftoken')
+                'X-CSRFToken': getCookie('csrftoken'),
+                'X-Requested-With': 'XMLHttpRequest'
             },
             body: formData
         });
@@ -664,9 +755,19 @@ async function setUserType(userId, newType) {
             const member = allMembers.find(m => m.id === userId);
             if (member) {
                 member.type = newType;
+                // If type is REGULAR or STAFF, automatically approve
+                if (newType === 'REGULAR' || newType === 'STAFF') {
+                    member.is_approved = true;
+                }
+                // If type is REGULAR, remove all functions
+                if (newType === 'REGULAR') {
+                    member.is_pastor = false;
+                    member.is_secretary = false;
+                    member.is_treasurer = false;
+                }
                 // Update type_display
                 const typeNames = {
-                    'REGULAR': 'Membro',
+                    'REGULAR': 'Usuário Comum',
                     'STAFF': 'Equipe',
                     'ONLY_WORKER': 'Contratado',
                     'CONGREGATED': 'Congregado',
@@ -683,7 +784,7 @@ async function setUserType(userId, newType) {
 
             // Show notification
             const typeNames = {
-                'REGULAR': 'Membro',
+                'REGULAR': 'Usuário Comum',
                 'STAFF': 'Equipe',
                 'ONLY_WORKER': 'Contratado',
                 'CONGREGATED': 'Congregado',
@@ -714,6 +815,79 @@ function showNotification(message, type) {
         setTimeout(() => notification.remove(), 300);
     }, 2000);
 }
+
+// Delete modal functions
+let userToDelete = null;
+
+function openDeleteModal(userId, userName) {
+    event.stopPropagation();
+    userToDelete = userId;
+    document.getElementById('delete-user-name').textContent = userName;
+    document.getElementById('delete-confirm-input').value = '';
+    document.getElementById('delete-error').classList.add('hidden');
+    document.getElementById('delete-confirm-btn').disabled = true;
+    document.getElementById('delete-modal').classList.remove('hidden');
+
+    // Close dropdown
+    document.querySelectorAll('[id^="quick-actions-"]').forEach(el => {
+        el.classList.add('hidden');
+    });
+}
+
+function closeDeleteModal() {
+    document.getElementById('delete-modal').classList.add('hidden');
+    userToDelete = null;
+}
+
+function confirmDelete() {
+    const input = document.getElementById('delete-confirm-input');
+    if (input.value.toUpperCase() === 'CONFIRMAR') {
+        // Submit the delete form
+        const form = document.getElementById('delete-form');
+        form.action = `/secretarial/user/${userToDelete}/delete/`;
+        form.submit();
+    } else {
+        document.getElementById('delete-error').classList.remove('hidden');
+    }
+}
+
+// Enable/disable delete button based on input
+document.addEventListener('DOMContentLoaded', function() {
+    const input = document.getElementById('delete-confirm-input');
+    const btn = document.getElementById('delete-confirm-btn');
+    const errorMsg = document.getElementById('delete-error');
+
+    if (input) {
+        input.addEventListener('input', function() {
+            if (this.value.toUpperCase() === 'CONFIRMAR') {
+                btn.disabled = false;
+                errorMsg.classList.add('hidden');
+            } else {
+                btn.disabled = true;
+            }
+        });
+
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !btn.disabled) {
+                confirmDelete();
+            }
+        });
+    }
+
+    // Close modal on escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeDeleteModal();
+        }
+    });
+
+    // Close modal on backdrop click
+    document.getElementById('delete-modal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeDeleteModal();
+        }
+    });
+});
 </script>
 
 <!-- Add CSRF token to forms dynamically -->

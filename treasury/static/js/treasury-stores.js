@@ -675,3 +675,142 @@ function formatDateTime(dateString) {
     const date = new Date(dateString);
     return date.toLocaleString('pt-BR');
 }
+
+// ============================================
+// Expor helpers globalmente (para uso no modal)
+// ============================================
+
+window.formatBRL = formatBRL;
+window.formatDate = formatDate;
+window.formatDateTime = formatDateTime;
+
+// ============================================
+// OCR Handlers (globais para acesso do modal)
+// ============================================
+
+window.ocrHandlers = {
+    /**
+     * Manipula seleção de arquivo no modal OCR
+     */
+    async handleFileSelect(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const store = Alpine.store('treasuryUi');
+
+        // Validar tamanho (10MB)
+        if (file.size > 10 * 1024 * 1024) {
+            store.ocrError = 'Arquivo muito grande. Máximo: 10MB';
+            return;
+        }
+
+        // Mostrar preview
+        if (file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                store.ocrPreviewImage = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        } else {
+            store.ocrPreviewImage = null;
+        }
+
+        // Salvar arquivo para anexar depois
+        store.ocrFile = file;
+        store.ocrError = null;
+
+        // Enviar para OCR
+        await this.processOcr(file);
+    },
+
+    /**
+     * Processa arquivo via API OCR
+     */
+    async processOcr(file) {
+        const store = Alpine.store('treasuryUi');
+        store.ocrProcessing = true;
+        store.ocrError = null;
+
+        console.log('[OCR] Iniciando processamento:', file.name, file.size, 'bytes');
+
+        const formData = new FormData();
+        formData.append('receipt', file);
+
+        try {
+            console.log('[OCR] Enviando para API...');
+            const response = await fetch('/treasury/api/ocr/receipt/', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': this.getCookie('csrftoken')
+                },
+                body: formData
+            });
+
+            console.log('[OCR] Resposta recebida:', response.status);
+            const data = await response.json();
+            console.log('[OCR] Dados recebidos:', data);
+
+            if (response.ok && data.description) {
+                store.ocrResult = data;
+                console.log('[OCR] ✅ Sucesso:', data);
+            } else {
+                store.ocrError = data.error || 'Erro ao processar imagem';
+                console.error('[OCR] ❌ Erro:', data.error || data);
+            }
+        } catch (error) {
+            console.error('[OCR] ❌ Erro de comunicação:', error);
+            store.ocrError = 'Erro ao comunicar com servidor';
+        } finally {
+            store.ocrProcessing = false;
+            console.log('[OCR] Processamento finalizado');
+        }
+    },
+
+    /**
+     * Aplica resultado OCR ao formulário
+     */
+    applyResult() {
+        const store = Alpine.store('treasuryUi');
+        const result = store.ocrResult;
+
+        if (!result) return;
+
+        // Encontrar componente transactionForm
+        const transactionForm = Alpine.$data(document.querySelector('[x-data*="transactionForm"]'));
+        if (!transactionForm) {
+            console.error('transactionForm not found');
+            return;
+        }
+
+        // Aplicar dados ao formulário
+        transactionForm.form.description = result.description || '';
+        transactionForm.form.amount = result.amount?.toString() || '';
+        transactionForm.form.date = result.date || new Date().toISOString().split('T')[0];
+        transactionForm.form.is_positive = result.is_positive !== false;
+        transactionForm.form.category = result.category_id || '';
+
+        // Atualizar display de amount
+        transactionForm.amountDisplay = result.amount?.toString() || '';
+
+        // Anexar arquivo ao input do formulário
+        if (store.ocrFile && transactionForm.$refs.docFile) {
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(store.ocrFile);
+            transactionForm.$refs.docFile.files = dataTransfer.files;
+        }
+
+        // Fechar modal
+        store.closeOcrModal();
+
+        store.notify('Dados aplicados ao formulário!', 'success');
+    },
+
+    /**
+     * Helper para pegar cookie CSRF
+     */
+    getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+};

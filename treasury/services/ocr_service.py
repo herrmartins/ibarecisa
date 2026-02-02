@@ -32,6 +32,8 @@ class ReceiptOCRService:
 
     def __init__(self):
         self.debug_mode = getattr(settings, 'DEBUG', False)
+        # Forçar Mistral mesmo em dev (para testes)
+        self.force_mistral = getattr(settings, 'USE_MISTRAL_OCR', False)
 
     def extract_from_receipt(self, image_file) -> Dict[str, Any]:
         """
@@ -126,18 +128,18 @@ class ReceiptOCRService:
         categories = list(CategoryModel.objects.values_list('name', flat=True))
 
         # Chamar OCR apropriado
-        if self.debug_mode:
+        if self.force_mistral or not self.debug_mode:
+            # Produção ou forçado: Mistral
+            result = self._extract_with_mistral(file_base64, 'image/png', categories)
+        else:
             # Desenvolvimento: Ollama
             result = self._extract_with_ollama(file_base64, 'image/png', categories)
-        else:
-            # Produção: Mistral
-            result = self._extract_with_mistral(file_base64, 'image/png', categories)
 
         return result
 
     def _extract_with_ollama(self, file_base64: str, file_type: str, categories: list) -> Dict[str, Any]:
         """
-        Extrai dados usando Ollama com Ministral-3 (modelo multimodal).
+        Extrai dados usando Ollama com qwen3-vl (modelo multimodal).
 
         Args:
             file_base64: Arquivo em base64
@@ -148,15 +150,14 @@ class ReceiptOCRService:
             Dict com os dados extraídos
         """
         ollama_host = getattr(settings, 'OLLAMA_HOST', 'http://localhost:11434')
-        ollama_model = getattr(settings, 'OLLAMA_OCR_MODEL', 'deepseek-ocr:3b')
+        ollama_model = getattr(settings, 'OLLAMA_OCR_MODEL', 'qwen3-vl:4b')
 
-        # Prompt simples para extrair texto (não pede JSON)
-        # Usar prompt curto que funciona no curl
-        prompt = "Extract text from image."
+        # Prompt ultra-simples para testar se o modelo funciona
+        prompt = "Describe this image in detail. What text do you see?"
 
         try:
             print(f"[OCR] Enviando para Ollama (modelo: {ollama_model})...")
-            print(f"[OCR] Prompt: {prompt[:100]}...")
+            print(f"[OCR] Prompt: {prompt}")
 
             payload = {
                 'model': ollama_model,
@@ -165,16 +166,16 @@ class ReceiptOCRService:
                 'stream': False,
                 'options': {
                     'temperature': 0.0,
-                    'num_predict': 4000,  # Aumentado para capturar textos maiores
+                    'num_predict': 4000,
                 }
             }
 
-            print(f"[OCR] Payload (primeiros 200 chars do JSON): {str(payload)[:200]}...")
+            print(f"[OCR] Payload: {str(payload)}")
 
             response = requests.post(
                 f'{ollama_host}/api/generate',
                 json=payload,
-                timeout=120
+                timeout=360
             )
             print(f"[OCR] Status code: {response.status_code}")
             response.raise_for_status()
@@ -182,13 +183,13 @@ class ReceiptOCRService:
             result = response.json()
             ocr_text = result.get('response', '')
 
-            print(f"[OCR] Texto extraído pelo OCR:")
-            print(f"[OCR] {ocr_text[:800]}...")
+            print(f"[OCR] Texto extraído pelo OCR ({len(ocr_text)} chars):")
+            print(f"[OCR] {ocr_text}")
 
-            # Parsear o texto extraído para encontrar os dados
+            # Parsear diretamente o texto (abordagem que funcionava antes)
             extracted = self._parse_receipt_text(ocr_text, categories)
-            # Salvar texto cru para inferência de categoria
             extracted['raw_text'] = ocr_text
+
             print(f"[OCR] Dados parseados:")
             print(f"[OCR]   description: {extracted.get('description')}")
             print(f"[OCR]   amount: {extracted.get('amount')}")
@@ -298,31 +299,32 @@ class ReceiptOCRService:
 
     def _build_extraction_prompt(self, categories: list) -> str:
         """Constrói o prompt para extração de dados."""
-        categories_list = '", "'.join(categories) if categories else 'Outros'
+        # Formatar categorias como lista numerada para ficar mais claro
+        categories_formatted = "\n".join([f"- {cat}" for cat in categories]) if categories else "- Outros"
 
-        return f"""Analise este comprovante de pagamento e extraia as seguintes informações:
+        return f"""Extraia informações deste comprovante e retorne JSON:
 
-1. **description**: Descrição breve do que foi pago (ex: "Compra no Mercado", "Pagamento de Luz")
-2. **amount**: Valor numérico (apenas números, sem pontos ou vírgulas)
-3. **date**: Data do pagamento no formato AAAA-MM-DD
-4. **category**: Escolha a MELHOR categoria desta lista: "{categories_list}"
-5. **is_positive**: true se for RECEITA (entrada), false se for DESPESA (saída)
-6. **confidence**: Nível de confiança de 0 a 100
+Categorias disponíveis:
+{categories_formatted}
 
-Regras:
-- Se for um comprovante de pagamento/fatura, is_positive deve ser false
-- Se for um comprovante de recebimento/depósito, is_positive deve ser true
-- Se não conseguir identificar a categoria, use "Outros"
-- A data deve estar no formato AAAA-MM-DD. Se não conseguir identificar, use a data atual
+Instruções:
+- description: Formato: "Nome da Loja - tipo de produtos comprados (X itens)"
+  * Exemplo: "Leroy Merlin - materiais elétricos (10 itens)"
+  * Exemplo: "Mercado Extra - alimentos e produtos de limpeza (5 itens)"
+  * Se não identificar os itens, use apenas o nome da loja
+- amount: Valor TOTAL a pagar (número decimal com ponto)
+- date: Data no formato YYYY-MM-DD
+- category: Escolha UMA categoria da lista acima que melhor descreve esta compra
+- is_positive: false (comprovantes são despesas)
 
-Responda APENAS com um JSON válido neste formato exato:
+Retorne APENAS este JSON:
 {{
-    "description": "descrição",
-    "amount": 0.00,
-    "date": "2024-01-15",
-    "category": "nome da categoria",
-    "is_positive": false,
-    "confidence": 85
+  "description": "Loja - tipo de itens (quantidade itens)",
+  "amount": 0.00,
+  "date": "2026-01-15",
+  "category": "nome exato da categoria da lista",
+  "is_positive": false,
+  "confidence": 80
 }}"""
 
     def _parse_fallback_json(self, text: str) -> Dict:
@@ -354,6 +356,35 @@ Responda APENAS com um JSON válido neste formato exato:
         # Retornar dict vazio se falhar
         return {}
 
+    def _parse_date(self, date_str: str) -> str:
+        """Parseia data de diversos formatos."""
+        date_str = date_str.strip()
+        # Tentar vários formatos
+        for fmt in ['%Y-%m-%d', '%d/%m/%Y', '%d-%m-%Y', '%Y/%m/%d']:
+            try:
+                parsed_date = datetime.strptime(date_str, fmt)
+                return parsed_date.strftime('%Y-%m-%d')
+            except ValueError:
+                continue
+        return datetime.now().strftime('%Y-%m-%d')
+
+    def _parse_amount(self, amount_str: str) -> float:
+        """Parseia valor de diversos formatos brasileiros."""
+        amount_str = amount_str.strip()
+        # Remover R$, espaços, etc.
+        amount_str = re.sub(r'[^\d.,]', '', amount_str)
+        # Converter para formato float
+        if ',' in amount_str:
+            # Tem vírgula como separador decimal (brasileiro)
+            amount_str = amount_str.replace('.', '').replace(',', '.')
+        else:
+            # Sem vírgula, pode ter ponto como decimal
+            amount_str = amount_str.replace(',', '')
+        try:
+            return float(amount_str)
+        except ValueError:
+            return 0.0
+
     def _parse_receipt_text(self, text: str, categories: list) -> Dict[str, Any]:
         """Parseia texto extraído do OCR para encontrar dados estruturados."""
         result = {
@@ -369,35 +400,88 @@ Responda APENAS com um JSON válido neste formato exato:
         text = text.replace('\n', ' ').replace('\r', ' ')
         text = re.sub(r'\s+', ' ', text).strip()
 
-        print(f"[OCR] Parseando texto: {text[:300]}...")
+        print(f"[OCR] Parseando texto ({len(text)} chars): {text}")
 
+        # Tentar extrair do formato estruturado (TOTAL: | DATE: | DESC: |)
+        total_match = re.search(r'TOTAL:\s*([^\n]+?)(?=DATE:|DESC:|$)', text, re.IGNORECASE)
+        date_match = re.search(r'DATE:\s*([^\n]+?)(?=TOTAL:|DESC:|$)', text, re.IGNORECASE)
+        desc_match = re.search(r'DESC:\s*([^\n]+?)(?=TOTAL:|DATE:|$)', text, re.IGNORECASE)
+
+        if date_match or desc_match or total_match:
+            # Formato estruturado encontrado
+            if date_match:
+                date_str = date_match.group(1).strip()
+                result['date'] = self._parse_date(date_str)
+                print(f"[OCR] Data estruturada: {result['date']}")
+            if desc_match:
+                result['description'] = desc_match.group(1).strip()
+                print(f"[OCR] Descrição estruturada: {result['description']}")
+            if total_match:
+                amount_str = total_match.group(1).strip()
+                result['amount'] = self._parse_amount(amount_str)
+                print(f"[OCR] Valor estruturado: {result['amount']}")
+
+            return result
+
+        # Se não achou formato estruturado, tentar parsing livre
         # Extrair valor - procurar TOTAL primeiro, depois outros valores
         amount_patterns = [
-            # Padrões com TOTAL/TOTAL A PAGAR/VALOR A PAGAR
-            r'(?:TOTAL|VALOR.*?PAGAR|SOMA)\s*(?:R\$\s*)?[\d]{1,6}[,\.]\d{2}',
-            r'(?:TOTAL|VALOR.*?PAGAR)\s*:\s*R?\$?\s*[\d]{1,6}[,\.]\d{2}',
-            # Depois genéricos (limitado a valores razoáveis)
-            r'R\$\s*[\d]{1,6}[,\.]\d{2}',
-            r'[\d]{1,6}[,\.]\d{2}(?=\s*$)',
+            # Padrões específicos NFC-e/Nota Fiscal (valor total no final)
+            r'(?:TOTAL\s*(?:GERAL|DA\s*NOTA|A\s*PAGAR)?|VALOR\s*TOTAL|SOMA)\s*R?\$?\s*([\d]{1,3}\.?,?[\d]{3}\.?,?[\d]{1,3},\d{2})',
+            r'(?:TOTAL|VALOR\s*TOTAL|VALOR\s*A\s*PAGAR|SOMA)\s*R?\$?\s*([\d]{1,6}[,\.]\d{2})',
+            r'(?:TOTAL|VALOR.*?PAGAR)\s*:\s*R?\$?\s*([\d]{1,6}[,\.]\d{2})',
+            # Genéricos com R$ (evitar descontos)
+            r'R\$\s*([\d]{1,3}\.?,?[\d]{3}\.?,?[\d]{1,3},\d{2})(?!\s*Desc)',
+            r'R\$\s*([\d]{1,6}[,\.]\d{2})(?!\s*Desc)',
         ]
 
         for pattern in amount_patterns:
             matches = list(re.finditer(pattern, text, re.IGNORECASE))
-            # Pegar o último match (geralmente o total é o último valor)
             if matches:
-                amount_str = matches[-1].group(0)
-                # Limpar e converter
+                # Pegar o último match (geralmente o total é o último valor)
+                amount_str = matches[-1].group(1) if matches[-1].lastindex else matches[-1].group(0)
+                print(f"[OCR] Match encontrado: '{amount_str}' (padrão: {pattern})")
+
+                # Limpar e converter - preservar formato brasileiro
                 amount_str = re.sub(r'[^\d.,]', '', amount_str)
-                amount_str = amount_str.replace('.', '').replace(',', '.')
+                # Para formatos como 1.234,56 ou 1234,56 ou 1.234.56,78
+                # Primeiro remover pontos de milhar (antes da vírgula)
+                if ',' in amount_str:
+                    # Tem vírgula como separador decimal
+                    amount_str = amount_str.replace('.', '').replace(',', '.')
+                else:
+                    # Sem vírgula, pode ser formato com ponto como decimal
+                    amount_str = amount_str.replace(',', '')
+
                 try:
                     val = float(amount_str)
                     # Ignorar valores absurdos (> 100000 provavelmente é erro/CNPJ)
-                    if val < 100000:
+                    # Mas também ignorar muito pequenos (< 0.01)
+                    if 0.01 <= val < 100000:
                         result['amount'] = val
-                        print(f"[OCR] Valor encontrado: {result['amount']} (padrão: {pattern})")
+                        print(f"[OCR] Valor encontrado: {result['amount']}")
                         break
                 except ValueError:
                     pass
+
+        # Se não achou TOTAL, tentar somar todos os valores positivos encontrados
+        if not result['amount']:
+            print(f"[OCR] TOTAL não encontrado, somando valores positivos...")
+            # Encontrar todos os valores monetários
+            all_values = re.findall(r'-?\s*R?\$?\s*([\d.]+,\d{2})', text)
+            total_sum = 0
+            for val_str in all_values:
+                try:
+                    val = float(val_str.replace('.', '').replace(',', '.'))
+                    # Somar apenas valores positivos razoáveis (ignorar descontos negativos)
+                    if 0.50 < val < 10000:  # Valores razoáveis de item
+                        total_sum += val
+                        print(f"[OCR]  + {val}")
+                except ValueError:
+                    pass
+            if total_sum > 1:
+                result['amount'] = total_sum
+                print(f"[OCR] Soma dos valores: {result['amount']}")
 
         # Extrair data (DD/MM/AAAA, DD-MM-AAAA, etc.)
         date_patterns = [
@@ -433,24 +517,44 @@ Responda APENAS com um JSON válido neste formato exato:
         if not result['date']:
             result['date'] = datetime.now().strftime('%Y-%m-%d')
 
-        # Extrair descrição - pegar nome do estabelecimento (primeira linha não numérica)
-        # Dividir por palavras-chave comuns
-        text_parts = re.split(r'CNPJ|Documento Auxiliar|ITEM C00160|---', text)
-        first_part = text_parts[0].strip() if text_parts else text
+        # Extrair descrição - tentar pegar nome do estabelecimento ou informações úteis
+        # Dividir por palavras-chave comuns que separam cabeçalho do conteúdo
+        split_patterns = [
+            r'CNPJ\s*:?',
+            r'Documento Auxiliar',
+            r'ITEM\s+C\d+',
+            r'\*\*Item\*\*\s*\|',
+            r'Here\'s extracted',
+            r'extracted information',
+        ]
+        for pattern in split_patterns:
+            text_parts = re.split(pattern, text, maxsplit=1, flags=re.IGNORECASE)
+            if len(text_parts) > 1:
+                text = text_parts[-1]  # Usar a parte após o separador
+                break
 
-        # Pegar até 4 primeiras palavras (geralmente o nome da empresa)
-        words = first_part.split()
-        if words:
-            # Pegar até 4 palavras, mas não muito curto
-            for i in range(3, min(len(words) + 1, 7)):
-                desc = ' '.join(words[:i])
-                if len(desc) >= 8 and len(desc) < 60:  # Entre 8 e 60 caracteres
-                    result['description'] = desc
+        # Tentar extrair nome de estabelecimento (geralmente no início)
+        # Procurar por padrões como "Conj tom 2pt", "Mercado", etc.
+        desc_patterns = [
+            # Padrões de produtos/nomes
+            r'([A-Z][a-z]+\s+[A-Z][a-z]+\s+[A-Z][a-z]+)',  # 3+ palavras com maiúscula
+            r'(Conj\s+\w+\s+\w+\s+\w+)',  # Conjunto algo
+            r'(Mercado\s+\w+)',
+            r'(Supermercado\s+\w+)',
+        ]
+
+        for pattern in desc_patterns:
+            match = re.search(pattern, text)
+            if match:
+                potential_desc = match.group(1).strip()
+                # Usar se for razoável
+                if 8 <= len(potential_desc) < 80:
+                    result['description'] = potential_desc
                     print(f"[OCR] Descrição encontrada: {result['description']}")
                     break
 
         # Se não achou descrição adequada, usar padrão
-        if not result['description']:
+        if not result['description'] or result['description'] == 'Here\'s the extracted':
             result['description'] = 'Compra no estabelecimento'
 
         return result
@@ -469,13 +573,16 @@ Responda APENAS com um JSON válido neste formato exato:
                        'hortifruti', 'açougue', 'padaria', 'farmácia', 'panificadora', 'alimentar'],
             # Construção
             'Construção': ['leroy', 'construção', 'material', 'depósito', 'madeireira', 'lojas cem',
-                          'quero-quero', 'c%C', 'sodimaco', 'mm', 'telhanorte'],
+                          'quero-quero', 'c%c', 'sodimaco', 'mm', 'telhanorte',
+                          # Materiais elétricos/hidráulicos
+                          'tom', 'tomada', '4x2', '2pt', 'pl ceva', 'stella', 'conj', 'conjunto',
+                          'elétr', 'cab', 'fio', 'disjunt', 'caixa', 'eletro'],
             # Transporte
             'Transporte': ['uber', '99 taxi', 'taxi', 'posto', 'gasolina', 'combustível', 'estacionamento',
                           'pedágio', 'transporte', 'ônibus', 'metrô'],
             # Alimentação
             'Alimentação': ['restaurante', 'lanchonete', 'fast food', 'mc donalds', 'burger king',
-                           'pizza', ' Delivery', 'ifood', 'rappi'],
+                           'pizza', ' delivery', 'ifood', 'rappi'],
             # Saúde
             'Saúde': ['médico', 'dentista', 'farmácia', 'clínica', 'hospital', 'exame', 'consultório'],
             # Educação
@@ -542,10 +649,15 @@ Responda APENAS com um JSON válido neste formato exato:
         else:
             date = datetime.now().strftime('%Y-%m-%d')
 
-        # Categoria - usar inferência se for "Outros" ou não existir
+        # Categoria - usar a que veio do JSON se existir no BD
         category_name = data.get('category', 'Outros')
-        if category_name not in categories or category_name == 'Outros':
-            # Tentar inferir categoria da descrição e texto cru
+
+        # Se a categoria do JSON existe no BD, usar ela
+        if category_name and category_name in categories:
+            print(f"[OCR] Categoria do JSON válida: {category_name}")
+        else:
+            # Categoria não existe ou é Outros - tentar inferir
+            print(f"[OCR] Categoria '{category_name}' não encontrada no BD, tentando inferir...")
             raw_text = data.get('raw_text', '')
             category_name = self._infer_category(description, raw_text, categories)
 
@@ -555,11 +667,11 @@ Responda APENAS com um JSON válido neste formato exato:
             category = CategoryModel.objects.filter(name=category_name).first()
             if category:
                 category_id = category.id
-            elif categories:
-                # Se não achou, usar a primeira disponível
-                category = CategoryModel.objects.filter(name__in=categories).first()
-                category_id = category.id if category else None
-        except Exception:
+                print(f"[OCR] Categoria encontrada no BD: {category.name} (id: {category.id})")
+            else:
+                print(f"[OCR] Categoria '{category_name}' não existe no BD, deixando como None")
+        except Exception as e:
+            print(f"[OCR] Erro ao buscar categoria: {e}")
             pass
 
         # is_positive

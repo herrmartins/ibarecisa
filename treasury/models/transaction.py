@@ -2,7 +2,6 @@ from django.db import models
 from core.models import BaseModel
 from django.utils import timezone
 from django.core.exceptions import ValidationError
-from django_resized import ResizedImageField
 from treasury.utils import custom_upload_to
 from django.core.files.storage import default_storage
 from decimal import Decimal
@@ -19,9 +18,10 @@ class TransactionModel(BaseModel):
     is_positive = models.BooleanField(default=True)
     date = models.DateField()
 
-    acquittance_doc = ResizedImageField(
-        size=[1200, 850], upload_to=custom_upload_to,
-        quality=75, blank=True, null=True, force_format='JPEG'
+    # FileField simples para aceitar PDF e imagens
+    acquittance_doc = models.FileField(
+        upload_to=custom_upload_to,
+        blank=True, null=True
     )
 
     edit_history = models.ManyToManyField(
