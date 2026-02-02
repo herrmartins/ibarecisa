@@ -775,10 +775,13 @@ window.ocrHandlers = {
 
         if (!result) return;
 
-        // Encontrar componente transactionForm
-        const transactionForm = Alpine.$data(document.querySelector('[x-data*="transactionForm"]'));
+        // Encontrar componente - tenta transactionForm ou transactionUpdate
+        let transactionForm = Alpine.$data(document.querySelector('[x-data*="transactionForm"]'));
         if (!transactionForm) {
-            console.error('transactionForm not found');
+            transactionForm = Alpine.$data(document.querySelector('[x-data*="transactionUpdate"]'));
+        }
+        if (!transactionForm) {
+            console.error('transactionForm or transactionUpdate not found');
             return;
         }
 
@@ -789,8 +792,10 @@ window.ocrHandlers = {
         transactionForm.form.is_positive = result.is_positive !== false;
         transactionForm.form.category = result.category_id || '';
 
-        // Atualizar display de amount
-        transactionForm.amountDisplay = result.amount?.toString() || '';
+        // Atualizar display de amount (se existir no componente de criação)
+        if (transactionForm.amountDisplay !== undefined) {
+            transactionForm.amountDisplay = result.amount?.toString() || '';
+        }
 
         // Anexar arquivo ao input do formulário
         if (store.ocrFile && transactionForm.$refs.docFile) {
