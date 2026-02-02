@@ -139,7 +139,9 @@ class ReceiptOCRService:
 
     def _extract_with_ollama(self, file_base64: str, file_type: str, categories: list) -> Dict[str, Any]:
         """
-        Extrai dados usando Ollama com qwen3-vl (modelo multimodal).
+        Extrai dados usando Ollama com qwen2-vl ou qwen3-vl (modelo multimodal).
+
+        Usa a API HTTP do Ollama para processar a imagem.
 
         Args:
             file_base64: Arquivo em base64
@@ -150,27 +152,47 @@ class ReceiptOCRService:
             Dict com os dados extraídos
         """
         ollama_host = getattr(settings, 'OLLAMA_HOST', 'http://localhost:11434')
-        ollama_model = getattr(settings, 'OLLAMA_OCR_MODEL', 'qwen3-vl:4b')
+        ollama_model = getattr(settings, 'OLLAMA_OCR_MODEL', 'qwen3-vl:8b')
 
-        # Prompt ultra-simples para testar se o modelo funciona
-        prompt = "Describe this image in detail. What text do you see?"
+        # Prompt melhorado para extração estruturada
+        categories_formatted = "\n".join([f"- {cat}" for cat in categories]) if categories else "- Outros"
+
+        prompt = f"""Extraia as informações deste comprovante de pagamento e retorne APENAS no formato JSON especificado.
+
+Categorias disponíveis:
+{categories_formatted}
+
+Retorne EXATAMENTE este JSON (substitua os valores):
+{{
+  "description": "Nome da Loja - tipo de produtos (quantidade itens)",
+  "amount": 0.00,
+  "date": "2026-01-15",
+  "category": "nome da categoria",
+  "is_positive": false,
+  "confidence": 80
+}}
+
+Regras:
+- description: Formato "Loja - tipo de itens (X itens)" ou apenas nome da loja
+- amount: Valor TOTAL em decimal (ex: 123.45)
+- date: Data no formato YYYY-MM-DD
+- category: Escolha UMA categoria da lista acima
+- is_positive: false (comprovantes são despesas)
+- confidence: 0-100 baseado na clareza da imagem
+
+Retorne APENAS o JSON, sem texto adicional."""
 
         try:
             print(f"[OCR] Enviando para Ollama (modelo: {ollama_model})...")
-            print(f"[OCR] Prompt: {prompt}")
+            print(f"[OCR] Tamanho do base64: {len(file_base64)} chars")
 
+            # Usar API HTTP do Ollama
             payload = {
                 'model': ollama_model,
                 'prompt': prompt,
                 'images': [file_base64],
-                'stream': False,
-                'options': {
-                    'temperature': 0.0,
-                    'num_predict': 4000,
-                }
+                'stream': False
             }
-
-            print(f"[OCR] Payload: {str(payload)}")
 
             response = requests.post(
                 f'{ollama_host}/api/generate',
@@ -181,34 +203,33 @@ class ReceiptOCRService:
             response.raise_for_status()
 
             result = response.json()
+            print(f"[OCR] JSON completo recebido: {json.dumps(result, indent=2)}...")
+
             ocr_text = result.get('response', '')
 
-            print(f"[OCR] Texto extraído pelo OCR ({len(ocr_text)} chars):")
-            print(f"[OCR] {ocr_text}")
+            print(f"[OCR] Resposta recebida ({len(ocr_text)} chars):")
+            print(f"[OCR] {ocr_text[:500]}...")
 
-            # Parsear diretamente o texto (abordagem que funcionava antes)
-            extracted = self._parse_receipt_text(ocr_text, categories)
+            # Tentar parsear JSON da resposta
+            extracted = self._parse_fallback_json(ocr_text)
+            if not extracted:
+                # Se falhou, tentar parsing de texto livre
+                extracted = self._parse_receipt_text(ocr_text, categories)
+
             extracted['raw_text'] = ocr_text
 
-            print(f"[OCR] Dados parseados:")
-            print(f"[OCR]   description: {extracted.get('description')}")
-            print(f"[OCR]   amount: {extracted.get('amount')}")
-            print(f"[OCR]   date: {extracted.get('date')}")
-            print(f"[OCR]   category: {extracted.get('category')}")
-            print(f"[OCR]   is_positive: {extracted.get('is_positive')}")
+            print(f"[OCR] Dados extraídos:")
+            for key, value in extracted.items():
+                if key != 'raw_text':
+                    print(f"[OCR]   {key}: {value}")
 
             normalized = self._normalize_extracted_data(extracted, categories)
-            print(f"[OCR] Dados normalizados:")
-            print(f"[OCR]   description: {normalized.get('description')}")
-            print(f"[OCR]   amount: {normalized.get('amount')}")
-            print(f"[OCR]   date: {normalized.get('date')}")
-            print(f"[OCR]   category: {normalized.get('category_name')}")
-            print(f"[OCR]   is_positive: {normalized.get('is_positive')}")
-            print(f"[OCR]   confidence: {normalized.get('confidence')}")
-
             return normalized
 
-        except requests.RequestException as e:
+        except Exception as e:
+            print(f"[OCR] Erro: {type(e).__name__}: {e}")
+            import traceback
+            traceback.print_exc()
             return {
                 'error': f'Erro ao comunicar com Ollama: {str(e)}',
                 'description': '',
