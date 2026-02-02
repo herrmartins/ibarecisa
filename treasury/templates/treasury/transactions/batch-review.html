@@ -179,9 +179,15 @@
 
         <!-- Footer Actions -->
         <div class="mt-8 flex flex-wrap items-center justify-between gap-4 p-4 bg-white rounded-lg shadow sticky bottom-4">
-            <button @click="goBack()" class="px-6 py-3 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
-                Cancelar
-            </button>
+            <div class="flex items-center gap-4">
+                <button @click="goBack()" class="px-6 py-3 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+                    Cancelar
+                </button>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" x-model="saveReceipt" class="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500">
+                    <span class="text-sm text-gray-700">Guardar comprovante</span>
+                </label>
+            </div>
             <div class="flex items-center gap-3">
                 <button x-show="selectedCount > 0" x-cloak @click="saveSelected()" :disabled="saving" class="app-btn app-btn-primary">
                     <span x-show="!saving">Salvar <span x-text="selectedCount"></span> Transação(ões)</span>
@@ -201,6 +207,8 @@ function batchReview() {
         categories: [],
         transactions: [],
         allSelected: false,
+        saveReceipt: false,
+        receiptData: null,  // Guarda a imagem base64 para anexar
 
         get selectedCount() {
             return this.transactions.filter(t => t.selected).length;
@@ -225,6 +233,9 @@ function batchReview() {
                 this.loading = false;
                 return;
             }
+
+            // Guardar a imagem para possível anexação
+            this.receiptData = imageData;
 
             // Load categories
             await this.loadCategories();
@@ -275,7 +286,6 @@ function batchReview() {
                 this.error = 'Erro ao processar imagem: ' + e.message;
             } finally {
                 this.loading = false;
-                sessionStorage.removeItem('ocrMultipleImage');
             }
         },
 
@@ -309,16 +319,36 @@ function batchReview() {
             this.saving = true;
 
             try {
-                const response = await fetch('/treasury/api/transactions/batch/', {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': this.getCookie('csrftoken'),
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        transactions: selected
-                    })
-                });
+                let response;
+                const saveReceipt = this.saveReceipt && this.receiptData;
+
+                if (saveReceipt) {
+                    // Usar FormData para incluir o arquivo
+                    const formData = new FormData();
+                    formData.append('receipt', this.dataURLtoBlob(this.receiptData), 'comprovante.jpg');
+                    formData.append('transactions', JSON.stringify(selected));
+
+                    response = await fetch('/treasury/api/transactions/batch/', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': this.getCookie('csrftoken')
+                            // Não definir Content-Type para FormData, o navegador define automaticamente
+                        },
+                        body: formData
+                    });
+                } else {
+                    // Usar JSON normal sem arquivo
+                    response = await fetch('/treasury/api/transactions/batch/', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': this.getCookie('csrftoken'),
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            transactions: selected
+                        })
+                    });
+                }
 
                 const result = await response.json();
 
@@ -327,6 +357,7 @@ function batchReview() {
                         `✓ ${result.created_count} transação(ões) criada(s) com sucesso!`,
                         'success'
                     );
+                    sessionStorage.removeItem('ocrMultipleImage');
                     window.location.href = '/treasury/transacoes/';
                 } else {
                     this.error = 'Erro ao criar transações: ' + (result.errors?.[0]?.error || 'Erro desconhecido');
@@ -353,6 +384,19 @@ function batchReview() {
             const value = `; ${document.cookie}`;
             const parts = value.split(`; ${name}=`);
             if (parts.length === 2) return parts.pop().split(';').shift();
+        },
+
+        dataURLtoBlob(dataURL) {
+            // Converter base64 para blob
+            const parts = dataURL.split(',');
+            const mime = parts[0].match(/:(.*?);/)[1];
+            const bstr = atob(parts[1]);
+            let n = bstr.length;
+            const u8arr = new Uint8Array(n);
+            while (n--) {
+                u8arr[n] = bstr.charCodeAt(n);
+            }
+            return new Blob([u8arr], { type: mime });
         }
     };
 }

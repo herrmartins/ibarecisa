@@ -1158,21 +1158,46 @@ class BatchTransactionCreateView(APIView):
     API para criar múltiplas transações em lote.
 
     POST /api/treasury/transactions/batch/
-    Body: { "transactions": [...] }
+    Body JSON: { "transactions": [...] }
+    Body FormData: receipt (arquivo), transactions (string JSON)
     """
     permission_classes = [IsAuthenticated, IsTreasuryUser]
 
     def post(self, request):
         """Cria múltiplas transações."""
         from treasury.serializers import TransactionCreateSerializer
+        import json
 
-        transactions_data = request.data.get('transactions', [])
+        # Verificar se é FormData (com arquivo) ou JSON
+        receipt_file = request.FILES.get('receipt')
+        transactions_str = request.data.get('transactions')
+
+        if transactions_str:
+            # FormData: parsear string JSON
+            try:
+                transactions_data = json.loads(transactions_str)
+            except json.JSONDecodeError:
+                return Response(
+                    {'error': 'Formato de transações inválido.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        else:
+            # JSON normal
+            transactions_data = request.data.get('transactions', [])
 
         if not transactions_data:
             return Response(
                 {'error': 'Envie pelo menos uma transação.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+        # Salvar comprovante uma vez (se fornecido)
+        receipt_path = None
+        if receipt_file:
+            from django.core.files.storage import default_storage
+            # Salvar e obter o caminho
+            receipt_path = default_storage.save(f'treasury/receipts/batch_{receipt_file.name}', receipt_file)
+            print(f"[Batch] Comprovante salvo em: {receipt_path}")
 
         created_transactions = []
         errors = []
@@ -1185,6 +1210,12 @@ class BatchTransactionCreateView(APIView):
                 )
                 serializer.is_valid(raise_exception=True)
                 transaction = serializer.save()
+
+                # Usar o mesmo caminho do comprovante para todas as transações
+                if receipt_path:
+                    transaction.acquittance_doc.name = receipt_path
+                    transaction.save(update_fields=['acquittance_doc'])
+
                 created_transactions.append(TransactionSerializer(transaction).data)
             except Exception as e:
                 errors.append({
