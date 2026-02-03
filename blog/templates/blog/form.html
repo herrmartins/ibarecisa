@@ -239,8 +239,13 @@
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    // Initialize TinyMCE for content field
+    // Remove required attribute from content field since TinyMCE will hide it
     const contentField = document.querySelector('#id_content');
+    if (contentField) {
+      contentField.removeAttribute('required');
+    }
+
+    // Initialize TinyMCE for content field
     if (contentField) {
       tinymce.init({
         selector: '#id_content',

@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('treasury', '0015_migrate_monthly_balance_to_accounting_period'),
+        ('treasury', '0014_ai_insight_model'),
     ]
 
     operations = [

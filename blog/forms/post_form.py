@@ -7,7 +7,11 @@ logger = logging.getLogger(__name__)
 
 
 class PostForm(forms.ModelForm):
-    content = forms.CharField(widget=forms.Textarea(attrs={"class": "w-full", "rows": 15}), label="Conteúdo")
+    content = forms.CharField(
+        widget=forms.Textarea(attrs={"class": "w-full", "rows": 15}),
+        label="Conteúdo",
+        required=False  # TinyMCE will populate this field
+    )
 
     class Meta:
         model = Post
@@ -62,3 +66,9 @@ class PostForm(forms.ModelForm):
             logger.error("PostForm clean_author - author is None or empty!")
             raise forms.ValidationError("Este campo é obrigatório.")
         return author
+
+    def clean_content(self):
+        content = self.cleaned_data.get('content')
+        if not content or not content.strip():
+            raise forms.ValidationError("Este campo é obrigatório.")
+        return content

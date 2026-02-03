@@ -21,6 +21,7 @@ class PostFormView(PermissionRequiredMixin, FormView):
         context = super().get_context_data(**kwargs)
         post_id = self.kwargs.get('pk')
         post = Post.objects.filter(id=post_id).first()
+        context["post"] = post
         context["instance"] = post
         return context
 
