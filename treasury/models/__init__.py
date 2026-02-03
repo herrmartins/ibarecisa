@@ -6,6 +6,7 @@ from .monthly_report_model import MonthlyReportModel
 from .monthly_transactions_by_category_model import MonthlyTransactionByCategoryModel
 from .accounting_period import AccountingPeriod
 from .reversal_transaction import ReversalTransaction
+from .ai_insight import AIInsight
 
 # Models no banco de auditoria (audit.sqlite3)
 from .period_snapshot import PeriodSnapshot

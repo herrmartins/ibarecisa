@@ -3,6 +3,16 @@
 from django.db import migrations, models
 
 
+def fix_notes(apps, schema_editor):
+    # Só executa no banco default, não no audit
+    if schema_editor.connection.alias != 'default':
+        return
+    AccountingPeriod = apps.get_model('treasury', 'AccountingPeriod')
+    for period in AccountingPeriod.objects.filter(notes__isnull=True):
+        period.notes = ''
+        period.save(update_fields=['notes'])
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -11,10 +21,7 @@ class Migration(migrations.Migration):
 
     operations = [
         # Primeiro, corrigir valores NULL em notes para evitar erro na migração do SQLite
-        migrations.RunSQL(
-            "UPDATE treasury_accountingperiod SET notes = '' WHERE notes IS NULL",
-            reverse_sql=migrations.RunSQL.noop
-        ),
+        migrations.RunPython(fix_notes, migrations.RunPython.noop),
         migrations.AddField(
             model_name='accountingperiod',
             name='is_first_month',

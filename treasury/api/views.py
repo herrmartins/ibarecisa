@@ -1690,30 +1690,36 @@ class KPICardsView(APIView):
 
 class AIInsightsView(APIView):
     """
-    API para gerar insights financeiros usando IA.
+    API para gerar insights financeiros usando IA com cache inteligente.
 
     - Desenvolvimento (DEBUG=True): Usa Ollama com ministral-3:8b
     - Produção (DEBUG=False): Usa Mistral API com mistral-small-latest
+    - Cache: Insights são salvos e reutilizados se o count de transações não mudou
+    - Force: Use force=true para regenerar ignorando o cache
 
     POST /api/treasury/charts/ai-insights/
+    Body: { start_date: "2025-01-01", end_date: "2025-01-31", force: false }
     """
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        """Gera insights financeiros usando Ollama (dev) ou Mistral API (prod)."""
+        """Gera insights financeiros usando cache inteligente."""
         import logging
+        import os
         from django.conf import settings
 
         logger = logging.getLogger(__name__)
 
         # Desenvolvimento: Ollama, Produção: Mistral API
         use_mistral_api = not getattr(settings, 'DEBUG', True)
+        debug_mode = getattr(settings, 'DEBUG', True)
         api_name = "Mistral API" if use_mistral_api else "Ollama"
-        logger.info(f'AI Insights request - usando {api_name} (DEBUG={settings.DEBUG})')
+        logger.info(f'AI Insights request - usando {api_name} (DEBUG={debug_mode})')
 
         # Coletar parâmetros
         start_date = request.data.get('start_date')
         end_date = request.data.get('end_date')
+        force_regenerate = request.data.get('force', False)
 
         if not start_date or not end_date:
             logger.warning('Request sem datas start_date/end_date')
@@ -1722,7 +1728,7 @@ class AIInsightsView(APIView):
         try:
             start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
             end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
-            logger.info(f'Período solicitado: {start_date} até {end_date}')
+            logger.info(f'Período solicitado: {start_date} até {end_date}, force={force_regenerate}')
         except ValueError as e:
             logger.error(f'Formato de data inválido: {e}')
             return Response({'error': 'Formato de data inválido. Use YYYY-MM-DD'}, status=status.HTTP_400_BAD_REQUEST)
@@ -1739,7 +1745,29 @@ class AIInsightsView(APIView):
                 logger.warning(f'Nenhuma transação encontrada no período {start_date} até {end_date}')
                 return Response({'error': 'Nenhuma transação encontrada no período'}, status=status.HTTP_400_BAD_REQUEST)
 
-            logger.info(f'Processando {len(transactions)} transações')
+            transactions_count = len(transactions)
+            logger.info(f'Processando {transactions_count} transações')
+
+            # Verificar cache existente
+            from treasury.models import AIInsight
+
+            existing_insight = AIInsight.objects.filter(
+                start_date=start_date,
+                end_date=end_date
+            ).first()
+
+            # Retornar cache se válido e não forçado
+            if existing_insight and not force_regenerate:
+                if existing_insight.is_still_valid(transactions_count):
+                    logger.info(f'Retornando insight em cache de {existing_insight.generated_at}')
+                    return Response({
+                        'insights': existing_insight.content,
+                        'generated_at': existing_insight.generated_at.isoformat(),
+                        'cached': True,
+                        'is_stale': existing_insight.is_stale
+                    })
+                else:
+                    logger.info(f'Cache invalidado: count mudou de {existing_insight.transactions_count} para {transactions_count}')
 
             # Preparar resumo dos dados para a IA
             summary = self._prepare_summary_for_ai(transactions, start_date, end_date)
@@ -1753,9 +1781,33 @@ class AIInsightsView(APIView):
 
             logger.info(f'Insights gerados com sucesso: {len(insights)} caracteres')
 
+            # Salvar no banco (atualiza se existe)
+            model_used = os.environ.get('OLLAMA_INSIGHTS_MODEL', 'ministral-3:8b') if not use_mistral_api else getattr(settings, 'MISTRAL_MODEL', 'mistral-small-latest')
+
+            if existing_insight:
+                # Atualiza existente
+                existing_insight.content = insights
+                existing_insight.transactions_count = transactions_count
+                existing_insight.model_used = model_used
+                existing_insight.debug_mode = debug_mode
+                existing_insight.save()
+                logger.info(f'Insight atualizado no banco (id={existing_insight.id})')
+            else:
+                # Cria novo
+                new_insight = AIInsight.objects.create(
+                    start_date=start_date,
+                    end_date=end_date,
+                    content=insights,
+                    transactions_count=transactions_count,
+                    model_used=model_used,
+                    debug_mode=debug_mode
+                )
+                logger.info(f'Insight salvo no banco (id={new_insight.id})')
+
             return Response({
                 'insights': insights,
-                'generated_at': timezone.now().isoformat()
+                'generated_at': timezone.now().isoformat(),
+                'cached': False
             })
 
         except Exception as e:
@@ -1789,7 +1841,9 @@ class AIInsightsView(APIView):
                     'content': 'Você é um assistente financeiro especializado em análise de dados financeiros de igrejas. '
                     'Forneça insights práticos e acionáveis em formato markdown, usando linguagem clara e objetiva. '
                     'Use emojis para tornar o texto mais visual. '
-                    'Estruture sua resposta com: 📊 Visão Geral, 💡 Insights Principais, ⚠️ Pontos de Atenção, 🎯 Recomendações.'
+                    'Estruture sua resposta com: 📊 Visão Geral, 💡 Insights Principais, ⚠️ Pontos de Atenção, 🎯 Recomendações, 📖 Palavra de Sabedoria. '
+                    'Na seção "📖 Palavra de Sabedoria", inclua 1-2 versículos bíblicos relevantes sobre fidelidade, mordomia e sabedoria financeira, '
+                    'com uma breve exposição/princípio prático que se aplica à situação financeira analisada.'
                 },
                 {
                     'role': 'user',
@@ -1882,7 +1936,9 @@ class AIInsightsView(APIView):
                         'content': 'Você é um assistente financeiro especializado em análise de dados financeiros de igrejas. '
                         'Forneça insights práticos e acionáveis em formato markdown, usando linguagem clara e objetiva. '
                         'Use emojis para tornar o texto mais visual. '
-                        'Estruture sua resposta com: 📊 Visão Geral, 💡 Insights Principais, ⚠️ Pontos de Atenção, 🎯 Recomendações.'
+                        'Estruture sua resposta com: 📊 Visão Geral, 💡 Insights Principais, ⚠️ Pontos de Atenção, 🎯 Recomendações, 📖 Palavra de Sabedoria. '
+                        'Na seção "📖 Palavra de Sabedoria", inclua 1-2 versículos bíblicos relevantes sobre fidelidade, mordomia e sabedoria financeira, '
+                        'com uma breve exposição/princípio prático que se aplica à situação financeira analisada.'
                     },
                     {
                         'role': 'user',
