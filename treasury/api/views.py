@@ -1686,3 +1686,291 @@ class KPICardsView(APIView):
             return Response({'error': f'Formato de data inválido: {e}'}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class AIInsightsView(APIView):
+    """
+    API para gerar insights financeiros usando IA.
+
+    - Desenvolvimento (DEBUG=True): Usa Ollama com ministral-3:8b
+    - Produção (DEBUG=False): Usa Mistral API com mistral-small-latest
+
+    POST /api/treasury/charts/ai-insights/
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        """Gera insights financeiros usando Ollama (dev) ou Mistral API (prod)."""
+        import logging
+        from django.conf import settings
+
+        logger = logging.getLogger(__name__)
+
+        # Desenvolvimento: Ollama, Produção: Mistral API
+        use_mistral_api = not getattr(settings, 'DEBUG', True)
+        api_name = "Mistral API" if use_mistral_api else "Ollama"
+        logger.info(f'AI Insights request - usando {api_name} (DEBUG={settings.DEBUG})')
+
+        # Coletar parâmetros
+        start_date = request.data.get('start_date')
+        end_date = request.data.get('end_date')
+
+        if not start_date or not end_date:
+            logger.warning('Request sem datas start_date/end_date')
+            return Response({'error': 'Datas start_date e end_date são obrigatórias'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+            end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+            logger.info(f'Período solicitado: {start_date} até {end_date}')
+        except ValueError as e:
+            logger.error(f'Formato de data inválido: {e}')
+            return Response({'error': 'Formato de data inválido. Use YYYY-MM-DD'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # Buscar transações do período
+            transactions = TransactionModel.objects.filter(
+                date__gte=start_date,
+                date__lte=end_date,
+                transaction_type='original'
+            ).order_by('-date')[:100]  # Limitar a 100 transações mais recentes
+
+            if not transactions:
+                logger.warning(f'Nenhuma transação encontrada no período {start_date} até {end_date}')
+                return Response({'error': 'Nenhuma transação encontrada no período'}, status=status.HTTP_400_BAD_REQUEST)
+
+            logger.info(f'Processando {len(transactions)} transações')
+
+            # Preparar resumo dos dados para a IA
+            summary = self._prepare_summary_for_ai(transactions, start_date, end_date)
+            logger.info(f'Summary preparado: {len(summary)} caracteres')
+
+            # Gerar insights com Ollama (dev) ou Mistral API (prod)
+            if use_mistral_api:
+                insights = self._generate_insights_with_mistral(summary)
+            else:
+                insights = self._generate_insights_with_ollama(summary)
+
+            logger.info(f'Insights gerados com sucesso: {len(insights)} caracteres')
+
+            return Response({
+                'insights': insights,
+                'generated_at': timezone.now().isoformat()
+            })
+
+        except Exception as e:
+            import traceback
+            error_trace = traceback.format_exc()
+            logger.error(f'Erro ao gerar insights: {e}\n{error_trace}')
+            return Response({
+                'error': str(e),
+                'insights': f'Erro ao gerar insights: {str(e)}'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def _generate_insights_with_ollama(self, summary: str) -> str:
+        """Gera insights usando Ollama com ministral-3:8b."""
+        import logging
+        import os
+        import requests
+        from django.conf import settings
+
+        logger = logging.getLogger(__name__)
+
+        ollama_base_url = os.environ.get('OLLAMA_BASE_URL', 'http://localhost:11434')
+        ollama_model = os.environ.get('OLLAMA_INSIGHTS_MODEL', 'ministral-3:8b')
+
+        logger.info(f'Gerando insights com Ollama: model={ollama_model}, url={ollama_base_url}')
+
+        payload = {
+            'model': ollama_model,
+            'messages': [
+                {
+                    'role': 'system',
+                    'content': 'Você é um assistente financeiro especializado em análise de dados financeiros de igrejas. '
+                    'Forneça insights práticos e acionáveis em formato markdown, usando linguagem clara e objetiva. '
+                    'Use emojis para tornar o texto mais visual. '
+                    'Estruture sua resposta com: 📊 Visão Geral, 💡 Insights Principais, ⚠️ Pontos de Atenção, 🎯 Recomendações.'
+                },
+                {
+                    'role': 'user',
+                    'content': f'Analise os seguintes dados financeiros:\n\n{summary}'
+                }
+            ],
+            'stream': False,
+            'options': {
+                'num_predict': 1200,
+                'temperature': 0.7
+            }
+        }
+
+        try:
+            response = requests.post(
+                f'{ollama_base_url}/api/chat',
+                json=payload,
+                timeout=120
+            )
+            logger.info(f'Ollama response status: {response.status_code}')
+        except requests.exceptions.ConnectionError as e:
+            error_msg = f'Ollama não está respondendo em {ollama_base_url}. Verifique se o serviço está rodando.'
+            logger.error(f'ConnectionError: {error_msg} - {e}')
+            raise Exception(error_msg)
+        except requests.exceptions.Timeout as e:
+            error_msg = f'Ollama demorou muito para responder (timeout 120s). Tente reduzir o período ou usar um modelo mais rápido.'
+            logger.error(f'Timeout: {error_msg} - {e}')
+            raise Exception(error_msg)
+        except requests.exceptions.RequestException as e:
+            error_msg = f'Erro ao comunicar com Ollama: {type(e).__name__}: {e}'
+            logger.error(f'RequestException: {error_msg}')
+            raise Exception(error_msg)
+
+        if response.status_code != 200:
+            error_detail = response.text[:500] if response.text else 'sem detalhes'
+            error_msg = f'Ollama retornou erro {response.status_code}: {error_detail}'
+            logger.error(f'Ollama HTTP error: {error_msg}')
+            raise Exception(error_msg)
+
+        try:
+            result = response.json()
+        except ValueError as e:
+            error_msg = f'Resposta inválida do Ollama (não é JSON): {response.text[:200]}'
+            logger.error(f'JSON decode error: {error_msg}')
+            raise Exception(error_msg)
+
+        insights = result.get('message', {}).get('content', '')
+
+        if not insights:
+            error_msg = f'Ollama retornou resposta vazia. Resposta completa: {result}'
+            logger.error(f'Empty insights: {error_msg}')
+            raise Exception('Resposta vazia da IA - tente novamente')
+
+        logger.info(f'Insights gerados com sucesso: {len(insights)} caracteres')
+        return insights
+
+    def _generate_insights_with_mistral(self, summary: str) -> str:
+        """Gera insights usando Mistral API com mistral-small-latest."""
+        import logging
+        from django.conf import settings
+
+        logger = logging.getLogger(__name__)
+
+        logger.info('Gerando insights com Mistral API')
+
+        try:
+            from mistralai import Mistral
+        except ImportError:
+            error_msg = 'SDK Mistral não instalado. Execute: pip install mistralai'
+            logger.error(f'ImportError: {error_msg}')
+            raise Exception(error_msg)
+
+        api_key = getattr(settings, 'MISTRAL_API_KEY', None)
+        if not api_key:
+            error_msg = 'MISTRAL_API_KEY não configurado nas variáveis de ambiente'
+            logger.error(f'Missing API key: {error_msg}')
+            raise Exception(error_msg)
+
+        model = getattr(settings, 'MISTRAL_MODEL', 'mistral-small-latest')
+        logger.info(f'Usando modelo Mistral: {model}')
+
+        try:
+            client = Mistral(api_key=api_key)
+
+            chat_response = client.chat.complete(
+                model=model,
+                messages=[
+                    {
+                        'role': 'system',
+                        'content': 'Você é um assistente financeiro especializado em análise de dados financeiros de igrejas. '
+                        'Forneça insights práticos e acionáveis em formato markdown, usando linguagem clara e objetiva. '
+                        'Use emojis para tornar o texto mais visual. '
+                        'Estruture sua resposta com: 📊 Visão Geral, 💡 Insights Principais, ⚠️ Pontos de Atenção, 🎯 Recomendações.'
+                    },
+                    {
+                        'role': 'user',
+                        'content': f'Analise os seguintes dados financeiros:\n\n{summary}'
+                    }
+                ],
+                max_tokens=1200,
+                temperature=0.7
+            )
+
+            insights = chat_response.choices[0].message.content
+
+            if not insights:
+                error_msg = 'Mistral retornou resposta vazia - tente novamente'
+                logger.error(f'Empty response from Mistral: {error_msg}')
+                raise Exception(error_msg)
+
+            logger.info(f'Insights gerados com sucesso: {len(insights)} caracteres')
+            return insights
+
+        except Exception as e:
+            if '401' in str(e) or 'authentication' in str(e).lower():
+                error_msg = f'Erro de autenticação na API Mistral. Verifique MISTRAL_API_KEY: {e}'
+            elif 'rate limit' in str(e).lower():
+                error_msg = f'Limite de taxa da API Mistral atingido. Tente novamente em alguns minutos: {e}'
+            elif 'timeout' in str(e).lower():
+                error_msg = f'Timeout na API Mistral. Tente novamente: {e}'
+            else:
+                error_msg = f'Erro ao comunicar com Mistral API: {type(e).__name__}: {e}'
+            logger.error(f'Mistral API error: {error_msg}')
+            raise Exception(error_msg)
+
+    def _prepare_summary_for_ai(self, transactions, start_date, end_date):
+        """Prepara um resumo dos dados para enviar à IA."""
+        from collections import defaultdict
+
+        # Agrupar por categoria
+        category_totals = defaultdict(lambda: {'revenue': Decimal('0'), 'expense': Decimal('0'), 'count': 0})
+
+        for tx in transactions:
+            cat = tx.category.name if tx.category else 'Sem Categoria'
+            if tx.is_positive:
+                category_totals[cat]['revenue'] += tx.amount
+            else:
+                category_totals[cat]['expense'] += tx.amount  # Já é negativo
+            category_totals[cat]['count'] += 1
+
+        # Calcular totais gerais
+        total_revenue = sum(d['revenue'] for d in category_totals.values())
+        total_expense = sum(d['expense'] for d in category_totals.values())  # Já é negativo
+        net_balance = total_revenue + total_expense
+
+        # Formatar resumo
+        summary = f"""Período Analisado: {start_date.strftime('%d/%m/%Y')} a {end_date.strftime('%d/%m/%Y')}
+
+RESUMO FINANCEIRO:
+• Total de Receitas: R$ {float(total_revenue):,.2f}
+• Total de Despesas: R$ {abs(float(total_expense)):,.2f}
+• Saldo Líquido: R$ {float(net_balance):,.2f}
+• Número de Transações: {len(transactions)}
+
+TOP RECEITAS POR CATEGORIA:
+"""
+
+        # Adicionar top categorias de receita
+        revenue_by_cat = sorted(
+            [(cat, float(data['revenue'])) for cat, data in category_totals.items()],
+            key=lambda x: x[1],
+            reverse=True
+        )[:5]
+
+        for cat, total in revenue_by_cat:
+            if total > 0:
+                summary += f"• {cat}: R$ {total:,.2f}\n"
+
+        summary += "\nTOP DESPESAS POR CATEGORIA:\n"
+
+        # Adicionar top categorias de despesa
+        expense_by_cat = sorted(
+            [(cat, abs(float(data['expense']))) for cat, data in category_totals.items()],
+            key=lambda x: x[1],
+            reverse=True
+        )[:5]
+
+        for cat, total in expense_by_cat:
+            if total > 0:
+                summary += f"• {cat}: R$ {total:,.2f}\n"
+
+        summary += "\nForneça insights sobre estes dados, destacando tendências, padrões e recomendações."
+
+        return summary

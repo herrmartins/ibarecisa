@@ -24,6 +24,7 @@ from treasury.api.views import (
     MonthlyComparisonChartView,
     BalanceHistoryChartView,
     KPICardsView,
+    AIInsightsView,
 )
 
 # Router principal
@@ -56,6 +57,7 @@ urlpatterns = [
     path('charts/monthly-comparison/', MonthlyComparisonChartView.as_view(), name='chart-monthly-comparison'),
     path('charts/balance-history/', BalanceHistoryChartView.as_view(), name='chart-balance-history'),
     path('charts/kpi/', KPICardsView.as_view(), name='chart-kpi'),
+    path('charts/ai-insights/', AIInsightsView.as_view(), name='chart-ai-insights'),
 
     # Rotas do router (DEPOIS para não interceptar rotas específicas)
     path('', include(router.urls)),
