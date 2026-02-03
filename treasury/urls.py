@@ -15,6 +15,7 @@ from treasury.views.template_views import (
     ReversalView,
     BalanceSheetView,
     AuditLogView,
+    ChartsView,
 )
 
 # PDF generation views (used by new system)
@@ -49,4 +50,7 @@ urlpatterns = [
 
     # ===== AUDIT =====
     path('auditoria/', AuditLogView.as_view(), name='audit-log'),
+
+    # ===== CHARTS =====
+    path('graficos/', ChartsView.as_view(), name='charts'),
 ]

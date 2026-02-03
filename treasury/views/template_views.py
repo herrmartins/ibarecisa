@@ -226,3 +226,13 @@ class AuditLogView(LoginRequiredMixin, TemplateView):
         context['entity_type_choices'] = json.dumps(AuditLog.ENTITY_TYPE_CHOICES, ensure_ascii=False)
 
         return context
+
+
+class ChartsView(LoginRequiredMixin, TemplateView):
+    """Página de gráficos financeiros."""
+    template_name = 'treasury/charts.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['page_title'] = 'Gráficos'
+        return context

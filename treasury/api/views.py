@@ -5,11 +5,14 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, BasePermission
 from rest_framework.pagination import PageNumberPagination
 from django.shortcuts import get_object_or_404
-from django.db.models import Q, Sum, F, DecimalField
-from django.db.models.functions import Coalesce
+from django.db.models import Q, Sum, F, DecimalField, Count, Case, When, Value
+from django.db.models.functions import Coalesce, TruncMonth
 from django.db import transaction
 from django.utils import timezone
 from decimal import Decimal
+from datetime import datetime, timedelta
+from calendar import month_name, monthrange
+import locale
 
 # Try to import DjangoFilterBackend, fall back to search filter if not available
 try:
@@ -1229,3 +1232,457 @@ class BatchTransactionCreateView(APIView):
             'errors': errors,
             'errors_count': len(errors),
         }, status=status.HTTP_201_CREATED if created_transactions else status.HTTP_400_BAD_REQUEST)
+
+
+# ============================================================================
+# CHART API VIEWS
+# ============================================================================
+
+class CashflowChartView(APIView):
+    """
+    API para dados do gráfico de fluxo de caixa mensal.
+
+    GET /api/treasury/charts/cashflow/?start_date=&end_date=
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        """Retorna dados de fluxo de caixa agrupados por mês."""
+        try:
+            # Parse dates
+            start_date = request.query_params.get('start_date')
+            end_date = request.query_params.get('end_date')
+
+            if not start_date:
+                # Default: start of current year
+                today = timezone.now().date()
+                start_date = today.replace(month=1, day=1)
+            else:
+                start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+
+            if not end_date:
+                # Default: today
+                end_date = timezone.now().date()
+            else:
+                end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+
+            # Get transactions grouped by month
+            transactions = TransactionModel.objects.filter(
+                date__gte=start_date,
+                date__lte=end_date,
+                transaction_type='original'
+            ).annotate(
+                month=TruncMonth('date')
+            ).values('month').annotate(
+                revenues=Sum(Case(When(is_positive=True, then=F('amount')), default=Decimal('0.00'), output_field=DecimalField())),
+                expenses=Sum(Case(When(is_positive=False, then=F('amount')), default=Decimal('0.00'), output_field=DecimalField()))
+            ).order_by('month')
+
+            # Build response
+            months = []
+            revenues = []
+            expenses = []
+            balance = []
+            running_balance = Decimal('0.00')
+
+            # Get initial balance from transactions before start_date
+            initial_balance = TransactionModel.objects.filter(
+                date__lt=start_date,
+                transaction_type='original'
+            ).aggregate(
+                initial_revenue=Sum(Case(When(is_positive=True, then=F('amount')), default=Decimal('0.00'), output_field=DecimalField())),
+                initial_expense=Sum(Case(When(is_positive=False, then=F('amount')), default=Decimal('0.00'), output_field=DecimalField()))
+            )
+            running_balance = (initial_balance['initial_revenue'] or Decimal('0.00')) + (initial_balance['initial_expense'] or Decimal('0.00'))
+
+            # Build lists from transactions (only months with data)
+            for tx in transactions:
+                month_label = self._get_month_name(tx['month'].month, tx['month'].year)
+                months.append(month_label)
+
+                rev = float(tx['revenues'] or Decimal('0.00'))
+                exp = float(tx['expenses'] or Decimal('0.00'))
+                revenues.append(rev)
+                expenses.append(abs(exp))  # Show as positive for display
+
+                running_balance += Decimal(str(rev)) + Decimal(str(exp))
+                balance.append(float(running_balance))
+
+            return Response({
+                'categories': months,
+                'series': [
+                    {'name': 'Receitas', 'data': revenues},
+                    {'name': 'Despesas', 'data': expenses},
+                    {'name': 'Saldo Acumulado', 'data': balance}
+                ]
+            })
+
+        except ValueError as e:
+            return Response({'error': f'Formato de data inválido: {e}'}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def _get_month_name(self, month, year):
+        """Retorna o nome do mês em português."""
+        months_pt = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+        return f"{months_pt[month - 1]}/{str(year)[2:]}"
+
+
+class RevenuesByCategoryChartView(APIView):
+    """
+    API para dados do gráfico de receitas por categoria.
+
+    GET /api/treasury/charts/revenues-by-category/?start_date=&end_date=
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        """Retorna receitas agrupadas por categoria."""
+        try:
+            start_date = request.query_params.get('start_date')
+            end_date = request.query_params.get('end_date')
+
+            if not start_date:
+                today = timezone.now().date()
+                start_date = today.replace(month=1, day=1)
+            else:
+                start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+
+            if not end_date:
+                end_date = timezone.now().date()
+            else:
+                end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+
+            # Get revenues by category
+            categories = TransactionModel.objects.filter(
+                date__gte=start_date,
+                date__lte=end_date,
+                is_positive=True,
+                transaction_type='original'
+            ).values(
+                category_name=Coalesce('category__name', Value('Sem categoria'))
+            ).annotate(
+                total=Sum('amount')
+            ).order_by('-total')
+
+            labels = []
+            values = []
+
+            for cat in categories:
+                labels.append(cat['category_name'])
+                values.append(float(cat['total']))
+
+            return Response({
+                'labels': labels,
+                'values': values,
+                'total': sum(values)
+            })
+
+        except ValueError as e:
+            return Response({'error': f'Formato de data inválido: {e}'}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class ExpensesByCategoryChartView(APIView):
+    """
+    API para dados do gráfico de despesas por categoria.
+
+    GET /api/treasury/charts/expenses-by-category/?start_date=&end_date=
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        """Retorna despesas agrupadas por categoria (valores positivos)."""
+        try:
+            start_date = request.query_params.get('start_date')
+            end_date = request.query_params.get('end_date')
+
+            if not start_date:
+                today = timezone.now().date()
+                start_date = today.replace(month=1, day=1)
+            else:
+                start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+
+            if not end_date:
+                end_date = timezone.now().date()
+            else:
+                end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+
+            # Get expenses by category - amount is already negative for expenses, so we negate to get positive
+            categories = TransactionModel.objects.filter(
+                date__gte=start_date,
+                date__lte=end_date,
+                is_positive=False,
+                transaction_type='original'
+            ).values(
+                category_name=Coalesce('category__name', Value('Sem categoria'))
+            ).annotate(
+                total=Sum('amount')
+            ).order_by('total')  # Order by total (negative to positive)
+
+            labels = []
+            values = []
+
+            for cat in categories:
+                labels.append(cat['category_name'])
+                # Negate to get positive value for display
+                values.append(abs(float(cat['total'])))
+
+            # Reverse so highest values are first
+            labels.reverse()
+            values.reverse()
+
+            return Response({
+                'labels': labels,
+                'values': values,
+                'total': sum(values)
+            })
+
+        except ValueError as e:
+            return Response({'error': f'Formato de data inválido: {e}'}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class MonthlyComparisonChartView(APIView):
+    """
+    API para dados do gráfico comparativo mensal.
+
+    GET /api/treasury/charts/monthly-comparison/?start_date=&end_date=
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        """Retorna comparativo de receitas vs despesas por mês."""
+        try:
+            start_date = request.query_params.get('start_date')
+            end_date = request.query_params.get('end_date')
+
+            if not start_date:
+                today = timezone.now().date()
+                start_date = today.replace(month=1, day=1)
+            else:
+                start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+
+            if not end_date:
+                end_date = timezone.now().date()
+            else:
+                end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+
+            # Get transactions grouped by month
+            transactions = TransactionModel.objects.filter(
+                date__gte=start_date,
+                date__lte=end_date,
+                transaction_type='original'
+            ).annotate(
+                month=TruncMonth('date')
+            ).values('month').annotate(
+                revenues=Sum(Case(When(is_positive=True, then=F('amount')), default=Decimal('0.00'), output_field=DecimalField())),
+                expenses=Sum(Case(When(is_positive=False, then=F('amount')), default=Decimal('0.00'), output_field=DecimalField()))
+            ).order_by('month')
+
+            # Build lists from transactions (only months with data)
+            months = []
+            revenues = []
+            expenses = []
+            months_pt = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+
+            for tx in transactions:
+                month_label = f"{months_pt[tx['month'].month - 1]}/{str(tx['month'].year)[2:]}"
+                months.append(month_label)
+                revenues.append(float(tx['revenues'] or Decimal('0.00')))
+                expenses.append(abs(float(tx['expenses'] or Decimal('0.00'))))
+
+            return Response({
+                'categories': months,
+                'series': [
+                    {'name': 'Receitas', 'data': revenues},
+                    {'name': 'Despesas', 'data': expenses}
+                ]
+            })
+
+        except ValueError as e:
+            return Response({'error': f'Formato de data inválido: {e}'}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class BalanceHistoryChartView(APIView):
+    """
+    API para dados do gráfico de histórico de saldo.
+
+    GET /api/treasury/charts/balance-history/?start_date=&end_date=
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        """Retorna histórico de saldo por período."""
+        try:
+            # Aceita tanto start_date/end_date quanto period_start/period_end
+            period_start = request.query_params.get('start_date') or request.query_params.get('period_start')
+            period_end = request.query_params.get('end_date') or request.query_params.get('period_end')
+
+            if not period_start:
+                # Default: 6 months ago
+                today = timezone.now().date()
+                if today.month > 6:
+                    period_start = today.replace(month=today.month - 6, day=1)
+                else:
+                    period_start = today.replace(year=today.year - 1, month=today.month - 6 + 12, day=1)
+            else:
+                period_start = datetime.strptime(period_start, '%Y-%m-%d').date()
+
+            if not period_end:
+                period_end = timezone.now().date()
+            else:
+                period_end = datetime.strptime(period_end, '%Y-%m-%d').date()
+
+            # Ajustar data final para excluir meses parciais
+            # Se a data final não for o último dia do mês, usar o último dia do mês anterior
+            last_day_of_month = monthrange(period_end.year, period_end.month)[1]
+            if period_end.day < last_day_of_month:
+                # Usar o último dia do mês anterior
+                if period_end.month == 1:
+                    period_end = period_end.replace(year=period_end.year - 1, month=12, day=31)
+                else:
+                    period_end = period_end.replace(month=period_end.month - 1, day=monthrange(period_end.year, period_end.month - 1)[1])
+
+            # Get periods within range
+            periods = AccountingPeriod.objects.filter(
+                month__gte=period_start.replace(day=1),
+                month__lte=period_end.replace(day=1)
+            ).order_by('month')
+
+            labels = []
+            values = []
+
+            # Get accumulated balance from before the first period
+            accumulated = Decimal('0.00')
+            periods_list = list(periods)
+            if periods_list:
+                first_period = periods_list[0]
+                # Look for previous closed periods
+                prev_period = AccountingPeriod.objects.filter(
+                    month__lt=first_period.month,
+                    closing_balance__isnull=False
+                ).order_by('-month').first()
+                if prev_period and prev_period.closing_balance is not None:
+                    accumulated = prev_period.closing_balance
+
+            for period in periods_list:
+                labels.append(period.month_name)
+                # Use closing_balance if available, otherwise calculate current
+                if period.closing_balance is not None:
+                    accumulated = period.closing_balance
+                    values.append(float(accumulated))
+                else:
+                    # For open periods, calculate balance from transactions
+                    summary = period.get_transactions_summary()
+                    if summary['count'] > 0:
+                        accumulated += float(summary['net'])
+                    else:
+                        # No transactions, keep accumulated balance
+                        pass
+                    values.append(float(accumulated))
+
+            return Response({
+                'categories': labels,
+                'values': values
+            })
+
+        except ValueError as e:
+            return Response({'error': f'Formato de data inválido: {e}'}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class KPICardsView(APIView):
+    """
+    API para dados dos cards KPI.
+
+    GET /api/treasury/charts/kpi/?start_date=&end_date=
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        """Retorna dados dos KPIs para o período especificado."""
+        try:
+            start_date = request.query_params.get('start_date')
+            end_date = request.query_params.get('end_date')
+
+            if not start_date:
+                today = timezone.now().date()
+                start_date = today.replace(month=1, day=1)
+            else:
+                start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+
+            if not end_date:
+                end_date = timezone.now().date()
+            else:
+                end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+
+            # Calculate current period stats
+            transactions = TransactionModel.objects.filter(
+                date__gte=start_date,
+                date__lte=end_date,
+                transaction_type='original'
+            )
+
+            total_revenues = transactions.filter(is_positive=True).aggregate(
+                total=Sum('amount')
+            )['total'] or Decimal('0.00')
+
+            total_expenses = transactions.filter(is_positive=False).aggregate(
+                total=Sum('amount')
+            )['total'] or Decimal('0.00')
+
+            current_net = total_revenues + total_expenses
+
+            # Calculate previous period for variation
+            days_diff = (end_date - start_date).days
+            prev_end = start_date - timedelta(days=1)
+            prev_start = prev_end - timedelta(days=days_diff)
+
+            prev_transactions = TransactionModel.objects.filter(
+                date__gte=prev_start,
+                date__lte=prev_end,
+                transaction_type='original'
+            )
+
+            prev_revenues = prev_transactions.filter(is_positive=True).aggregate(
+                total=Sum('amount')
+            )['total'] or Decimal('0.00')
+
+            prev_expenses = prev_transactions.filter(is_positive=False).aggregate(
+                total=Sum('amount')
+            )['total'] or Decimal('0.00')
+
+            prev_net = prev_revenues + prev_expenses
+
+            # Get current balance
+            service = PeriodService()
+            current_balance = service.get_current_balance()
+
+            # Calculate variation percentage
+            if prev_net != 0:
+                variation = ((current_net - prev_net) / abs(prev_net)) * 100
+            else:
+                variation = 0 if current_net == 0 else 100
+
+            return Response({
+                'total_revenues': float(total_revenues),
+                'total_expenses': abs(float(total_expenses)),  # Show as positive
+                'current_balance': float(current_balance),
+                'current_net': float(current_net),
+                'variation': round(variation, 2),
+                'period': {
+                    'start': start_date.strftime('%d/%m/%Y'),
+                    'end': end_date.strftime('%d/%m/%Y')
+                }
+            })
+
+        except ValueError as e:
+            return Response({'error': f'Formato de data inválido: {e}'}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
