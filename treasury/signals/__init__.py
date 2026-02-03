@@ -1,4 +1,5 @@
 from .post_save_monthly_report import post_save_monthly_report
+from .post_save_accounting_period import set_opening_balance_on_create
 
 # REMOVED: Old MonthlyBalance-related signals (replaced by AccountingPeriod)
 # - update_monthly_balance_on_create (substituído por AccountingPeriod)
