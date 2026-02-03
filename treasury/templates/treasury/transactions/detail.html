@@ -159,7 +159,7 @@
                     <template x-if="!imageFailed">
                       <img src="{{ transaction.acquittance_doc.url }}"
                            alt="Comprovante"
-                           class="w-24 h-24 rounded-lg object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                           class="w-24 h-24 min-w-24 min-h-24 max-w-24 max-h-24 rounded-lg object-cover cursor-pointer hover:opacity-90 transition-opacity flex-shrink-0"
                            @error="imageFailed = true"
                            @click="window.open('{{ transaction.acquittance_doc.url }}', '_blank')">
                     </template>
