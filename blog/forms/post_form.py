@@ -1,6 +1,9 @@
+import logging
 from django import forms
 from blog.models import Post
 from django.forms.widgets import HiddenInput
+
+logger = logging.getLogger(__name__)
 
 
 class PostForm(forms.ModelForm):
@@ -26,9 +29,36 @@ class PostForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         author = kwargs.pop('author', None)
+        logger.info(f"PostForm __init__ - author: {author}, args: {args}, kwargs keys: {list(kwargs.keys())}")
         super(PostForm, self).__init__(*args, **kwargs)
         instance = kwargs.get('instance')
-        self.fields['author'].initial = author
-        self.fields['author'].widget = HiddenInput()
+        if author:
+            self.fields['author'].initial = author
+            self.fields['author'].required = False  # Don't require from POST, we'll set it in clean
+            self.fields['author'].widget = HiddenInput()
+        logger.info(f"PostForm __init__ - author initial: {self.fields['author'].initial}")
         if instance:
             self.fields['categories'].initial = instance.categories.all()
+
+    def clean(self):
+        cleaned_data = super().clean()
+        logger.info(f"PostForm clean - cleaned_data keys: {list(cleaned_data.keys()) if cleaned_data else 'None'}")
+        logger.info(f"PostForm clean - cleaned_data: {cleaned_data}")
+        for field in self.fields:
+            logger.info(f"PostForm clean - {field}: value={cleaned_data.get(field) if cleaned_data else 'N/A'}, errors={self.errors.get(field)}")
+        return cleaned_data
+
+    def clean_author(self):
+        author = self.cleaned_data.get('author')
+        logger.info(f"PostForm clean_author - author from cleaned_data: {author}")
+
+        # Se author veio vazio do POST mas temos o initial, usa o initial
+        if not author and self.fields['author'].initial:
+            author = self.fields['author'].initial
+            logger.info(f"PostForm clean_author - using initial author: {author}")
+            self.cleaned_data['author'] = author
+
+        if not author:
+            logger.error("PostForm clean_author - author is None or empty!")
+            raise forms.ValidationError("Este campo é obrigatório.")
+        return author
