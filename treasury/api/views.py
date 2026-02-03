@@ -1782,7 +1782,7 @@ class AIInsightsView(APIView):
             logger.info(f'Insights gerados com sucesso: {len(insights)} caracteres')
 
             # Salvar no banco (atualiza se existe)
-            model_used = os.environ.get('OLLAMA_INSIGHTS_MODEL', 'ministral-3:8b') if not use_mistral_api else getattr(settings, 'MISTRAL_MODEL', 'mistral-small-latest')
+            model_used = getattr(settings, 'OLLAMA_TEXT_MODEL', 'gemma3n:e4b') if not use_mistral_api else getattr(settings, 'MISTRAL_MODEL', 'mistral-small-latest')
 
             if existing_insight:
                 # Atualiza existente
@@ -1820,7 +1820,7 @@ class AIInsightsView(APIView):
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def _generate_insights_with_ollama(self, summary: str) -> str:
-        """Gera insights usando Ollama com ministral-3:8b."""
+        """Gera insights usando Ollama (modelo local)."""
         import logging
         import os
         import requests
@@ -1828,8 +1828,8 @@ class AIInsightsView(APIView):
 
         logger = logging.getLogger(__name__)
 
-        ollama_base_url = os.environ.get('OLLAMA_BASE_URL', 'http://localhost:11434')
-        ollama_model = os.environ.get('OLLAMA_INSIGHTS_MODEL', 'ministral-3:8b')
+        ollama_base_url = getattr(settings, 'OLLAMA_HOST', 'http://localhost:11434')
+        ollama_model = getattr(settings, 'OLLAMA_TEXT_MODEL', 'gemma3n:e4b')
 
         logger.info(f'Gerando insights com Ollama: model={ollama_model}, url={ollama_base_url}')
 

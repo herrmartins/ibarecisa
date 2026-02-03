@@ -291,12 +291,13 @@ CAPTCHA_FONT_SIZE = 40
 CAPTCHA_TEST_MODE = True
 
 MISTRAL_API_KEY = config("MISTRAL_API_KEY", default="")
-USE_MISTRAL_OCR = True
+USE_MISTRAL_OCR = config("USE_MISTRAL_OCR", default=False)  # False=Ollama em dev, True=Mistral sempre
 MISTRAL_MODEL = config("MISTRAL_MODEL", default="mistral-small-latest")
 
 # Ollama Configuration (desenvolvimento)
 OLLAMA_HOST = config("OLLAMA_HOST", default="http://localhost:11434")
 OLLAMA_OCR_MODEL = config("OLLAMA_OCR_MODEL", default="qwen3-vl:4b")
+OLLAMA_TEXT_MODEL = config("OLLAMA_TEXT_MODEL", default="gemma3n:e4b")
 
 if not DEBUG:
     sentry_sdk.init(
