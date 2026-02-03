@@ -51,6 +51,10 @@ class Command(BaseCommand):
             "secretarial.change_minuteexcerptsmodel",
             "secretarial.delete_minuteexcerptsmodel",
             "secretarial.view_minuteexcerptsmodel",
+            "secretarial.add_minutefilemodel",
+            "secretarial.change_minutefilemodel",
+            "secretarial.delete_minutefilemodel",
+            "secretarial.view_minutefilemodel",
             "secretarial.add_minuteprojectmodel",
             "secretarial.change_minuteprojectmodel",
             "secretarial.delete_minuteprojectmodel",
@@ -74,6 +78,7 @@ class Command(BaseCommand):
 
         members_permissions = [
             "secretarial.view_meetingminutemodel",
+            "secretarial.view_minutefilemodel",
             "treasury.view_monthlybalance",
             "treasury.view_categorymodel",
             "treasury.view_monthlyreportmodel",
@@ -94,20 +99,17 @@ class Command(BaseCommand):
         )
         users_group, created_users = Group.objects.get_or_create(name="users")
 
-        if created_treasurer:
-            add_permissions_to_group(treasurer_group, treasurer_permissions)
-
-        if created_secretarial:
-            add_permissions_to_group(secretarial_group, secretarial_permissions)
-
-        if created_pastor:
-            add_permissions_to_group(pastor_group, pastor_permissions)
-
-        if created_members:
-            add_permissions_to_group(members_group, members_permissions)
+        # Sempre atualizar permissões (não apenas na criação)
+        add_permissions_to_group(treasurer_group, treasurer_permissions)
+        add_permissions_to_group(secretarial_group, secretarial_permissions)
+        add_permissions_to_group(pastor_group, pastor_permissions)
+        add_permissions_to_group(members_group, members_permissions)
 
 
 def add_permissions_to_group(group, permission_strings):
+    # Limpar permissões existentes para garantir estado consistente
+    group.permissions.clear()
+
     for perm_string in permission_strings:
         app_label, codename = perm_string.split(".")
         permission = Permission.objects.get(
