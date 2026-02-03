@@ -15,7 +15,8 @@ DEBUG = config("DEBUG", cast=bool)
 
 if not DEBUG:
     ALLOWED_HOSTS = ["ibarecisa.org.br", "diacono.ibarecisa.org.br",
-                     "104.251.208.79", "104.237.2.251", "https://104.237.2.251"]
+                     "104.251.208.79", "104.237.2.251", "https://104.237.2.251",
+                     'mail.ibarecisa.org.br']
 else:
     ALLOWED_HOSTS = ["*"]
 

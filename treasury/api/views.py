@@ -49,15 +49,57 @@ from treasury.services.transaction_service import TransactionService
 
 class IsTreasuryUser(BasePermission):
     """
-    Permissão para usuários do departamento de tesouraria.
+    Permissão para membros da igreja visualizarem dados da tesouraria.
+
+    Usuários autorizados:
+    - Membro regular (type == REGULAR)
+    - Tesoureiro (is_treasurer)
+    - Secretário (is_secretary)
+    - Pastor (is_pastor)
+    - Staff (is_staff)
+    - Superuser (is_superuser)
+
+    Congregados e usuários simples NÃO têm acesso.
     """
     def has_permission(self, request, view):
-        return request.user.is_authenticated and (
-            request.user.is_treasurer or
-            request.user.is_secretary or
-            request.user.is_pastor or
-            request.user.is_staff
+        user = request.user
+        if not user.is_authenticated:
+            return False
+
+        # Membros regulares podem visualizar
+        if user.type == "REGULAR":
+            return True
+
+        # Staff e funções especiais
+        return (
+            user.is_treasurer or
+            user.is_secretary or
+            user.is_pastor or
+            user.is_staff
         )
+
+
+class IsTreasurerOnly(BasePermission):
+    """
+    Permissão APENAS para tesoureiros.
+
+    Usuários autorizados:
+    - Tesoureiro (is_treasurer)
+    - Superuser (is_superuser)
+
+    Secretários, pastores e staff em geral NÃO têm acesso.
+    """
+    def has_permission(self, request, view):
+        user = request.user
+        if not user.is_authenticated:
+            return False
+
+        # Superuser pode tudo
+        if user.is_superuser:
+            return True
+
+        # Apenas tesoureiros (não secretários/pastores)
+        return user.is_treasurer
 
 
 class IsAdminUser(BasePermission):
@@ -148,7 +190,7 @@ class AccountingPeriodViewSet(viewsets.ReadOnlyModelViewSet):
         - close, reopen, archive: apenas tesoureiros
         """
         if self.action in ['close', 'reopen', 'archive']:
-            return [IsAuthenticated(), IsTreasuryUser()]
+            return [IsAuthenticated(), IsTreasurerOnly()]
         return [IsAuthenticated()]
 
     @action(detail=True, methods=['get'])
@@ -421,10 +463,10 @@ class TransactionViewSet(viewsets.ModelViewSet):
         """
         Define permissões baseado na ação:
         - list, retrieve: qualquer usuário autenticado
-        - create, update, partial_update, destroy: apenas tesoureiros
+        - create, update, partial_update, destroy: apenas tesoureiros (não secretários)
         """
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            return [IsAuthenticated(), IsTreasuryUser()]
+            return [IsAuthenticated(), IsTreasurerOnly()]
         return [IsAuthenticated()]
 
     def perform_destroy(self, instance):
@@ -526,7 +568,7 @@ class ReversalCreateView(APIView):
 
     POST /api/treasury/reversals/
     """
-    permission_classes = [IsAuthenticated, IsTreasuryUser]
+    permission_classes = [IsAuthenticated, IsTreasurerOnly]
 
     def post(self, request):
         """Cria um novo estorno."""
@@ -955,7 +997,7 @@ class ReceiptOCRView(APIView):
 
     POST /api/treasury/ocr/receipt/
     """
-    permission_classes = [IsAuthenticated, IsTreasuryUser]
+    permission_classes = [IsAuthenticated, IsTreasurerOnly]
 
     def post(self, request):
         """Processa um comprovante e extrai os dados."""
@@ -1024,7 +1066,7 @@ class ReceiptTransactionCreateView(APIView):
 
     POST /api/treasury/transactions/from-receipt/
     """
-    permission_classes = [IsAuthenticated, IsTreasuryUser]
+    permission_classes = [IsAuthenticated, IsTreasurerOnly]
 
     def post(self, request):
         """Cria uma transação processando o comprovante e permitindo edição."""
@@ -1129,7 +1171,7 @@ class ReceiptMultipleOCRView(APIView):
 
     POST /api/treasury/ocr/receipt-multiple/
     """
-    permission_classes = [IsAuthenticated, IsTreasuryUser]
+    permission_classes = [IsAuthenticated, IsTreasurerOnly]
 
     def post(self, request):
         """Processa uma imagem e extrai múltiplas transações."""
@@ -1184,7 +1226,7 @@ class BatchTransactionCreateView(APIView):
     Body JSON: { "transactions": [...] }
     Body FormData: receipt (arquivo), transactions (string JSON)
     """
-    permission_classes = [IsAuthenticated, IsTreasuryUser]
+    permission_classes = [IsAuthenticated, IsTreasurerOnly]
 
     def post(self, request):
         """Cria múltiplas transações."""
@@ -1720,7 +1762,7 @@ class AIInsightsView(APIView):
     POST /api/treasury/charts/ai-insights/
     Body: { start_date: "2025-01-01", end_date: "2025-01-31", force: false }
     """
-    permission_classes = [IsAuthenticated, IsTreasuryUser]
+    permission_classes = [IsAuthenticated, IsTreasurerOnly]
 
     def post(self, request):
         """Gera insights financeiros usando cache inteligente."""

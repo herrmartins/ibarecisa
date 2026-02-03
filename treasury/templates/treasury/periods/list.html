@@ -66,6 +66,7 @@
                         <a :href="`/treasury/periodos/${period.id}/`" class="flex-1 text-center bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded text-sm">
                             Ver Detalhes
                         </a>
+                        {% if user.is_treasurer or user.is_superuser %}
                         <template x-if="period.status === 'open'">
                             <button @click="closePeriod(period)" class="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded text-sm">
                                 Fechar
@@ -76,6 +77,7 @@
                                 Reabrir
                             </button>
                         </template>
+                        {% endif %}
                     </div>
                 </div>
             </div>

@@ -14,10 +14,10 @@ from django.utils import timezone
 from datetime import datetime, timedelta
 
 from treasury.models import AccountingPeriod, TransactionModel, CategoryModel, AuditLog
-from treasury.mixins import IsTreasuryUserMixin
+from treasury.mixins import IsTreasuryUserMixin, IsTreasurerOnlyMixin
 
 
-class TreasuryDashboardView(LoginRequiredMixin, TemplateView):
+class TreasuryDashboardView(IsTreasuryUserMixin, LoginRequiredMixin, TemplateView):
     """Dashboard principal da tesouraria."""
     template_name = 'treasury/dashboard.html'
 
@@ -28,7 +28,7 @@ class TreasuryDashboardView(LoginRequiredMixin, TemplateView):
         return context
 
 
-class PeriodListView(LoginRequiredMixin, ListView):
+class PeriodListView(IsTreasuryUserMixin, LoginRequiredMixin, ListView):
     """Lista de períodos contábeis."""
     model = AccountingPeriod
     template_name = 'treasury/periods/list.html'
@@ -44,7 +44,7 @@ class PeriodListView(LoginRequiredMixin, ListView):
         return context
 
 
-class PeriodDetailView(LoginRequiredMixin, DetailView):
+class PeriodDetailView(IsTreasuryUserMixin, LoginRequiredMixin, DetailView):
     """Detalhes de um período contábil."""
     model = AccountingPeriod
     template_name = 'treasury/periods/detail.html'
@@ -57,7 +57,7 @@ class PeriodDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-class TransactionListView(LoginRequiredMixin, TemplateView):
+class TransactionListView(IsTreasuryUserMixin, LoginRequiredMixin, TemplateView):
     """Lista de transações com filtros."""
     template_name = 'treasury/transactions/list.html'
 
@@ -68,7 +68,7 @@ class TransactionListView(LoginRequiredMixin, TemplateView):
         return context
 
 
-class TransactionDetailView(LoginRequiredMixin, DetailView):
+class TransactionDetailView(IsTreasuryUserMixin, LoginRequiredMixin, DetailView):
     """Detalhes de uma transação."""
     model = TransactionModel
     template_name = 'treasury/transactions/detail.html'
@@ -80,7 +80,7 @@ class TransactionDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-class TransactionCreateView(IsTreasuryUserMixin, LoginRequiredMixin, CreateView):
+class TransactionCreateView(IsTreasurerOnlyMixin, LoginRequiredMixin, CreateView):
     """Formulário para criar nova transação (apenas tesoureiros)."""
     model = TransactionModel
     template_name = 'treasury/transactions/form.html'
@@ -103,7 +103,7 @@ class TransactionCreateView(IsTreasuryUserMixin, LoginRequiredMixin, CreateView)
         return super().form_valid(form)
 
 
-class TransactionUpdateView(IsTreasuryUserMixin, LoginRequiredMixin, UpdateView):
+class TransactionUpdateView(IsTreasurerOnlyMixin, LoginRequiredMixin, UpdateView):
     """Formulário para editar transação (apenas tesoureiros)."""
     model = TransactionModel
     template_name = 'treasury/transactions/update.html'
@@ -132,7 +132,7 @@ class TransactionUpdateView(IsTreasuryUserMixin, LoginRequiredMixin, UpdateView)
         return reverse_lazy('treasury:transaction-detail', kwargs={'pk': self.object.pk})
 
 
-class BatchTransactionReviewView(IsTreasuryUserMixin, LoginRequiredMixin, TemplateView):
+class BatchTransactionReviewView(IsTreasurerOnlyMixin, LoginRequiredMixin, TemplateView):
     """Página para revisar múltiplas transações extraídas via OCR (apenas tesoureiros)."""
     template_name = 'treasury/transactions/batch-review.html'
 
@@ -142,7 +142,7 @@ class BatchTransactionReviewView(IsTreasuryUserMixin, LoginRequiredMixin, Templa
         return context
 
 
-class CategoryListView(LoginRequiredMixin, ListView):
+class CategoryListView(IsTreasuryUserMixin, LoginRequiredMixin, ListView):
     """Lista de categorias."""
     model = CategoryModel
     template_name = 'treasury/categories/list.html'
@@ -157,7 +157,7 @@ class CategoryListView(LoginRequiredMixin, ListView):
         return context
 
 
-class MonthlyReportView(LoginRequiredMixin, TemplateView):
+class MonthlyReportView(IsTreasuryUserMixin, LoginRequiredMixin, TemplateView):
     """Relatório mensal detalhado."""
     template_name = 'treasury/reports/monthly.html'
 
@@ -182,7 +182,7 @@ class MonthlyReportView(LoginRequiredMixin, TemplateView):
         return context
 
 
-class ReversalView(IsTreasuryUserMixin, LoginRequiredMixin, DetailView):
+class ReversalView(IsTreasurerOnlyMixin, LoginRequiredMixin, DetailView):
     """View para criar estorno de transação (apenas tesoureiros)."""
     model = TransactionModel
     template_name = 'treasury/transactions/reversal.html'
@@ -202,7 +202,7 @@ class ReversalView(IsTreasuryUserMixin, LoginRequiredMixin, DetailView):
         return super().dispatch(request, *args, **kwargs)
 
 
-class BalanceSheetView(LoginRequiredMixin, TemplateView):
+class BalanceSheetView(IsTreasuryUserMixin, LoginRequiredMixin, TemplateView):
     """Balanço financeiro."""
     template_name = 'treasury/reports/balance_sheet.html'
 
@@ -213,7 +213,7 @@ class BalanceSheetView(LoginRequiredMixin, TemplateView):
         return context
 
 
-class AuditLogView(LoginRequiredMixin, TemplateView):
+class AuditLogView(IsTreasuryUserMixin, LoginRequiredMixin, TemplateView):
     """Página de auditoria com filtros."""
     template_name = 'treasury/audit.html'
 
@@ -229,7 +229,7 @@ class AuditLogView(LoginRequiredMixin, TemplateView):
         return context
 
 
-class ChartsView(LoginRequiredMixin, TemplateView):
+class ChartsView(IsTreasuryUserMixin, LoginRequiredMixin, TemplateView):
     """Página de gráficos financeiros."""
     template_name = 'treasury/charts.html'
 

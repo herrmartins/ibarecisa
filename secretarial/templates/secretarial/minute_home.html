@@ -25,6 +25,7 @@
       </div>
 
       <!-- Stats Cards -->
+      {% if user.is_secretary %}
       <div class="flex justify-center gap-4 sm:gap-6 flex-wrap">
         <!-- Atas Registradas -->
         <a href="{% url 'secretarial:list-minutes' %}" class="app-header-card app-header-income">
@@ -70,6 +71,20 @@
           <div class="text-3xl font-bold text-white">{{number_of_projects}}</div>
         </a>
       </div>
+      {% else %}
+      <!-- Only minutes card for non-secretaries -->
+      <div class="flex justify-center">
+        <a href="{% url 'secretarial:list-minutes' %}" class="app-header-card app-header-income">
+          <div class="flex items-center justify-center gap-3 mb-2">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+            </svg>
+            <span class="text-sm font-medium text-white/90">Atas Registradas</span>
+          </div>
+          <div class="text-3xl font-bold text-white">{{number_of_minutes}}</div>
+        </a>
+      </div>
+      {% endif %}
     </div>
   </div>
 
@@ -163,8 +178,7 @@
       </div>
     </div>
 
-    {% if user.is_secretary %}
-    <!-- Recent Minutes Section -->
+    <!-- Recent Minutes Section - for all users -->
     <div class="max-w-5xl mx-auto">
       <div class="flex items-center gap-3 mb-6">
         <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -174,7 +188,7 @@
       </div>
 
       {% if meeting_minutes %}
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-32">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 {% if user.is_secretary %}mb-32{% endif %}">
           {% for mm in meeting_minutes %}
             <a href="{% url 'secretarial:minute-detail-view' mm.pk %}" class="minute-recent-card">
               <div class="minute-recent-header">
@@ -223,7 +237,7 @@
           {% endfor %}
         </div>
       {% else %}
-        <div class="minute-list-card max-w-2xl mx-auto mb-32">
+        <div class="minute-list-card max-w-2xl mx-auto {% if user.is_secretary %}mb-32{% endif %}">
           <div class="p-8 text-center text-slate-500">
             <svg class="w-16 h-16 mx-auto mb-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
@@ -235,7 +249,8 @@
       {% endif %}
     </div>
 
-    <!-- Quick Actions Dock -->
+    {% if user.is_secretary %}
+    <!-- Quick Actions Dock - only for secretaries -->
     <div class="minute-quick-dock">
       <a href="{% url 'secretarial:new-minute-view' %}" class="minute-quick-dock-btn">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -267,20 +282,6 @@
         </svg>
         <span>Projetos</span>
       </a>
-    </div>
-    {% else %}
-    <!-- Non-secretary view -->
-    <div class="max-w-2xl mx-auto">
-      <div class="minute-list-card">
-        <div class="minute-list-header">
-          <h3 class="font-semibold text-slate-800">Lista de Atas</h3>
-        </div>
-        <div>
-          {% for m in minutes %}
-            <a class="minute-list-item" href="{% url 'secretarial:minute-detail-view' m.pk %}">{{ m }}</a>
-          {% endfor %}
-        </div>
-      </div>
     </div>
     {% endif %}
   </div>

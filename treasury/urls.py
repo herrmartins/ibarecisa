@@ -20,6 +20,7 @@ from treasury.views.template_views import (
 
 # PDF generation views (used by new system)
 from treasury.views.generate_balance_sheet_pdf_view import GenerateBalanceSheetPDFView
+from treasury.views.generate_analytical_report_pdf_view import generate_analytical_report_pdf
 
 app_name = "treasury"
 
@@ -31,6 +32,7 @@ urlpatterns = [
     # ===== PERIODS =====
     path('periodos/', PeriodListView.as_view(), name='period-list'),
     path('periodos/<int:pk>/', PeriodDetailView.as_view(), name='period-detail'),
+    path('periodos/<int:period_id>/pdf/analitico/', generate_analytical_report_pdf, name='period-analytical-pdf'),
 
     # ===== TRANSACTIONS =====
     path('transacoes/', TransactionListView.as_view(), name='transaction-list'),

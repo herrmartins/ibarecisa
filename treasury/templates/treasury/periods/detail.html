@@ -163,6 +163,7 @@ function periodHeaderStats() {
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                         </svg>
                     </div>
+                    {% if user.is_treasurer or user.is_superuser %}
                     <!-- Close Period Button (only when open) -->
                     <template x-if="period && period.status === 'open'">
                         <button @click="closePeriod" class="app-btn app-btn-warning">
@@ -181,7 +182,7 @@ function periodHeaderStats() {
                                 </svg>
                                 Reabrir
                             </button>
-                            <a :href="`/treasury/reports/pdf/${period.month_number}/${period.year}/`" class="app-btn app-btn-primary">
+                            <a :href="`/treasury/periodos/${period.id}/pdf/analitico/`" class="app-btn app-btn-primary">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h3a2 2 0 002-2v-4m-6-4h6"/>
                                 </svg>
@@ -189,6 +190,17 @@ function periodHeaderStats() {
                             </a>
                         </div>
                     </template>
+                    {% else %}
+                    <!-- Non-treasurers only see PDF button when closed -->
+                    <template x-if="period && period.status === 'closed'">
+                        <a :href="`/treasury/periodos/${period.id}/pdf/analitico/`" class="app-btn app-btn-primary">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h3a2 2 0 002-2v-4m-6-4h6"/>
+                            </svg>
+                            PDF
+                        </a>
+                    </template>
+                    {% endif %}
                 </div>
             </div>
 

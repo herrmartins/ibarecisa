@@ -264,7 +264,8 @@ class AccountingPeriod(models.Model):
         """
         Cria o MonthlyReportModel automaticamente ao fechar o período.
         """
-        from treasury.models import MonthlyReportModel, TransactionModel
+        from .monthly_report_model import MonthlyReportModel
+        from .transaction import TransactionModel
         from decimal import Decimal
 
         year = self.month.year

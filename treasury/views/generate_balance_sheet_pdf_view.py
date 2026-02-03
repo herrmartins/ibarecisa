@@ -7,6 +7,35 @@ from core.core_context_processor import context_user_data
 from decimal import Decimal
 
 
+def _is_treasury_user(user):
+    """
+    Verifica se o usuário é membro da igreja (pode visualizar tesouraria).
+
+    Usuários autorizados:
+    - Membro regular (type == REGULAR)
+    - Tesoureiro (is_treasurer)
+    - Secretário (is_secretary)
+    - Pastor (is_pastor)
+    - Staff (is_staff)
+    - Superuser (is_superuser)
+    """
+    if not user.is_authenticated:
+        return False
+
+    # Membros regulares podem visualizar
+    if user.type == "REGULAR":
+        return True
+
+    # Staff e funções especiais
+    return (
+        user.is_treasurer or
+        user.is_secretary or
+        user.is_pastor or
+        user.is_staff or
+        user.is_superuser
+    )
+
+
 @login_required
 def GenerateBalanceSheetPDFView(request):
     """
@@ -17,8 +46,8 @@ def GenerateBalanceSheetPDFView(request):
         end_year: Ano final
         status: Filtro de status (all, open, closed, archived)
     """
-    if not request.user.has_perm("treasury.view_accountingperiod"):
-        return HttpResponseForbidden("You don't have the required permissions.")
+    if not _is_treasury_user(request.user):
+        return HttpResponseForbidden("Você não tem permissão para acessar este relatório.")
 
     # Obter parâmetros de filtro
     start_year = request.GET.get('start_year')

@@ -1,80 +1,111 @@
 {% extends 'core/base.html' %}
 {% load static %}
+
 {% block extra_head %}
 <style>
-.app-page-header::before {
+.secretarial-home-header::before {
   pointer-events: none !important;
+}
+.app-card {
+  position: relative;
+  z-index: 10;
 }
 </style>
 {% endblock %}
 
 {% block content %}
-
 {% if not user.is_authenticated %}
 <!-- Página para não autenticados -->
-<div class="app-page-header">
-  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-    <div class="text-center mb-12">
-      <h1 class="app-page-title text-4xl sm:text-5xl">Bem-vindo ao Sistema</h1>
-      <p class="app-page-subtitle text-xl">Igreja Batista Regular de Cidade Satélide</p>
-    </div>
-
-    <!-- Feature Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-      <div class="app-card text-center">
-        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white mb-4">
-          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-          </svg>
-        </div>
-        <h3 class="text-lg font-semibold text-gray-800 mb-2">Gestão Administrativa</h3>
-        <p class="text-gray-600 text-sm">Transparência e organização dos assuntos administrativos da igreja.</p>
+<div class="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+  <!-- Header Section -->
+  <div class="secretarial-home-header">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <div class="text-center mb-12">
+        <h1 class="app-page-title text-4xl sm:text-5xl text-white">Igreja Batista Regular de Cidade Satélite</h1>
+        <p class="app-page-subtitle text-xl text-white/90">Sistema Administrativo</p>
       </div>
 
-      <div class="app-card text-center">
-        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-green-500 to-green-600 text-white mb-4">
-          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-          </svg>
-        </div>
-        <h3 class="text-lg font-semibold text-gray-800 mb-2">Para Membros</h3>
-        <p class="text-gray-600 text-sm">Acesso a atas, eventos e informações exclusivas da comunidade.</p>
+      <!-- Feature Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <!-- Blog -->
+        <a href="{% url 'blog:home' %}" class="secretarial-nav-card">
+          <div class="secretarial-nav-icon secretarial-nav-icon-blog">
+            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
+            </svg>
+          </div>
+          <div class="secretarial-nav-content">
+            <h3 class="secretarial-nav-title">Blog</h3>
+            <p class="secretarial-nav-desc">Postagens, notícias e devocionais para edificação da igreja.</p>
+          </div>
+          <div class="secretarial-nav-arrow">
+            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </div>
+        </a>
+
+        <!-- Tesouraria -->
+        <a href="{% url 'treasury:dashboard' %}" class="secretarial-nav-card">
+          <div class="secretarial-nav-icon" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);">
+            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <div class="secretarial-nav-content">
+            <h3 class="secretarial-nav-title">Tesouraria</h3>
+            <p class="secretarial-nav-desc">Gestão financeira, relatórios e controle de dízimos e ofertas.</p>
+          </div>
+          <div class="secretarial-nav-arrow">
+            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </div>
+        </a>
+
+        <!-- Secretaria -->
+        <a href="{% url 'secretarial:home' %}" class="secretarial-nav-card">
+          <div class="secretarial-nav-icon secretarial-nav-icon-assembly">
+            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+          </div>
+          <div class="secretarial-nav-content">
+            <h3 class="secretarial-nav-title">Secretaria</h3>
+            <p class="secretarial-nav-desc">Atas de assembleias, documentos e registro de decisões.</p>
+          </div>
+          <div class="secretarial-nav-arrow">
+            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </div>
+        </a>
       </div>
 
-      <div class="app-card text-center">
-        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 text-white mb-4">
-          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-          </svg>
-        </div>
-        <h3 class="text-lg font-semibold text-gray-800 mb-2">Blog e Discussões</h3>
-        <p class="text-gray-600 text-sm">Participe de comentários e discussões em nosso blog comunitário.</p>
-      </div>
-    </div>
-
-    <!-- Login Card -->
-    <div class="max-w-md mx-auto">
-      <div class="app-card">
-        <div class="app-card-body">
-          <h2 class="text-xl font-bold text-center text-gray-800 mb-6">Entrar no Sistema</h2>
-          <form action="{% url 'login' %}" method="post" class="space-y-4">
-            {% csrf_token %}
-            <div>
-              {{ login_form.username.label_tag }}
-              <input type="text" name="username" class="app-input w-full" required>
+      <!-- Login Card -->
+      <div class="max-w-md mx-auto">
+        <div class="app-card">
+          <div class="app-card-body">
+            <h2 class="text-xl font-bold text-center text-gray-800 mb-6">Entrar no Sistema</h2>
+            <form action="{% url 'login' %}" method="post" class="space-y-4">
+              {% csrf_token %}
+              <div>
+                {{ login_form.username.label_tag }}
+                <input type="text" name="username" class="app-input w-full" required>
+              </div>
+              <div>
+                {{ login_form.password.label_tag }}
+                <input type="password" name="password" class="app-input w-full" required>
+              </div>
+              <button type="submit" class="app-btn app-btn-primary w-full">
+                Entrar
+              </button>
+            </form>
+            <div class="mt-4 text-center">
+              <a href="{% url 'users:reset-password' %}" class="text-sm text-blue-600 hover:text-blue-700">
+                Esqueci a senha
+              </a>
             </div>
-            <div>
-              {{ login_form.password.label_tag }}
-              <input type="password" name="password" class="app-input w-full" required>
-            </div>
-            <button type="submit" class="app-btn app-btn-primary w-full">
-              Entrar
-            </button>
-          </form>
-          <div class="mt-4 text-center">
-            <a href="{% url 'users:reset-password' %}" class="text-sm text-blue-600 hover:text-blue-700">
-              Esqueci a senha
-            </a>
           </div>
         </div>
       </div>
@@ -84,77 +115,84 @@
 
 {% else %}
 <!-- Página para autenticados -->
-<div class="app-page-header">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    <div class="text-center mb-8">
-      <h1 class="app-page-title">Bem-vindo de Volta!</h1>
-      <p class="app-page-subtitle">O que você gostaria de fazer hoje?</p>
-    </div>
+<div class="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+  <!-- Header Section -->
+  <div class="secretarial-home-header">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div class="text-center mb-8">
+        <h1 class="app-page-title text-white">Bem-vindo de Volta!</h1>
+        <p class="app-page-subtitle text-white/90">O que você gostaria de fazer hoje?</p>
+      </div>
 
-    <!-- Quick Links Grid -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-
-      <!-- Blog -->
-      <a href="{% url 'blog:home' %}" class="app-card group hover:shadow-lg transition-all duration-200">
-        <div class="app-card-body text-center">
-          <div class="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500 to-purple-600 text-white mb-4 group-hover:scale-110 transition-transform">
-            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <!-- Quick Links Cards -->
+      <h2 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+        </svg>
+        Acesso Rápido
+      </h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <!-- Blog -->
+        <a href="{% url 'blog:home' %}" class="secretarial-nav-card">
+          <div class="secretarial-nav-icon secretarial-nav-icon-blog">
+            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
             </svg>
           </div>
-          <h3 class="font-semibold text-gray-800 mb-1">Blog</h3>
-          <p class="text-sm text-gray-500">Postagens e notícias</p>
-        </div>
-      </a>
+          <div class="secretarial-nav-content">
+            <h3 class="secretarial-nav-title">Blog</h3>
+            <p class="secretarial-nav-desc">Postagens, notícias e devocionais para edificação da igreja.</p>
+          </div>
+          <div class="secretarial-nav-arrow">
+            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </div>
+        </a>
 
-      <!-- Tesouraria -->
-      <a href="{% url 'treasury:dashboard' %}" class="app-card group hover:shadow-lg transition-all duration-200">
-        <div class="app-card-body text-center">
-          <div class="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-gradient-to-br from-green-500 to-green-600 text-white mb-4 group-hover:scale-110 transition-transform">
-            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <!-- Tesouraria -->
+        <a href="{% url 'treasury:dashboard' %}" class="secretarial-nav-card">
+          <div class="secretarial-nav-icon" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);">
+            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
           </div>
-          <h3 class="font-semibold text-gray-800 mb-1">Tesouraria</h3>
-          <p class="text-sm text-gray-500">Gestão financeira</p>
-        </div>
-      </a>
-
-      <!-- Eventos -->
-      <a href="{% url 'events:home' %}" class="app-card group hover:shadow-lg transition-all duration-200">
-        <div class="app-card-body text-center">
-          <div class="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 text-white mb-4 group-hover:scale-110 transition-transform">
-            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          <div class="secretarial-nav-content">
+            <h3 class="secretarial-nav-title">Tesouraria</h3>
+            <p class="secretarial-nav-desc">Gestão financeira, relatórios e controle de dízimos e ofertas.</p>
+          </div>
+          <div class="secretarial-nav-arrow">
+            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
             </svg>
           </div>
-          <h3 class="font-semibold text-gray-800 mb-1">Eventos</h3>
-          <p class="text-sm text-gray-500">Calendário e inscrições</p>
-        </div>
-      </a>
+        </a>
 
-      <!-- Secretaria -->
-      <a href="{% url 'secretarial:home' %}" class="app-card group hover:shadow-lg transition-all duration-200">
-        <div class="app-card-body text-center">
-          <div class="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 text-white mb-4 group-hover:scale-110 transition-transform">
-            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <!-- Secretaria -->
+        <a href="{% url 'secretarial:home' %}" class="secretarial-nav-card">
+          <div class="secretarial-nav-icon secretarial-nav-icon-assembly">
+            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
             </svg>
           </div>
-          <h3 class="font-semibold text-gray-800 mb-1">Secretaria</h3>
-          <p class="text-sm text-gray-500">Atas e documentos</p>
-        </div>
-      </a>
+          <div class="secretarial-nav-content">
+            <h3 class="secretarial-nav-title">Secretaria</h3>
+            <p class="secretarial-nav-desc">Atas de assembleias, documentos e registro de decisões.</p>
+          </div>
+          <div class="secretarial-nav-arrow">
+            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </div>
+        </a>
+      </div>
 
-    </div>
-
-    <!-- Latest Post Section -->
-    {% if post %}
-    <div class="mt-12">
+      <!-- Latest Post Section -->
+      {% if post %}
       <div class="app-card">
         <div class="app-card-body">
           <div class="flex items-center gap-2 mb-4">
-            <span class="message-success inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold uppercase">
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold uppercase bg-purple-100 text-purple-700">
               Postagem Recente
             </span>
           </div>
@@ -175,9 +213,8 @@
           </div>
         </div>
       </div>
+      {% endif %}
     </div>
-    {% endif %}
-
   </div>
 </div>
 

@@ -182,7 +182,8 @@
         </div>
     </div>
 
-    <!-- AI Insights Section -->
+    <!-- AI Insights Section (apenas tesoureiros) -->
+    {% if user.is_treasurer or user.is_superuser %}
     <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6 mb-8">
         <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-3">
@@ -243,6 +244,7 @@
             </div>
         </div>
     </div>
+    {% endif %}
 
     <!-- Charts Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
