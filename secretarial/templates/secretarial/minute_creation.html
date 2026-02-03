@@ -4,126 +4,157 @@
 {% block content %}
 <script src="https://cdn.tiny.cloud/1/{{ TINYMCE_API_KEY }}/tinymce/8/tinymce.min.js" referrerpolicy="origin"></script>
 
-<div class="min-h-screen bg-gradient-to-b from-slate-50 to-white">
-  <!-- Header Section -->
-  <div class="minutes-list-header relative">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
-      <!-- Back Button -->
-      <div class="mb-6">
-        <a href="{% url 'secretarial:minute-home' %}" class="inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors">
+<!-- Page Header -->
+<div class="app-page-header">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <a href="{% url 'secretarial:minute-home' %}" class="app-btn app-btn-secondary">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
           </svg>
-          Voltar para Registro de Reuniões
         </a>
-      </div>
-
-      <div class="text-center mb-4">
-        <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">
-          Nova Ata
-        </h1>
-        <p class="text-white/90 text-lg">
-          Preencha os dados da reunião
-        </p>
+        <div>
+          <h1 class="app-page-title">Nova Ata</h1>
+          <p class="app-page-subtitle">Registro de reunião</p>
+        </div>
       </div>
     </div>
   </div>
+</div>
 
-  <!-- Main Content -->
-  <div class="editor-page-container py-8">
-    <!-- Form Card -->
-    <div class="minute-create-editor-card mb-8">
-      <div class="p-6">
-        <form id="minute-form" action="{% url 'secretarial:create-minute-view' %}" method="POST" class="space-y-4">
-          {% csrf_token %}
+<!-- Main Content -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+  <form id="minute-form" action="{% url 'secretarial:create-minute-view' %}" method="POST">
+    {% csrf_token %}
 
-          <!-- President Field -->
-          <div>
-            <label for="id_president" class="block text-sm font-semibold text-slate-700 mb-2">Presidente</label>
-            {{ form.president }}
-          </div>
-
-          <!-- Secretary Field -->
-          <div>
-            <label for="id_secretary" class="block text-sm font-semibold text-slate-700 mb-2">Secretário</label>
-            {{ form.secretary }}
-          </div>
-
-          <!-- Meeting Date Field -->
-          <div>
-            <label for="id_meeting_date" class="block text-sm font-semibold text-slate-700 mb-2">Data da Reunião</label>
-            {{ form.meeting_date }}
-          </div>
-
-          <!-- Number of Attendees Field -->
-          <div>
-            <label for="id_number_of_attendees" class="block text-sm font-semibold text-slate-700 mb-2">Número de Presentes</label>
-            {{ form.number_of_attendees }}
-          </div>
-
-          <!-- TinyMCE Editor for Body -->
-          <div>
-            <label for="minute_editor" class="block text-sm font-semibold text-slate-700 mb-2">Corpo do Texto</label>
-            <textarea id="minute_editor" name="body">{% if form.body.value %}{{ form.body.value|safe }}{% endif %}</textarea>
-          </div>
-
-          <!-- Agenda Field -->
-          <div>
-            <label for="id_agenda" class="block text-sm font-semibold text-slate-700 mb-2">Pauta</label>
-            {{ form.agenda }}
-          </div>
-
-          <div class="flex justify-end pt-4">
-            <button type="submit" class="minute-create-btn">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+    <!-- Meeting Data + Editor Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+      <!-- Meeting Data Card (1 column) -->
+      <div class="space-y-6">
+        <!-- Responsáveis -->
+        <div class="app-card">
+          <div class="app-card-header">
+            <div class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
               </svg>
-              Criar Ata
+              <h3 class="app-card-title">Responsáveis</h3>
+            </div>
+          </div>
+          <div class="app-card-body space-y-4">
+            <div>
+              <label for="id_president" class="block text-sm font-medium text-slate-700 mb-1.5">Presidente</label>
+              {{ form.president }}
+            </div>
+            <div>
+              <label for="id_secretary" class="block text-sm font-medium text-slate-700 mb-1.5">Secretário</label>
+              {{ form.secretary }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Detalhes da Reunião -->
+        <div class="app-card">
+          <div class="app-card-header">
+            <div class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+              </svg>
+              <h3 class="app-card-title">Detalhes da Reunião</h3>
+            </div>
+          </div>
+          <div class="app-card-body space-y-4">
+            <div>
+              <label for="id_meeting_date" class="block text-sm font-medium text-slate-700 mb-1.5">Data</label>
+              {{ form.meeting_date }}
+            </div>
+            <div>
+              <label for="id_number_of_attendees" class="block text-sm font-medium text-slate-700 mb-1.5">Presentes</label>
+              {{ form.number_of_attendees }}
+            </div>
+            <div>
+              <label for="id_agenda" class="block text-sm font-medium text-slate-700 mb-1.5">Pauta</label>
+              {{ form.agenda }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Excerpts (if available) -->
+        {% if excerpts_list %}
+        <div class="app-card bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200">
+          <div class="app-card-header">
+            <div class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+              </svg>
+              <h3 class="app-card-title">Trechos Úteis</h3>
+            </div>
+          </div>
+          <div class="app-card-body space-y-3">
+            <select name="minute_excerpts" class="app-input" id="id_minute_excerpts" multiple>
+              {% for e in excerpts_list %}
+                <option value="{{e.id}}">{{e}}</option>
+              {% endfor %}
+            </select>
+            <textarea id="excerpt_t_area" class="app-input min-h-[80px] text-sm" readonly placeholder="Selecione um trecho acima para visualizar..."></textarea>
+            <button type="button" class="app-btn app-btn-secondary w-full" id="copy_button" disabled>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+              </svg>
+              <span class="ml-1">Copiar Trecho</span>
             </button>
           </div>
-        </form>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Editor Card (2 columns) -->
+      <div class="lg:col-span-2">
+        <div class="app-card h-full">
+          <div class="app-card-header">
+            <div class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+              <h3 class="app-card-title">Conteúdo da Ata</h3>
+            </div>
+          </div>
+          <div class="app-card-body">
+            <textarea id="minute_editor" name="body">{% if form.body.value %}{{ form.body.value|safe }}{% endif %}</textarea>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- Excerpts Section -->
-    {% if excerpts_list %}
-    <div class="minute-create-editor-card">
-      <div class="p-6">
-        <div class="flex items-center gap-3 mb-4">
-          <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+    <!-- Actions Bar (sticky) -->
+    <div class="sticky bottom-0 z-40 bg-white/90 backdrop-blur-sm border-t border-slate-200 py-4 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+      <div class="max-w-7xl mx-auto flex items-center justify-end gap-3">
+        <a href="{% url 'secretarial:minute-home' %}" class="app-btn app-btn-secondary">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
           </svg>
-          <h3 class="text-lg font-semibold text-slate-800">Trechos de Atas</h3>
-        </div>
-
-        <div class="space-y-4">
-          <select name="minute_excerpts" class="minute-search-select w-full" id="id_minute_excerpts" multiple>
-            {% for e in excerpts_list %}
-              <option value="{{e.id}}">{{e}}</option>
-            {% endfor %}
-          </select>
-
-          <textarea id="excerpt_t_area" class="minute-ai-textarea" rows="4" readonly placeholder="Selecione um trecho acima para visualizar..."></textarea>
-
-          <button class="minute-create-btn minute-create-btn-secondary" id="copy_button" disabled>
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-            </svg>
-            Copiar Trecho
-          </button>
-        </div>
+          Cancelar
+        </a>
+        <button type="submit" class="app-btn app-btn-primary">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+          <span class="ml-1">Criar Ata</span>
+        </button>
       </div>
     </div>
-    {% endif %}
-  </div>
+  </form>
 </div>
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    // Update form field classes
-    const formInputs = document.querySelectorAll('#minute-form input[type="text"], #minute-form select');
+    // Apply app-input class to all form fields that don't have it yet
+    const formInputs = document.querySelectorAll('#minute-form input:not([type="hidden"]):not([type="submit"]):not([type="button"]), #minute-form select, #minute-form textarea:not(#minute-editor):not(#excerpt_t_area)');
     formInputs.forEach(input => {
-      input.classList.add('w-full', 'px-4', 'py-2', 'border', 'border-slate-300', 'rounded-lg', 'focus:ring-2', 'focus:ring-primary-500', 'focus:border-primary-500', 'transition-all');
+      if (!input.classList.contains('app-input')) {
+        input.classList.add('app-input');
+      }
     });
 
     // Initialize TinyMCE

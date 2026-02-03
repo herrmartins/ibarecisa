@@ -20,9 +20,9 @@ class MinuteHomeView(PermissionRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
-        minutes = MeetingMinuteModel.objects.all()
+        minutes = MeetingMinuteModel.objects.all().order_by('-meeting_date')
 
-        context["meeting_minutes"] = MeetingMinuteModel.objects.all().reverse()[:10]
+        context["meeting_minutes"] = MeetingMinuteModel.objects.all().order_by('-meeting_date')[:10]
         context["number_of_projects"] = MinuteProjectModel.objects.count()
         context["number_of_excerpts"] = MinuteExcerptsModel.objects.count()
         context["number_of_minutes"] = minutes.count()
