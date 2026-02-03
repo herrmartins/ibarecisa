@@ -37,14 +37,54 @@ class AuditLog(models.Model):
         # Relatórios
         ('report_generated', 'Relatório Gerado'),
         ('report_regenerated', 'Relatório Regenerado'),
+
+        # Secretaria - Atas
+        ('minute_created', 'Ata Criada'),
+        ('minute_updated', 'Ata Atualizada'),
+        ('minute_deleted', 'Ata Deletada'),
+        ('minute_signed', 'Ata Assinada'),
+        ('minute_pdf_generated', 'PDF de Ata Gerado'),
+
+        # Secretaria - Excertos
+        ('excerpt_created', 'Excerto Criado'),
+        ('excerpt_updated', 'Excerto Atualizado'),
+        ('excerpt_deleted', 'Excerto Deletado'),
+
+        # Secretaria - Templates
+        ('template_created', 'Template Criado'),
+        ('template_updated', 'Template Atualizado'),
+        ('template_deleted', 'Template Deletado'),
+
+        # Secretaria - Projetos
+        ('project_created', 'Projeto Criado'),
+        ('project_updated', 'Projeto Atualizado'),
+        ('project_deleted', 'Projeto Deletado'),
+
+        # Secretaria - Arquivos
+        ('file_uploaded', 'Arquivo Enviado'),
+        ('file_deleted', 'Arquivo Deletado'),
+
+        # Secretaria - Agenda
+        ('agenda_created', 'Agenda Criada'),
+        ('agenda_updated', 'Agenda Atualizada'),
+        ('agenda_deleted', 'Agenda Deletada'),
     ]
 
     ENTITY_TYPE_CHOICES = [
+        # Tesouraria
         ('AccountingPeriod', 'Período Contábil'),
         ('TransactionModel', 'Transação'),
         ('PeriodSnapshot', 'Snapshot de Período'),
         ('MonthlyReportModel', 'Relatório Mensal'),
         ('CategoryModel', 'Categoria'),
+
+        # Secretaria
+        ('MeetingMinuteModel', 'Ata'),
+        ('MinuteExcerptsModel', 'Excerto'),
+        ('MinuteTemplateModel', 'Template'),
+        ('MinuteProjectModel', 'Projeto'),
+        ('MinuteFileModel', 'Arquivo'),
+        ('MeetingAgendaModel', 'Agenda'),
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
@@ -124,6 +164,12 @@ class AuditLog(models.Model):
         db_index=True,
         help_text="ID do período contábil relacionado (para filtros rápidos)"
     )
+    minute_id = models.IntegerField(
+        null=True,
+        blank=True,
+        db_index=True,
+        help_text="ID da ata relacionada (para filtros rápidos)"
+    )
 
     class Meta:
         app_label = 'treasury'
@@ -137,6 +183,7 @@ class AuditLog(models.Model):
             models.Index(fields=['entity_type', 'entity_id']),
             models.Index(fields=['user_id', '-timestamp']),
             models.Index(fields=['period_id']),
+            models.Index(fields=['minute_id']),
         ]
 
     def __str__(self):
@@ -146,7 +193,7 @@ class AuditLog(models.Model):
     @classmethod
     def log(cls, action, entity_type, entity_id, user=None, old_values=None,
             new_values=None, description='', snapshot_id=None, period_id=None,
-            request=None):
+            minute_id=None, request=None):
         """
         Método auxiliar para criar log de auditoria.
 
@@ -160,6 +207,7 @@ class AuditLog(models.Model):
             description: Descrição opcional
             snapshot_id: UUID do snapshot relacionado
             period_id: ID do período contábil
+            minute_id: ID da ata relacionada
             request: Objeto HttpRequest (para extrair IP e user agent)
 
         Returns:
@@ -198,6 +246,7 @@ class AuditLog(models.Model):
             description=description,
             snapshot_id=snapshot_id,
             period_id=period_id,
+            minute_id=minute_id,
             ip_address=ip_address,
             user_agent=user_agent,
         )
