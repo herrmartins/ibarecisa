@@ -141,6 +141,16 @@ class AccountingPeriodViewSet(viewsets.ReadOnlyModelViewSet):
             backends.insert(0, DjangoFilterBackend)
         return backends
 
+    def get_permissions(self):
+        """
+        Define permissões baseado na ação:
+        - list, retrieve, transactions, current: qualquer usuário autenticado
+        - close, reopen, archive: apenas tesoureiros
+        """
+        if self.action in ['close', 'reopen', 'archive']:
+            return [IsAuthenticated(), IsTreasuryUser()]
+        return [IsAuthenticated()]
+
     @action(detail=True, methods=['get'])
     def transactions(self, request, pk=None):
         """Lista todas as transações de um período."""
@@ -406,6 +416,16 @@ class TransactionViewSet(viewsets.ModelViewSet):
         elif self.action in ['update', 'partial_update']:
             return TransactionUpdateSerializer
         return TransactionSerializer
+
+    def get_permissions(self):
+        """
+        Define permissões baseado na ação:
+        - list, retrieve: qualquer usuário autenticado
+        - create, update, partial_update, destroy: apenas tesoureiros
+        """
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            return [IsAuthenticated(), IsTreasuryUser()]
+        return [IsAuthenticated()]
 
     def perform_destroy(self, instance):
         """Registra log de auditoria antes de deletar transação."""
@@ -935,7 +955,7 @@ class ReceiptOCRView(APIView):
 
     POST /api/treasury/ocr/receipt/
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsTreasuryUser]
 
     def post(self, request):
         """Processa um comprovante e extrai os dados."""
@@ -1700,7 +1720,7 @@ class AIInsightsView(APIView):
     POST /api/treasury/charts/ai-insights/
     Body: { start_date: "2025-01-01", end_date: "2025-01-31", force: false }
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsTreasuryUser]
 
     def post(self, request):
         """Gera insights financeiros usando cache inteligente."""

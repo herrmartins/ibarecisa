@@ -14,6 +14,7 @@ from django.utils import timezone
 from datetime import datetime, timedelta
 
 from treasury.models import AccountingPeriod, TransactionModel, CategoryModel, AuditLog
+from treasury.mixins import IsTreasuryUserMixin
 
 
 class TreasuryDashboardView(LoginRequiredMixin, TemplateView):
@@ -79,14 +80,14 @@ class TransactionDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
-class TransactionCreateView(LoginRequiredMixin, CreateView):
-    """Formulário para criar nova transação."""
+class TransactionCreateView(IsTreasuryUserMixin, LoginRequiredMixin, CreateView):
+    """Formulário para criar nova transação (apenas tesoureiros)."""
     model = TransactionModel
     template_name = 'treasury/transactions/form.html'
     fields = ['category', 'description', 'amount', 'is_positive', 'date', 'acquittance_doc']
 
     def get_success_url(self):
-        return reverse_lazy('treasury:transaction-detail-new', kwargs={'pk': self.object.pk})
+        return reverse_lazy('treasury:transaction-detail', kwargs={'pk': self.object.pk})
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -102,8 +103,8 @@ class TransactionCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class TransactionUpdateView(LoginRequiredMixin, UpdateView):
-    """Formulário para editar transação."""
+class TransactionUpdateView(IsTreasuryUserMixin, LoginRequiredMixin, UpdateView):
+    """Formulário para editar transação (apenas tesoureiros)."""
     model = TransactionModel
     template_name = 'treasury/transactions/update.html'
     fields = ['category', 'description', 'amount', 'is_positive', 'date', 'acquittance_doc']
@@ -128,11 +129,11 @@ class TransactionUpdateView(LoginRequiredMixin, UpdateView):
         return super().form_valid(form)
 
     def get_success_url(self):
-        return reverse_lazy('treasury:transaction-detail-new', kwargs={'pk': self.object.pk})
+        return reverse_lazy('treasury:transaction-detail', kwargs={'pk': self.object.pk})
 
 
-class BatchTransactionReviewView(LoginRequiredMixin, TemplateView):
-    """Página para revisar múltiplas transações extraídas via OCR."""
+class BatchTransactionReviewView(IsTreasuryUserMixin, LoginRequiredMixin, TemplateView):
+    """Página para revisar múltiplas transações extraídas via OCR (apenas tesoureiros)."""
     template_name = 'treasury/transactions/batch-review.html'
 
     def get_context_data(self, **kwargs):
@@ -181,8 +182,8 @@ class MonthlyReportView(LoginRequiredMixin, TemplateView):
         return context
 
 
-class ReversalView(LoginRequiredMixin, DetailView):
-    """View para criar estorno de transação."""
+class ReversalView(IsTreasuryUserMixin, LoginRequiredMixin, DetailView):
+    """View para criar estorno de transação (apenas tesoureiros)."""
     model = TransactionModel
     template_name = 'treasury/transactions/reversal.html'
     context_object_name = 'transaction'
@@ -197,7 +198,7 @@ class ReversalView(LoginRequiredMixin, DetailView):
         obj = self.get_object()
         if obj.can_be_edited:
             # Se pode editar, redirecionar para edição normal
-            return redirect('treasury:transaction-update-new', pk=obj.pk)
+            return redirect('treasury:transaction-update', pk=obj.pk)
         return super().dispatch(request, *args, **kwargs)
 
 
