@@ -144,8 +144,8 @@
         </div>
         {% if transaction.acquittance_doc %}
         <div class="sm:col-span-2 mt-4">
-          <div class="border border-gray-200 rounded-lg p-4 bg-gray-50">
-            <dt class="text-sm font-medium text-gray-700 flex items-center gap-2 mb-3">
+          <div class="border border-gray-200 rounded-lg p-3 bg-gray-50">
+            <dt class="text-sm font-medium text-gray-700 flex items-center gap-2 mb-2">
               <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
               </svg>
@@ -159,12 +159,12 @@
                     <template x-if="!imageFailed">
                       <img src="{{ transaction.acquittance_doc.url }}"
                            alt="Comprovante"
-                           class="w-24 h-24 min-w-24 min-h-24 max-w-24 max-h-24 rounded-lg object-cover cursor-pointer hover:opacity-90 transition-opacity flex-shrink-0"
+                           class="w-16 h-16 min-w-16 min-h-16 max-w-16 max-h-16 rounded-lg object-cover cursor-pointer hover:opacity-90 transition-opacity flex-shrink-0"
                            @error="imageFailed = true"
                            @click="window.open('{{ transaction.acquittance_doc.url }}', '_blank')">
                     </template>
                     <template x-if="imageFailed">
-                      <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                      <div class="w-16 h-16 bg-red-100 rounded-lg flex items-center justify-center">
                         <svg class="w-6 h-6 text-red-600" fill="currentColor" viewBox="0 0 20 20">
                           <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" clip-rule="evenodd"/>
                         </svg>
@@ -177,7 +177,7 @@
                   </div>
                 </div>
                 <!-- Open Button - em nova linha -->
-                <div class="mt-3">
+                <div class="mt-2">
                   <a href="{{ transaction.acquittance_doc.url }}" target="_blank" class="treasury-btn treasury-btn-primary">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
