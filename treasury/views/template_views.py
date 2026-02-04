@@ -148,8 +148,16 @@ class TransactionDeleteView(IsSuperUserOnlyMixin, LoginRequiredMixin, DeleteView
         """Sobrescreve para adicionar log de auditoria e tratar erros."""
         from django.contrib import messages
         from django.urls import reverse
+        import logging
+        logger = logging.getLogger(__name__)
 
-        self.object = self.get_object()
+        try:
+            self.object = self.get_object()
+            logger.info(f"[DELETE] Transação {self.object.id} encontrada, can_be_deleted={self.object.can_be_deleted}")
+        except Exception as e:
+            logger.error(f"[DELETE] Erro ao buscar transação: {e}", exc_info=True)
+            messages.error(request, f'Transação não encontrada.')
+            return redirect(reverse('treasury:dashboard'))
 
         if not self.object.can_be_deleted:
             messages.error(request, 'Esta transação não pode ser excluída porque o período está fechado.')
@@ -174,22 +182,21 @@ class TransactionDeleteView(IsSuperUserOnlyMixin, LoginRequiredMixin, DeleteView
                     'is_positive': self.object.is_positive,
                 }
             )
+            logger.info(f"[DELETE] Log de auditoria criado para transação {transaction_id}")
         except Exception as log_error:
-            # Se falhar o log, registra mas não impede a deleção
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.error(f"Erro ao criar log de auditoria ao deletar transação {transaction_id}: {log_error}", exc_info=True)
+            logger.error(f"[DELETE] Erro ao criar log de auditoria: {log_error}", exc_info=True)
 
         # Adiciona mensagem de sucesso ANTES de deletar
         messages.success(request, f'Transação #{transaction_id} "{transaction_desc}" excluída com sucesso.')
 
         # Tenta deletar
         try:
-            return super().delete(request, *args, **kwargs)
+            logger.info(f"[DELETE] Chamando super().delete() para transação {transaction_id}")
+            result = super().delete(request, *args, **kwargs)
+            logger.info(f"[DELETE] Deleção concluída com sucesso")
+            return result
         except Exception as e:
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.error(f"Erro ao deletar transação {transaction_id}: {e}", exc_info=True)
+            logger.error(f"[DELETE] Erro ao deletar transação {transaction_id}: {e}", exc_info=True)
             messages.error(request, f'Erro ao excluir transação: {str(e)}')
             return redirect(reverse('treasury:transaction-detail', kwargs={'pk': self.object.pk}))
 
