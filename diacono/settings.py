@@ -31,7 +31,6 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "phonenumber_field",
-    "ckeditor",
     "rest_framework",
     "xhtml2pdf",
     "weasyprint",
@@ -199,17 +198,6 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "users.CustomUser"
 LOGOUT_REDIRECT_URL = "core:home"
 LOGIN_REDIRECT_URL = "core:home"
-
-CKEDITOR_CONFIGS = {
-    "default": {
-        "skin": "moono",
-        "toolbar": "basic",
-        "height": "full",
-        "width": "full",
-        "removePlugins": "exportpdf",
-        "toolbarCanCollapse": "true",
-    },
-}
 
 # TinyMCE Configuration
 TINYMCE_JS_URL = 'https://cdn.tiny.cloud/1/no-api-key/tinymce/8/tinymce.min.js'
