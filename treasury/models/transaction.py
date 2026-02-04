@@ -150,9 +150,18 @@ class TransactionModel(BaseModel):
         super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
+        # Deleta o arquivo do comprovante (local ou S3)
         if self.acquittance_doc and self.acquittance_doc.name:
-            if os.path.isfile(self.acquittance_doc.path):
-                os.remove(self.acquittance_doc.path)
+            try:
+                # Tenta deletar usando o storage (funciona tanto local quanto S3)
+                self.acquittance_doc.delete(save=False)
+            except Exception:
+                # Se falhar, tenta método para storage local
+                try:
+                    if self.acquittance_doc.storage.exists(self.acquittance_doc.name):
+                        self.acquittance_doc.storage.delete(self.acquittance_doc.name)
+                except Exception:
+                    pass  # Arquivo não existe ou não pode ser deletado, ignora
 
         super(TransactionModel, self).delete(*args, **kwargs)
 
