@@ -76,19 +76,24 @@ class IsTreasuryUserMixin(UserPassesTestMixin):
 
 class IsAdminOrTreasuryUserMixin(UserPassesTestMixin):
     """
-    Mixin que restringe acesso a administradores.
+    Mixin que restringe acesso a administradores da tesouraria.
 
     Usuários autorizados:
+    - Tesoureiro (is_treasurer)
+    - Secretário (is_secretary)
     - Pastor (is_pastor)
     - Staff (is_staff)
     - Superuser (is_superuser)
     """
     def test_func(self):
+        user = self.request.user
         return (
-            self.request.user.is_authenticated and (
-                self.request.user.is_staff or
-                self.request.user.is_superuser or
-                self.request.user.is_pastor
+            user.is_authenticated and (
+                user.is_staff or
+                user.is_superuser or
+                user.is_treasurer or
+                user.is_secretary or
+                user.is_pastor
             )
         )
 

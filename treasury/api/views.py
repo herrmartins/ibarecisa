@@ -81,13 +81,14 @@ class IsTreasuryUser(BasePermission):
 
 class IsTreasurerOnly(BasePermission):
     """
-    Permissão APENAS para tesoureiros.
+    Permissão para administradores da tesouraria.
 
     Usuários autorizados:
     - Tesoureiro (is_treasurer)
+    - Secretário (is_secretary)
+    - Pastor (is_pastor)
+    - Staff (is_staff)
     - Superuser (is_superuser)
-
-    Secretários, pastores e staff em geral NÃO têm acesso.
     """
     def has_permission(self, request, view):
         user = request.user
@@ -98,19 +99,27 @@ class IsTreasurerOnly(BasePermission):
         if user.is_superuser:
             return True
 
-        # Apenas tesoureiros (não secretários/pastores)
-        return user.is_treasurer
+        # Admins da tesouraria
+        return (
+            user.is_treasurer or
+            user.is_secretary or
+            user.is_pastor or
+            user.is_staff
+        )
 
 
 class IsAdminUser(BasePermission):
     """
-    Permissão para administradores.
+    Permissão para administradores da tesouraria.
     """
     def has_permission(self, request, view):
-        return request.user.is_authenticated and (
-            request.user.is_staff or
-            request.user.is_superuser or
-            request.user.is_pastor
+        user = request.user
+        return user.is_authenticated and (
+            user.is_staff or
+            user.is_superuser or
+            user.is_treasurer or
+            user.is_secretary or
+            user.is_pastor
         )
 
 
@@ -463,7 +472,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
         """
         Define permissões baseado na ação:
         - list, retrieve: qualquer usuário autenticado
-        - create, update, partial_update, destroy: apenas tesoureiros (não secretários)
+        - create, update, partial_update, destroy: apenas admins da tesouraria
         """
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
             return [IsAuthenticated(), IsTreasurerOnly()]

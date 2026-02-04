@@ -80,8 +80,8 @@ class TransactionDetailView(IsTreasuryUserMixin, LoginRequiredMixin, DetailView)
         return context
 
 
-class TransactionCreateView(IsTreasurerOnlyMixin, LoginRequiredMixin, CreateView):
-    """Formulário para criar nova transação (apenas tesoureiros)."""
+class TransactionCreateView(IsAdminOrTreasuryUserMixin, LoginRequiredMixin, CreateView):
+    """Formulário para criar nova transação (tesoureiros, secretários, pastores e staff)."""
     model = TransactionModel
     template_name = 'treasury/transactions/form.html'
     fields = ['category', 'description', 'amount', 'is_positive', 'date', 'acquittance_doc']
@@ -103,8 +103,8 @@ class TransactionCreateView(IsTreasurerOnlyMixin, LoginRequiredMixin, CreateView
         return super().form_valid(form)
 
 
-class TransactionUpdateView(IsTreasurerOnlyMixin, LoginRequiredMixin, UpdateView):
-    """Formulário para editar transação (apenas tesoureiros)."""
+class TransactionUpdateView(IsAdminOrTreasuryUserMixin, LoginRequiredMixin, UpdateView):
+    """Formulário para editar transação (tesoureiros, secretários, pastores e staff)."""
     model = TransactionModel
     template_name = 'treasury/transactions/update.html'
     fields = ['category', 'description', 'amount', 'is_positive', 'date', 'acquittance_doc']
