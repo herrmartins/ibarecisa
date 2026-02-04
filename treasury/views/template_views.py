@@ -145,11 +145,18 @@ class TransactionDeleteView(IsSuperUserOnlyMixin, LoginRequiredMixin, DeleteView
         return context
 
     def delete(self, request, *args, **kwargs):
-        """Sobrescreve para adicionar log de auditoria antes de deletar."""
+        """Sobrescreve para adicionar log de auditoria e tratar erros."""
+        from django.contrib import messages
+
         self.object = self.get_object()
 
         if not self.object.can_be_deleted:
+            messages.error(request, 'Esta transação não pode ser excluída porque o período está fechado.')
             return redirect('treasury:transaction-detail', pk=self.object.pk)
+
+        # Guarda info para mensagem de sucesso
+        transaction_id = self.object.id
+        transaction_desc = self.object.description
 
         # Log de auditoria antes de deletar
         try:
@@ -166,12 +173,23 @@ class TransactionDeleteView(IsSuperUserOnlyMixin, LoginRequiredMixin, DeleteView
                     'is_positive': self.object.is_positive,
                 }
             )
-        except Exception as e:
-            # Se falhar o log, não impede a deleção (mas loga no stderr)
-            import sys
-            print(f"Erro ao criar log de auditoria: {e}", file=sys.stderr)
+        except Exception as log_error:
+            # Se falhar o log, registra mas não impede a deleção
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Erro ao criar log de auditoria ao deletar transação {transaction_id}: {log_error}", exc_info=True)
 
-        return super().delete(request, *args, **kwargs)
+        # Tenta deletar
+        try:
+            response = super().delete(request, *args, **kwargs)
+            messages.success(request, f'Transação #{transaction_id} "{transaction_desc}" excluída com sucesso.')
+            return response
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Erro ao deletar transação {transaction_id}: {e}", exc_info=True)
+            messages.error(request, f'Erro ao excluir transação: {str(e)}')
+            return redirect('treasury:transaction-detail', pk=self.object.pk)
 
 
 class BatchTransactionReviewView(IsTreasurerOnlyMixin, LoginRequiredMixin, TemplateView):
