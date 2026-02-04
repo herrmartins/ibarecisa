@@ -1,4 +1,5 @@
 {% extends 'core/base.html' %} {% block content %}
+{% csrf_token %}
 
 <!-- Page Header -->
 <div class="app-page-header">
@@ -68,6 +69,129 @@
       </div>
     </div>
   </div>
+
+  <!-- Test Panel -->
+  <div class="app-card mt-8" x-data="testPanel()">
+    <div class="app-card-header">
+      <h2 class="text-lg font-semibold text-slate-900">Painel de Testes</h2>
+      <p class="text-sm text-slate-500">Teste configurações do sistema</p>
+    </div>
+    <div class="app-card-body">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        <!-- Email Test -->
+        <div class="border border-slate-200 rounded-lg p-4">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+              <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="font-medium text-slate-900">Testar Email (Brevo)</h3>
+              <p class="text-sm text-slate-500">Envia email de teste para rafaelmagister@gmail.com</p>
+            </div>
+          </div>
+          <button
+            @click="runTest('email')"
+            :disabled="loading.email"
+            class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+          >
+            <template x-if="loading.email">
+              <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12c0-4.411-3.589-8-8-8v4c2.209 0 4 1.791 4 4s-1.791 4-4 4v5c4.418 0 8-3.582 8-8z"></path>
+              </svg>
+            </template>
+            <template x-if="!loading.email">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+              </svg>
+            </template>
+            <span x-text="loading.email ? 'Enviando...' : 'Enviar Email de Teste'"></span>
+          </button>
+          <div x-show="results.email"
+               :class="results.email?.success ? 'text-green-600' : 'text-red-600'"
+               class="text-sm mt-2"
+               x-text="results.email?.message || results.email?.error">
+          </div>
+        </div>
+
+        <!-- Sentry Test -->
+        <div class="border border-slate-200 rounded-lg p-4">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+              <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="font-medium text-slate-900">Testar Sentry</h3>
+              <p class="text-sm text-slate-500">Envia evento de teste para o Sentry</p>
+            </div>
+          </div>
+          <button
+            @click="runTest('sentry')"
+            :disabled="loading.sentry"
+            class="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+          >
+            <template x-if="loading.sentry">
+              <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12c0-4.411-3.589-8-8-8v4c2.209 0 4 1.791 4 4s-1.791 4-4 4v5c4.418 0 8-3.582 8-8z"></path>
+              </svg>
+            </template>
+            <template x-if="!loading.sentry">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+              </svg>
+            </template>
+            <span x-text="loading.sentry ? 'Enviando...' : 'Testar Sentry'"></span>
+          </button>
+          <div x-show="results.sentry"
+               :class="results.sentry?.success ? 'text-green-600' : 'text-red-600'"
+               class="text-sm mt-2"
+               x-text="results.sentry?.message || results.sentry?.error">
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
 </div>
+
+<script>
+function testPanel() {
+  return {
+    loading: { email: false, sentry: false },
+    results: { email: null, sentry: null },
+
+    async runTest(type) {
+      this.loading[type] = true;
+      this.results[type] = null;
+
+      const formData = new FormData();
+      formData.append('action', `test_${type}`);
+
+      try {
+        const response = await fetch('{% url "core:config" %}', {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+          }
+        });
+
+        const data = await response.json();
+        this.results[type] = data;
+      } catch (error) {
+        this.results[type] = { success: false, error: 'Erro de conexão: ' + error.message };
+      } finally {
+        this.loading[type] = false;
+      }
+    }
+  }
+}
+</script>
 
 {% endblock %}
