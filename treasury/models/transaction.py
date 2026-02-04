@@ -7,6 +7,14 @@ from django.core.files.storage import default_storage
 from decimal import Decimal
 import os
 
+# Import para S3 (se disponível)
+try:
+    import boto3
+    from django.conf import settings
+    BOTO3_AVAILABLE = True
+except ImportError:
+    BOTO3_AVAILABLE = False
+
 
 class TransactionModel(BaseModel):
     user = models.ForeignKey("users.CustomUser", on_delete=models.CASCADE)
@@ -152,16 +160,44 @@ class TransactionModel(BaseModel):
     def delete(self, *args, **kwargs):
         # Deleta o arquivo do comprovante (local ou S3)
         if self.acquittance_doc and self.acquittance_doc.name:
+            deleted = False
+
+            # Método 1: Tenta usar o método padrão do Django
             try:
-                # Tenta deletar usando o storage (funciona tanto local quanto S3)
                 self.acquittance_doc.delete(save=False)
-            except Exception:
-                # Se falhar, tenta método para storage local
+                deleted = True
+            except Exception as e1:
+                print(f"[TransactionModel] Erro ao deletar com .delete(): {e1}")
+
+            # Método 2: Se falhou e S3 está configurado, tenta boto3 diretamente
+            if not deleted and BOTO3_AVAILABLE:
+                try:
+                    s3 = boto3.client(
+                        's3',
+                        endpoint_url=getattr(settings, 'AWS_S3_ENDPOINT_URL', None),
+                        aws_access_key_id=getattr(settings, 'AWS_ACCESS_KEY_ID', None),
+                        aws_secret_access_key=getattr(settings, 'AWS_SECRET_ACCESS_KEY', None),
+                        region_name=getattr(settings, 'AWS_S3_REGION_NAME', 'us-east-1')
+                    )
+                    bucket_name = getattr(settings, 'AWS_STORAGE_BUCKET_NAME', None)
+                    if bucket_name:
+                        s3.delete_object(Bucket=bucket_name, Key=self.acquittance_doc.name)
+                        deleted = True
+                        print(f"[TransactionModel] Arquivo deletado do S3 via boto3: {self.acquittance_doc.name}")
+                except Exception as e2:
+                    print(f"[TransactionModel] Erro ao deletar com boto3: {e2}")
+
+            # Método 3: Storage local (fallback)
+            if not deleted:
                 try:
                     if self.acquittance_doc.storage.exists(self.acquittance_doc.name):
                         self.acquittance_doc.storage.delete(self.acquittance_doc.name)
-                except Exception:
-                    pass  # Arquivo não existe ou não pode ser deletado, ignora
+                        deleted = True
+                except Exception as e3:
+                    print(f"[TransactionModel] Erro ao deletar com storage: {e3}")
+
+            if not deleted:
+                print(f"[TransactionModel] AVISO: Arquivo não foi deletado: {self.acquittance_doc.name}")
 
         super(TransactionModel, self).delete(*args, **kwargs)
 
