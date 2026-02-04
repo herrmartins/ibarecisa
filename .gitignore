@@ -68,6 +68,8 @@ db.sqlite3
 audit.sqlite3
 dbback.sqlite3
 *.sqlite3
+*.sqlite3*
+*.backup
 # Flask stuff:
 instance/
 .webassets-cache
