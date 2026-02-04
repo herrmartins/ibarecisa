@@ -1,0 +1,385 @@
+{% load static %}
+{% load extras %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>Balanço Financeiro</title>
+  <style>
+    @page {
+      size: A4;
+      margin: 2cm;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Helvetica', 'Arial', sans-serif;
+      font-size: 10pt;
+      line-height: 1.5;
+      color: #333;
+      position: relative;
+    }
+
+    /* Watermark */
+    .watermark {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(45deg);
+      width: 500px;
+      height: 500px;
+      opacity: 0.03;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    .watermark img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .document-wrapper {
+      max-width: 100%;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Header */
+    .pdf-header {
+      border-bottom: 3px solid #2c3e50;
+      padding-bottom: 15px;
+      margin-bottom: 25px;
+    }
+
+    .pdf-header-title {
+      font-size: 20pt;
+      font-weight: bold;
+      color: #2c3e50;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+    }
+
+    .pdf-header-subtitle {
+      font-size: 11pt;
+      color: #7f8c8d;
+      text-align: center;
+      margin-bottom: 15px;
+    }
+
+    .pdf-header-divider {
+      height: 2px;
+      background: linear-gradient(to right, transparent, #3498db, transparent);
+      margin: 10px 0;
+    }
+
+    /* Info Section */
+    .pdf-info-section {
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      padding: 15px;
+      margin-bottom: 25px;
+      border-radius: 4px;
+    }
+
+    .pdf-info-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .pdf-info-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .pdf-info-label {
+      font-weight: bold;
+      color: #2c3e50;
+      min-width: 100px;
+      padding-right: 10px;
+    }
+
+    .pdf-info-value {
+      color: #34495e;
+      flex: 1;
+    }
+
+    /* Summary Cards */
+    .pdf-summary {
+      display: flex;
+      justify-content: space-between;
+      gap: 15px;
+      margin-bottom: 25px;
+      page-break-inside: avoid;
+    }
+
+    .pdf-summary-card {
+      flex: 1;
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 4px;
+      padding: 10px 8px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 70px;
+    }
+
+    .pdf-summary-card.positive {
+      background: #d4edda;
+      border-color: #c3e6cb;
+    }
+
+    .pdf-summary-card.negative {
+      background: #f8d7da;
+      border-color: #f5c6cb;
+    }
+
+    .pdf-summary-card.result {
+      background: #fff3cd;
+      border-color: #ffeaa7;
+    }
+
+    .pdf-summary-card.balance {
+      background: #d1ecf1;
+      border-color: #bee5eb;
+    }
+
+    .pdf-summary-label {
+      font-size: 6.5pt;
+      color: #7f8c8d;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 3px;
+      line-height: 1.1;
+    }
+
+    .pdf-summary-value {
+      font-size: 10pt;
+      font-weight: bold;
+      color: #2c3e50;
+      white-space: nowrap;
+    }
+
+    .pdf-summary-value.positive {
+      color: #27ae60;
+    }
+
+    .pdf-summary-value.negative {
+      color: #e74c3c;
+    }
+
+    /* Table */
+    .pdf-table-section {
+      margin-bottom: 25px;
+    }
+
+    .pdf-table-title {
+      font-size: 13pt;
+      font-weight: bold;
+      color: #2c3e50;
+      border-bottom: 2px solid #3498db;
+      padding-bottom: 8px;
+      margin-bottom: 15px;
+    }
+
+    .pdf-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 9pt;
+    }
+
+    .pdf-table thead {
+      background: #2c3e50;
+      color: white;
+    }
+
+    .pdf-table th {
+      padding: 10px 8px;
+      text-align: left;
+      font-weight: bold;
+      text-transform: uppercase;
+      font-size: 8pt;
+    }
+
+    .pdf-table th.text-right {
+      text-align: right;
+    }
+
+    .pdf-table .text-center {
+      text-align: center;
+    }
+
+    .pdf-table td {
+      padding: 8px;
+      border-bottom: 1px solid #e9ecef;
+    }
+
+    .pdf-table tbody tr:hover {
+      background: #f8f9fa;
+    }
+
+    .pdf-table .amount {
+      text-align: right;
+      font-family: 'Courier New', monospace;
+      font-size: 9pt;
+      white-space: nowrap;
+    }
+
+    .pdf-table .positive {
+      color: #27ae60;
+      font-weight: bold;
+    }
+
+    .pdf-table .negative {
+      color: #e74c3c;
+      font-weight: bold;
+    }
+
+    .pdf-table .status-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 7pt;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    .pdf-table .status-open {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .pdf-table .status-closed {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .pdf-table .status-archived {
+      background: #e2e3e5;
+      color: #383d41;
+    }
+
+    /* Footer */
+    .pdf-footer {
+      text-align: center;
+      font-size: 8pt;
+      color: #95a5a6;
+      border-top: 1px solid #e9ecef;
+      padding-top: 12px;
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Watermark -->
+  <div class="watermark">
+    <img src="{% get_static_prefix %}img/logo.jpg" alt="" />
+  </div>
+
+  <div class="document-wrapper">
+    <!-- Header -->
+    <div class="pdf-header">
+      <h1 class="pdf-header-title">Balanço Financeiro</h1>
+      {% if church_info %}
+      <p class="pdf-header-subtitle">{{church_info.name}}{% if church_info.CNPJ %} - CNPJ: {{church_info.CNPJ}}{% endif %}</p>
+      {% endif %}
+      <div class="pdf-header-divider"></div>
+    </div>
+
+    <!-- Period Information -->
+    <div class="pdf-info-section">
+      <div class="pdf-info-row">
+        <span class="pdf-info-label">Período:</span>
+        <span class="pdf-info-value">
+          {% if start_year == end_year %}{{ start_year }}{% else %}{{ start_year }} a {{ end_year }}{% endif %}
+        </span>
+      </div>
+      {% if status_filter != 'all' %}
+      <div class="pdf-info-row">
+        <span class="pdf-info-label">Status:</span>
+        <span class="pdf-info-value">{{ status_label }}</span>
+      </div>
+      {% endif %}
+      <div class="pdf-info-row">
+        <span class="pdf-info-label">Data do Relatório:</span>
+        <span class="pdf-info-value">{% now "d/m/Y \à\s H:i" %}</span>
+      </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="pdf-summary">
+      <div class="pdf-summary-card positive">
+        <div class="pdf-summary-label">Total Receitas</div>
+        <div class="pdf-summary-value positive">R$ {{ total_positive|format_brl }}</div>
+      </div>
+      <div class="pdf-summary-card negative">
+        <div class="pdf-summary-label">Total Despesas</div>
+        <div class="pdf-summary-value negative">R$ {{ total_negative|format_brl }}</div>
+      </div>
+      <div class="pdf-summary-card result">
+        <div class="pdf-summary-label">Resultado Acumulado</div>
+        <div class="pdf-summary-value {% if total_net >= 0 %}positive{% else %}negative{% endif %}">R$ {{ total_net|format_brl }}</div>
+      </div>
+      <div class="pdf-summary-card balance">
+        <div class="pdf-summary-label">Saldo Final</div>
+        <div class="pdf-summary-value">R$ {{ final_balance|format_brl }}</div>
+      </div>
+    </div>
+
+    <!-- Periods Table -->
+    <div class="pdf-table-section">
+      <h2 class="pdf-table-title">Evolução por Período</h2>
+      <table class="pdf-table">
+        <thead>
+          <tr>
+            <th style="width: 15%">Período</th>
+            <th class="text-right" style="width: 13%">Saldo Inicial</th>
+            <th class="text-right" style="width: 13%">Receitas</th>
+            <th class="text-right" style="width: 13%">Despesas</th>
+            <th class="text-right" style="width: 13%">Variação</th>
+            <th class="text-right" style="width: 13%">Saldo Final</th>
+            <th class="text-center" style="width: 10%">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in periods_with_balance %}
+          <tr>
+            <td>{{ item.period.month_name }}/{{ item.period.year }}</td>
+            <td class="amount">R$ {{ item.opening_balance|format_brl }}</td>
+            <td class="amount positive">R$ {{ item.total_positive|format_brl }}</td>
+            <td class="amount negative">R$ {{ item.total_negative|format_brl }}</td>
+            <td class="amount {% if item.net >= 0 %}positive{% else %}negative{% endif %}">R$ {{ item.net|format_brl }}</td>
+            <td class="amount {% if item.closing_balance >= 0 %}positive{% else %}negative{% endif %}">R$ {{ item.closing_balance|format_brl }}</td>
+            <td class="text-center">
+              <span class="status-badge status-{{ item.period.status }}">
+                {% if item.period.status == 'open' %}Aberto{% elif item.period.status == 'closed' %}Fechado{% else %}Arquivado{% endif %}
+              </span>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="7" class="text-center">Nenhum período encontrado com os filtros selecionados</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Footer -->
+    <div class="pdf-footer">
+      Relatório gerado em {% now "d/m/Y \à\s H:i" %}
+    </div>
+  </div>
+</body>
+</html>

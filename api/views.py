@@ -5,7 +5,7 @@ from dateutil.relativedelta import relativedelta
 from django.utils import timezone
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
-from treasury.models import MonthlyBalance
+from treasury.models import AccountingPeriod
 from rest_framework.parsers import MultiPartParser, FormParser
 
 from .serializers import (
@@ -27,17 +27,26 @@ from treasury.models import TransactionModel
 
 @api_view(["GET"])
 def getCurrentBalance(request):
+    from datetime import datetime
+
+    # Get current month period
+    today = timezone.now().date()
+    current_month_date = today.replace(day=1)
+
+    # Try to get current period's opening balance
+    try:
+        current_period = AccountingPeriod.objects.get(month=current_month_date)
+        last_month_balance = current_period.opening_balance
+    except AccountingPeriod.DoesNotExist:
+        last_month_balance = 0
+
+    # Get transactions for current month
     current_month = timezone.now().month
     current_year = timezone.now().year
 
-    previous_month = timezone.now() - relativedelta(months=1)
-
-    last_month_balance = MonthlyBalance.objects.get(
-        month__month=previous_month.month, month__year=previous_month.year
-    )
-
     transactions_queryset = TransactionModel.objects.filter(
-        date__month=current_month, date__year=current_year
+        date__month=current_month, date__year=current_year,
+        transaction_type='original'
     ).order_by("-date")
 
     positive_transactions_queryset = transactions_queryset.filter(
@@ -51,12 +60,12 @@ def getCurrentBalance(request):
     negative_transactions = sum(
         nt.amount for nt in negative_transactions_queryset)
 
-    aware_month_balance = last_month_balance.balance + unaware_month_balance
+    aware_month_balance = last_month_balance + unaware_month_balance
 
     serializer = BalanceSerializer(
         {
             "current_balance": aware_month_balance,
-            "last_month_balance": last_month_balance.balance,
+            "last_month_balance": last_month_balance,
             "unaware_month_balance": unaware_month_balance,
             "sum_negative_transactions": negative_transactions,
             "sum_positive_transactions": positive_transactions,

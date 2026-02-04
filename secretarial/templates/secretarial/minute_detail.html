@@ -2,74 +2,12 @@
 {% load static %}
 
 {% block content %}
-<div class="min-h-screen bg-gradient-to-b from-slate-50 to-white pb-24">
-  <!-- Header Section -->
-  <div class="minute-detail-header relative">
-    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10 relative z-10">
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div class="flex-1">
-          <div class="flex items-center gap-3 mb-3">
-            <svg class="w-7 h-7 text-white/90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-            </svg>
-            <h1 class="text-2xl md:text-3xl font-bold text-white">
-              Ata de Reunião
-            </h1>
-          </div>
-          <p class="text-white/90 text-lg">{{ minute.meeting_date|date:'d \d\e F \d\e Y' }}</p>
-        </div>
-        <a href="{% url 'secretarial:minute-generate-pdf' minute.id %}" class="minute-detail-pdf-btn">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-          </svg>
-          Gerar PDF
-        </a>
-      </div>
-
-      <!-- Meeting Info Cards -->
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6">
-        {% if minute.president %}
-        <div class="minute-detail-info-card">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-          </svg>
-          <div>
-            <p class="text-xs text-white/70 uppercase tracking-wide">Presidente</p>
-            <p class="text-sm font-semibold text-white">{{ minute.president.first_name }} {{ minute.president.last_name }}</p>
-          </div>
-        </div>
-        {% endif %}
-        {% if minute.secretary %}
-        <div class="minute-detail-info-card">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-          </svg>
-          <div>
-            <p class="text-xs text-white/70 uppercase tracking-wide">Secretário</p>
-            <p class="text-sm font-semibold text-white">{{ minute.secretary.first_name }} {{ minute.secretary.last_name }}</p>
-          </div>
-        </div>
-        {% endif %}
-        {% if minute.number_of_attendees %}
-        <div class="minute-detail-info-card">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-          </svg>
-          <div>
-            <p class="text-xs text-white/70 uppercase tracking-wide">Participantes</p>
-            <p class="text-sm font-semibold text-white">{{ minute.number_of_attendees }} presentes</p>
-          </div>
-        </div>
-        {% endif %}
-      </div>
-    </div>
-  </div>
-
-  <!-- Main Content -->
-  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<!-- Page Header -->
+<div class="app-page-header">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Back Button -->
     <div class="mb-6">
-      <a href="{% url 'secretarial:list-minutes' %}" class="inline-flex items-center gap-2 text-slate-600 hover:text-primary-600 transition-colors">
+      <a href="{% url 'secretarial:list-minutes' %}" class="inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
         </svg>
@@ -77,103 +15,177 @@
       </a>
     </div>
 
-    <!-- Minute Content Card -->
-    <div class="minute-detail-content-card mb-8">
-      <div class="minute-detail-card-header">
-        <div class="flex items-center gap-3">
-          <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-          </svg>
-          <h2 class="text-lg font-semibold text-slate-800">Conteúdo da Ata</h2>
-        </div>
-      </div>
-      <div class="minute-detail-card-body">
-        <div class="minute-detail-body prose prose-slate max-w-none">
-          {% if minute.body %}
-            {{ minute.body|safe }}
-          {% else %}
-            <p class="text-slate-400 italic">Sem conteúdo registrado.</p>
-          {% endif %}
-        </div>
-      </div>
+    <!-- Title -->
+    <div class="text-center mb-8">
+      <h1 class="app-page-title">Secretaria</h1>
+      <p class="app-page-subtitle">Ata da reunião de {{ minute.meeting_date|date:'d \d\e F \d\e Y' }}</p>
     </div>
 
-    <!-- Attachments Section -->
-    <div class="minute-detail-content-card mb-8">
-      <div class="minute-detail-card-header">
+    <!-- Info Cards -->
+    <div class="flex justify-center gap-4 flex-wrap">
+      {% if minute.president %}
+      <div class="app-header-card app-header-income">
+        <div class="flex items-center justify-center gap-2 mb-1">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+          <span class="text-xs font-medium text-white/80">Presidente</span>
+        </div>
+        <div class="text-lg font-semibold text-white truncate max-w-[150px]">{{ minute.president.first_name }} {{ minute.president.last_name }}</div>
+      </div>
+      {% endif %}
+      {% if minute.secretary %}
+      <div class="app-header-card app-header-monthly">
+        <div class="flex items-center justify-center gap-2 mb-1">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+          </svg>
+          <span class="text-xs font-medium text-white/80">Secretário</span>
+        </div>
+        <div class="text-lg font-semibold text-white truncate max-w-[150px]">{{ minute.secretary.first_name }} {{ minute.secretary.last_name }}</div>
+      </div>
+      {% endif %}
+      {% if minute.number_of_attendees %}
+      <div class="app-header-card app-header-balance">
+        <div class="flex items-center justify-center gap-2 mb-1">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+          <span class="text-xs font-medium text-white/80">Presentes</span>
+        </div>
+        <div class="text-2xl font-bold text-white">{{ minute.number_of_attendees }}</div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Main Content -->
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <!-- Actions Bar -->
+  <div class="flex justify-end mb-6">
+    <a href="{% url 'secretarial:minute-generate-pdf' minute.id %}" class="app-btn app-btn-primary">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+      </svg>
+      <span class="ml-1">Gerar PDF</span>
+    </a>
+  </div>
+
+  <!-- Minute Content Card -->
+  <div class="app-card mb-6">
+    <div class="app-card-header">
+      <div class="flex items-center gap-3">
+        <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        <h3 class="app-card-title">Conteúdo da Ata</h3>
+      </div>
+    </div>
+    <div class="app-card-body">
+      <div class="prose prose-slate max-w-none">
+        {% if minute.body %}
+          {{ minute.body|safe }}
+        {% else %}
+          <p class="text-slate-400 italic">Sem conteúdo registrado.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Attachments Section -->
+  <div class="app-card mb-6">
+    <div class="app-card-header">
+      <div class="flex items-center justify-between">
         <div class="flex items-center gap-3">
           <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
           </svg>
-          <h2 class="text-lg font-semibold text-slate-800">Arquivos Anexados</h2>
-          <span class="minute-detail-badge">{{ attachments|length }}</span>
+          <h3 class="app-card-title">Arquivos Anexados</h3>
         </div>
-      </div>
-      <div class="minute-detail-card-body">
-        {% if attachments %}
-          <div class="space-y-3">
-            {% for att in attachments %}
-            <a href="{{ att.file.url }}" target="_blank" class="minute-detail-attachment-item">
-              <div class="flex items-center gap-3 flex-1">
-                <svg class="w-8 h-8 text-primary-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-                </svg>
-                <div class="min-w-0 flex-1">
-                  <p class="font-medium text-slate-800 truncate">{{ att.description|default:att.file.name|truncatewords:5 }}</p>
-                  <p class="text-xs text-slate-500">{{ att.uploaded_at|date:"d/m/Y \à\s H:i" }}</p>
-                </div>
-              </div>
-              <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-              </svg>
-            </a>
-            {% endfor %}
-          </div>
-        {% else %}
-          <div class="text-center py-8 text-slate-400">
-            <svg class="w-12 h-12 mx-auto mb-3 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
-            </svg>
-            <p>Nenhum arquivo anexado ainda.</p>
-          </div>
-        {% endif %}
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600">
+          {{ attachments|length }}
+        </span>
       </div>
     </div>
-
-    <!-- Upload Section -->
-    <div class="minute-detail-content-card">
-      <div class="minute-detail-card-header">
-        <div class="flex items-center gap-3">
-          <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
-          </svg>
-          <h2 class="text-lg font-semibold text-slate-800">Anexar Novo Arquivo</h2>
-        </div>
-      </div>
-      <div class="minute-detail-card-body">
-        <form action="{{ file_upload_url }}" method="post" enctype="multipart/form-data" class="space-y-4">
-          {% csrf_token %}
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label for="{{ file_form.file.id_for_label }}" class="minute-detail-label">Arquivo</label>
-              {{ file_form.file }}
-            </div>
-            <div>
-              <label for="{{ file_form.description.id_for_label }}" class="minute-detail-label">Descrição</label>
-              {{ file_form.description }}
-            </div>
-          </div>
-          <div class="flex justify-end">
-            <button type="submit" class="minute-detail-submit-btn">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+    <div class="app-card-body">
+      {% if attachments %}
+        <div class="space-y-2">
+          {% for att in attachments %}
+          <a href="{{ att.file.url }}" target="_blank" class="flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:border-primary-300 hover:bg-primary-50/50 transition-all group">
+            <div class="w-10 h-10 rounded-lg bg-primary-100 flex items-center justify-center flex-shrink-0">
+              <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
               </svg>
-              Enviar Arquivo
-            </button>
-          </div>
-        </form>
-      </div>
+            </div>
+            <div class="min-w-0 flex-1">
+              <p class="font-medium text-slate-800 truncate group-hover:text-primary-700">{{ att.description|default:att.file.name|truncatewords:5 }}</p>
+              <p class="text-xs text-slate-500">{{ att.uploaded_at|date:"d/m/Y \à\s H:i" }}</p>
+            </div>
+            <svg class="w-5 h-5 text-slate-400 group-hover:text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+            </svg>
+          </a>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="text-center py-8">
+          <svg class="w-12 h-12 mx-auto mb-3 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+          </svg>
+          <p class="text-slate-400">Nenhum arquivo anexado ainda.</p>
+        </div>
+      {% endif %}
     </div>
   </div>
+
+  {% if user.is_secretary %}
+  <!-- Upload Section - only for secretaries -->
+  <div class="app-card">
+    <div class="app-card-header">
+      <div class="flex items-center gap-3">
+        <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+        </svg>
+        <h3 class="app-card-title">Anexar Novo Arquivo</h3>
+      </div>
+    </div>
+    <div class="app-card-body">
+      <form action="{{ file_upload_url }}" method="post" enctype="multipart/form-data" class="space-y-4">
+        {% csrf_token %}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label for="{{ file_form.file.id_for_label }}" class="block text-sm font-medium text-slate-700 mb-1.5">Arquivo</label>
+            {{ file_form.file }}
+          </div>
+          <div>
+            <label for="{{ file_form.description.id_for_label }}" class="block text-sm font-medium text-slate-700 mb-1.5">Descrição</label>
+            {{ file_form.description }}
+          </div>
+        </div>
+        <div class="flex justify-end">
+          <button type="submit" class="app-btn app-btn-primary">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+            </svg>
+            <span class="ml-1">Enviar Arquivo</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+  {% endif %}
 </div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Apply app-input class to form fields
+    const formInputs = document.querySelectorAll('input[type="file"], input[type="text"]');
+    formInputs.forEach(input => {
+      if (!input.classList.contains('app-input')) {
+        input.classList.add('app-input');
+      }
+    });
+  });
+</script>
 {% endblock %}

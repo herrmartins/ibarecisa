@@ -1,0 +1,170 @@
+{% extends "treasury/base.html" %}
+
+{% load static %}
+
+{% block treasury_content %}
+<div class="container mx-auto px-4 py-6" x-data="monthlyReport()">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <a href="{% url 'treasury:period-list' %}" class="text-blue-600 hover:text-blue-800">← Voltar para Períodos</a>
+            <h1 class="text-2xl font-bold text-gray-800 mt-2">Relatório Mensal</h1>
+        </div>
+        <button @click="printReport" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+            </svg>
+            Imprimir
+        </button>
+    </div>
+
+    <!-- Loading -->
+    <div x-show="loading" class="flex justify-center py-12">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+    </div>
+
+    <!-- Report Content -->
+    <div x-show="!loading && report" class="space-y-6">
+        <!-- Period Header -->
+        <div class="bg-white rounded-lg shadow p-6 text-center">
+            <h2 class="text-3xl font-bold text-gray-800" x-text="report.period?.month_name + ' de ' + report.period?.year"></h2>
+            <p class="text-gray-500 mt-1">Relatório Financeiro Mensal</p>
+            <div class="mt-4 inline-block px-4 py-2 rounded-full" :class="{
+                'bg-green-100 text-green-800': report.period?.status === 'open',
+                'bg-yellow-100 text-yellow-800': report.period?.status === 'closed',
+                'bg-gray-100 text-gray-800': report.period?.status === 'archived'
+            }">
+                <span x-text="statusText"></span>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white rounded-lg shadow p-4">
+                <p class="text-sm text-gray-500">Saldo Inicial</p>
+                <p class="text-2xl font-bold text-gray-800" x-text="formatBRL(report.summary?.opening_balance || 0)"></p>
+            </div>
+            <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                <p class="text-sm text-green-600 font-medium">Total Receitas</p>
+                <p class="text-2xl font-bold text-green-700" x-text="formatBRL(report.summary?.total_positive || 0)"></p>
+                <p class="text-sm text-green-600" x-text="(report.summary?.positive_count || 0) + ' transações'"></p>
+            </div>
+            <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                <p class="text-sm text-red-600 font-medium">Total Despesas</p>
+                <p class="text-2xl font-bold text-red-700" x-text="formatBRL(report.summary?.total_negative || 0)"></p>
+                <p class="text-sm text-red-600" x-text="(report.summary?.negative_count || 0) + ' transações'"></p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4">
+                <p class="text-sm text-gray-500">Saldo Final</p>
+                <p class="text-2xl font-bold" :class="(report.summary?.closing_balance || report.summary?.net || 0) >= 0 ? 'text-green-600' : 'text-red-600'"
+                   x-text="formatBRL(report.summary?.closing_balance || report.summary?.net || 0)"></p>
+                <p class="text-sm" :class="(report.summary?.net || 0) >= 0 ? 'text-green-600' : 'text-red-600'">
+                    Variação: <span x-text="formatBRL(report.summary?.net || 0)"></span>
+                </p>
+            </div>
+        </div>
+
+        <!-- By Category -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="p-4 border-b">
+                <h3 class="text-lg font-bold">Transações por Categoria</h3>
+            </div>
+            <div class="p-4">
+                <div class="space-y-3">
+                    <template x-for="cat in report.by_category" :key="cat.name">
+                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded hover:bg-gray-100">
+                            <div class="flex-1">
+                                <p class="font-medium" x-text="cat.name"></p>
+                                <div class="flex items-center gap-4 text-sm mt-1">
+                                    <span class="text-green-600" x-show="cat.total_positive > 0">
+                                        +<span x-text="formatBRL(cat.total_positive)"></span>
+                                    </span>
+                                    <span class="text-red-600" x-show="cat.total_negative > 0">
+                                        -<span x-text="formatBRL(cat.total_negative)"></span>
+                                    </span>
+                                    <span class="text-gray-500" x-text="cat.count + ' tx'"></span>
+                                </div>
+                            </div>
+                            <div class="w-32 text-right">
+                                <p class="font-bold" :class="cat.net >= 0 ? 'text-green-600' : 'text-red-600'" x-text="formatBRL(cat.net)"></p>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+                <p x-show="!report.by_category || report.by_category.length === 0" class="text-gray-500 text-center py-4">
+                    Nenhuma transação neste período
+                </p>
+            </div>
+        </div>
+
+        <!-- Period Notes -->
+        <div x-show="report.period?.notes" class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <h3 class="font-medium text-yellow-800 mb-2">Observações do Fechamento</h3>
+            <p class="text-sm text-yellow-700" x-text="report.period.notes"></p>
+        </div>
+    </div>
+</div>
+
+<script>
+function monthlyReport() {
+    return {
+        report: null,
+        loading: true,
+
+        get statusText() {
+            return {
+                'open': 'Aberto',
+                'closed': 'Fechado',
+                'archived': 'Arquivado'
+            }[this.report?.period?.status] || '';
+        },
+
+        async init() {
+            const pathParts = window.location.pathname.split('/');
+            const year = parseInt(pathParts[pathParts.length - 2]);
+            const month = parseInt(pathParts[pathParts.length - 1]);
+            await this.loadReport(year, month);
+        },
+
+        async loadReport(year, month) {
+            this.loading = true;
+            try {
+                const response = await fetch(`/treasury/api/reports/monthly/${year}/${month}/`, {
+                    headers: { 'X-CSRFToken': this.getCookie('csrftoken') }
+                });
+                this.report = await response.json();
+            } catch (error) {
+                console.error('Error loading report:', error);
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        printReport() {
+            window.print();
+        },
+
+        getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        },
+
+        formatBRL(value) {
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+        }
+    };
+}
+</script>
+
+<style>
+@media print {
+    button, a[href*="javascript"] {
+        display: none !important;
+    }
+    .shadow {
+        box-shadow: none !important;
+    }
+}
+</style>
+{% endblock %}

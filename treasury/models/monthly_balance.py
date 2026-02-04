@@ -11,6 +11,7 @@ class MonthlyBalance(BaseModel):
     balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
 
     class Meta:
+        managed = False  # Modelo não gerenciado - mantido para compatibilidade com dados existentes
         verbose_name = "Saldo Mensal"
         verbose_name_plural = "Saldos Mensais"
 

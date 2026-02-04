@@ -1,0 +1,458 @@
+{% extends "treasury/base.html" %}
+
+{% load static %}
+
+{% block header_title %}Detalhes do Período{% endblock %}
+{% block header_subtitle %}Visualização e gerenciamento do período contábil{% endblock %}
+
+{% block header_back_button %}
+<div class="mb-6">
+  <a href="{% url 'treasury:period-list' %}" class="app-back-link">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+    </svg>
+    Voltar para Períodos
+  </a>
+</div>
+{% endblock %}
+
+{% block header_stats %}
+<!-- Stats Cards in Header -->
+<div class="flex justify-center gap-4 sm:gap-6 flex-wrap" x-data="periodHeaderStats()" x-init="init()" @period-refresh.window="loadPeriod($event.detail.periodId)">
+  <!-- Status -->
+  <div class="treasury-stat-card" :class="{
+    'treasury-stat-balance': period?.status === 'open',
+    'treasury-stat-income': period?.status === 'closed',
+    'treasury-stat-expense': period?.status === 'archived'
+  }">
+    <div class="flex items-center justify-center gap-3 mb-2">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      <span class="text-sm font-medium text-white/90">Status</span>
+    </div>
+    <div class="text-xl font-bold text-white" x-text="period?.status_label || '-'"></div>
+  </div>
+
+  <!-- Saldo Inicial -->
+  <div class="treasury-stat-card treasury-stat-current">
+    <div class="flex items-center justify-center gap-3 mb-2">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      <span class="text-sm font-medium text-white/90">Saldo Inicial</span>
+    </div>
+    <div class="text-3xl font-bold text-white" x-text="period ? formatBalance(period.opening_balance) : '-'"></div>
+  </div>
+
+  <!-- Receitas -->
+  <div class="treasury-stat-card treasury-stat-income">
+    <div class="flex items-center justify-center gap-3 mb-2">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12"/>
+      </svg>
+      <span class="text-sm font-medium text-white/90">Receitas</span>
+    </div>
+    <div class="text-3xl font-bold text-white" x-text="period ? formatAmount(period.transactions_summary?.total_positive) : '-'"></div>
+  </div>
+
+  <!-- Despesas -->
+  <div class="treasury-stat-card treasury-stat-expense">
+    <div class="flex items-center justify-center gap-3 mb-2">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 13l-5 5m0 0l-5-5m5 5V6"/>
+      </svg>
+      <span class="text-sm font-medium text-white/90">Despesas</span>
+    </div>
+    <div class="text-3xl font-bold text-white" x-text="period ? formatAmount(period.transactions_summary?.total_negative) : '-'"></div>
+  </div>
+
+  <!-- Saldo Final -->
+  <div class="treasury-stat-card" :class="(period?.closing_balance || calculatedBalance) >= 0 ? 'treasury-stat-monthly' : 'treasury-stat-expense'">
+    <div class="flex items-center justify-center gap-3 mb-2">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+      </svg>
+      <span class="text-sm font-medium text-white/90">Saldo Final</span>
+    </div>
+    <div class="text-3xl font-bold text-white" x-text="period ? formatBalance(period.closing_balance || calculatedBalance) : '-'"></div>
+  </div>
+</div>
+
+<script>
+function periodHeaderStats() {
+    return {
+        period: null,
+        calculatedBalance: 0,
+        loading: true,
+
+        async init() {
+            const periodId = window.location.pathname.split('/').slice(-2, -1)[0];
+            await this.loadPeriod(periodId);
+        },
+
+        async loadPeriod(id) {
+            // If no id provided, get from URL
+            if (!id) {
+                id = window.location.pathname.split('/').slice(-2, -1)[0];
+            }
+            try {
+                // Add cache-buster
+                const bust = Date.now();
+                const response = await fetch(`/treasury/api/periods/${id}/?_=${bust}`, {
+                    headers: { 'X-CSRFToken': this.getCookie('csrftoken') }
+                });
+                this.period = await response.json();
+                this.period.status_label = { 'open': 'Aberto', 'closed': 'Fechado', 'archived': 'Arquivado' }[this.period.status];
+                const net = this.period.transactions_summary?.net || 0;
+                this.calculatedBalance = parseFloat(this.period.opening_balance) + net;
+            } catch (error) {
+                console.error('Error loading period:', error);
+            }
+        },
+
+        getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        },
+
+        formatBalance(value) {
+            const numValue = value !== null && value !== undefined ? parseFloat(value) : 0;
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(numValue);
+        },
+
+        formatAmount(value) {
+            const numValue = value !== null && value !== undefined ? parseFloat(value) : 0;
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(numValue);
+        }
+    };
+}
+</script>
+{% endblock %}
+
+{% block treasury_content %}
+<div class="max-w-6xl mx-auto" x-data="periodDetailContent()" x-init="init()" @period-refresh.window="loadPeriod($event.detail.periodId)" x-cloak>
+    <!-- Loading -->
+    <div x-show="loading" class="flex justify-center py-12">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+    </div>
+
+    <!-- Period Content -->
+    <div x-show="!loading">
+        <!-- Period Transactions -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <!-- Card Header -->
+            <div class="px-6 py-4 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-gray-50/50">
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-800">Transações do Período</h2>
+                    <p class="text-sm text-gray-500 mt-1" x-text="filteredTransactions.length + ' transações'"></p>
+                </div>
+                <div class="flex flex-wrap items-center gap-3">
+                    <!-- Filter by Category -->
+                    <select x-model="filters.category" @change="applyFilters" class="app-input py-2">
+                        <option value="">Todas categorias</option>
+                        <template x-for="cat in availableCategories" :key="cat.id">
+                            <option :value="cat.id" x-text="cat.name"></option>
+                        </template>
+                    </select>
+                    <!-- Search -->
+                    <div class="relative flex items-center">
+                        <input type="text" x-model="filters.search" @keyup.enter="applyFilters" placeholder="Buscar..." class="app-input pr-10 py-2 w-48">
+                        <svg class="w-4 h-4 absolute right-3 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </div>
+                    {% if user.is_treasurer or user.is_superuser %}
+                    <!-- Close Period Button (only when open) -->
+                    <template x-if="period && period.status === 'open'">
+                        <button @click="closePeriod" class="app-btn app-btn-warning">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                            </svg>
+                            Fechar
+                        </button>
+                    </template>
+                    <!-- Reopen and Report Buttons (when closed) -->
+                    <template x-if="period && period.status === 'closed'">
+                        <div class="flex items-center gap-2">
+                            <button @click="reopenPeriod" class="app-btn">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                </svg>
+                                Reabrir
+                            </button>
+                            <a :href="`/treasury/periodos/${period.id}/pdf/analitico/`" class="app-btn app-btn-primary">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h3a2 2 0 002-2v-4m-6-4h6"/>
+                                </svg>
+                                PDF
+                            </a>
+                        </div>
+                    </template>
+                    {% else %}
+                    <!-- Non-treasurers only see PDF button when closed -->
+                    <template x-if="period && period.status === 'closed'">
+                        <a :href="`/treasury/periodos/${period.id}/pdf/analitico/`" class="app-btn app-btn-primary">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h3a2 2 0 002-2v-4m-6-4h6"/>
+                            </svg>
+                            PDF
+                        </a>
+                    </template>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Descrição</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoria</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <template x-for="tx in filteredTransactions" :key="tx.id">
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" x-text="formatDate(tx.date)"></td>
+                                <td class="px-6 py-4 text-sm text-gray-900">
+                                    <a :href="`/treasury/transacoes/${tx.id}/`" class="text-blue-600 hover:text-blue-900 hover:underline" x-text="tx.description"></a>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    <template x-if="tx.category">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800" x-text="tx.category?.name"></span>
+                                    </template>
+                                    <template x-if="!tx.category">
+                                        <span>-</span>
+                                    </template>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-medium"
+                                    :class="tx.is_positive ? 'text-green-600' : 'text-red-600'"
+                                    x-text="formatBRL(tx.amount)"></td>
+                            </tr>
+                        </template>
+                        <tr x-show="filteredTransactions.length === 0">
+                            <td colspan="4" class="px-6 py-12 text-center text-gray-500">
+                                <div class="flex flex-col items-center justify-center">
+                                    <svg class="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                    </svg>
+                                    <p>Nenhuma transação encontrada</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Close Modal -->
+<div x-data="{
+    isOpen: false,
+    notes: '',
+    periodId: null,
+    open(id) { this.periodId = id; this.notes = ''; this.isOpen = true; },
+    close() { this.isOpen = false; this.periodId = null; this.notes = ''; },
+    async confirm() {
+        if (!this.periodId) return;
+        try {
+            const response = await fetch(`/treasury/api/periods/${this.periodId}/close/`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/json' },
+                body: JSON.stringify({ notes: this.notes })
+            });
+            if (response.ok) {
+                this.close();
+                window.__refreshPeriod?.();
+                Alpine.store('treasuryUi').notify('Período fechado com sucesso!', 'success');
+            } else {
+                const data = await response.json().catch(() => ({}));
+                const errorMsg = data.error || data.detail || 'Erro ao fechar período';
+                Alpine.store('treasuryUi').notify(errorMsg, 'error');
+            }
+        } catch (e) {
+            Alpine.store('treasuryUi').notify('Erro de conexão ao fechar período', 'error');
+        }
+    }
+}" x-cloak style="display: none;">
+    <div x-show="isOpen"
+         x-transition:enter="transition ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4" @click.away="close()">
+            <h3 class="text-lg font-bold mb-4">Fechar Período</h3>
+            <p class="text-gray-600 mb-4">
+                Ao fechar o período, as transações não poderão mais ser editadas ou excluídas.
+            </p>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Observações</label>
+                <textarea x-model="notes" rows="3" class="w-full rounded-md border-gray-300 shadow-sm"></textarea>
+            </div>
+            <div class="flex justify-end gap-2">
+                <button @click="close()" class="px-4 py-2 text-gray-600">Cancelar</button>
+                <button @click="confirm()" class="px-4 py-2 bg-yellow-500 text-white rounded">Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function periodDetailContent() {
+    return {
+        period: null,
+        transactions: [],
+        filteredTransactions: [],
+        loading: true,
+        calculatedBalance: 0,
+        filters: {
+            category: '',
+            search: ''
+        },
+
+        get availableCategories() {
+            // Use categories from the global store (already loaded in base template)
+            const cats = this.$store.categories?.categories || [];
+            return Array.isArray(cats) ? cats : (cats.results || []);
+        },
+
+        get filteredTransactions() {
+            let result = this.transactions;
+
+            // Filter by category
+            if (this.filters.category) {
+                result = result.filter(tx => tx.category?.id == this.filters.category);
+            }
+
+            // Filter by search
+            if (this.filters.search) {
+                const searchLower = this.filters.search.toLowerCase();
+                result = result.filter(tx =>
+                    tx.description.toLowerCase().includes(searchLower) ||
+                    (tx.category?.name || '').toLowerCase().includes(searchLower)
+                );
+            }
+
+            return result;
+        },
+
+        async init() {
+            const periodId = window.location.pathname.split('/').slice(-2, -1)[0];
+
+            // Expose refresh function globally - dispatches event for both header and content
+            window.__refreshPeriod = async () => {
+                window.dispatchEvent(new CustomEvent('period-refresh', { detail: { periodId } }));
+            };
+
+            await this.loadPeriod(periodId);
+            await this.loadTransactions(periodId);
+        },
+
+        async loadPeriod(id) {
+            // If no id provided, get from URL
+            if (!id) {
+                id = window.location.pathname.split('/').slice(-2, -1)[0];
+            }
+            try {
+                // Add cache-buster
+                const bust = Date.now();
+                const response = await fetch(`/treasury/api/periods/${id}/?_=${bust}`, {
+                    headers: { 'X-CSRFToken': this.getCookie('csrftoken') }
+                });
+                this.period = await response.json();
+                this.period.status_label = { 'open': 'Aberto', 'closed': 'Fechado', 'archived': 'Arquivado' }[this.period.status];
+                const net = this.period.transactions_summary?.net || 0;
+                this.calculatedBalance = parseFloat(this.period.opening_balance) + net;
+            } catch (error) {
+                console.error('Error loading period:', error);
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async loadTransactions(id) {
+            try {
+                const response = await fetch(`/treasury/api/periods/${id}/transactions/`, {
+                    headers: { 'X-CSRFToken': this.getCookie('csrftoken') }
+                });
+                const data = await response.json();
+                this.transactions = data.results || data;
+            } catch (error) {
+                console.error('Error loading transactions:', error);
+            }
+        },
+
+        applyFilters() {
+            // Filters are reactive via getter, nothing to do here
+        },
+
+        closePeriod() {
+            if (!this.period) return;
+            // Encontrar o componente do modal e chamar open()
+            const modalEl = document.querySelector('[x-data*="isOpen"]');
+            if (modalEl) {
+                const modalData = Alpine.$data(modalEl);
+                if (modalData && modalData.open) {
+                    modalData.open(this.period.id);
+                }
+            }
+        },
+
+        async reopenPeriod() {
+            if (!confirm('Reabrir este período?')) return;
+            try {
+                const response = await fetch(`/treasury/api/periods/${this.period.id}/reopen/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': this.getCookie('csrftoken'),
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (response.ok) {
+                    await this.loadPeriod(this.period.id);
+                    this.$store.treasuryUi?.notify('Período reaberto com sucesso!', 'success');
+                } else {
+                    const data = await response.json().catch(() => ({}));
+                    const errorMsg = data.error || data.detail || 'Erro ao reabrir período';
+                    this.$store.treasuryUi?.notify(errorMsg, 'error');
+                }
+            } catch (error) {
+                console.error('Error reopening period:', error);
+                this.$store.treasuryUi?.notify('Erro de conexão: ' + error.message, 'error');
+            }
+        },
+
+        getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        },
+
+        formatBRL(value) {
+            const numValue = value !== null && value !== undefined ? parseFloat(value) : 0;
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(numValue);
+        },
+
+        formatDate(dateStr) {
+            return new Date(dateStr).toLocaleDateString('pt-BR');
+        }
+    };
+}
+
+// Helper global para o modal
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+}
+</script>
+{% endblock %}

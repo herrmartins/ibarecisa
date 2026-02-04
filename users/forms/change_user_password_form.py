@@ -5,14 +5,23 @@ from users.models import CustomUser
 
 class ChangeUserPasswordForm(PasswordChangeForm):
     old_password = forms.CharField(widget=forms.PasswordInput(
-        attrs={'type': 'password',
-               'placeholder': 'Digite sua senha antiga...'}))
+        attrs={
+            'type': 'password',
+            'class': 'app-input',
+            'placeholder': 'Digite sua senha antiga...'
+        }))
     new_password1 = forms.CharField(widget=forms.PasswordInput(
-        attrs={'type': 'password',
-               'placeholder': "Digite sua nova senha..."}))
+        attrs={
+            'type': 'password',
+            'class': 'app-input',
+            'placeholder': 'Digite sua nova senha...'
+        }))
     new_password2 = forms.CharField(widget=forms.PasswordInput(
-        attrs={'type': 'password',
-               'placeholder': 'Confirme sua nova senha...'}))
+        attrs={
+            'type': 'password',
+            'class': 'app-input',
+            'placeholder': 'Confirme sua nova senha...'
+        }))
 
     class Meta:
         model = CustomUser

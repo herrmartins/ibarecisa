@@ -8,11 +8,11 @@ class EventCategoryForm(forms.ModelForm):
         fields = ["name", "description"]
         widgets = {
             "name": forms.TextInput(
-                attrs={"class": "form-control", "placeholder": "Nome da categoria"}
+                attrs={"class": "app-input", "placeholder": "Nome da categoria"}
             ),
             "description": forms.Textarea(
                 attrs={
-                    "class": "form-control",
+                    "class": "app-input",
                     "rows": 4,
                     "placeholder": "Digite uma descrição...",
                 }

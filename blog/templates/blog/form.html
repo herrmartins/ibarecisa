@@ -1,101 +1,256 @@
 {% extends 'core/base.html' %}
 {% load static %}
+
 {% block content %}
 <script src="https://cdn.tiny.cloud/1/{{ TINYMCE_API_KEY }}/tinymce/8/tinymce.min.js" referrerpolicy="origin"></script>
 
-<div class="min-h-screen bg-gradient-to-b from-slate-50 to-white py-8">
-  <div class="editor-page-container">
-    <!-- Header -->
-    <div class="text-center mb-8">
-      {% if 'edit' in request.resolver_match.view_name %}
-        <h1 class="text-3xl sm:text-4xl font-bold text-primary-600 mb-2">
-          <svg class="w-10 h-10 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2h2.828l8.586-8.586z"/></svg>
-          Alterar o post: {{ post.title }}
-        </h1>
-        <p class="text-slate-500">Edite o conteúdo do seu post</p>
-      {% else %}
-        <h1 class="text-3xl sm:text-4xl font-bold text-primary-600 mb-2">
-          <svg class="w-10 h-10 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-          Escreva um novo post
-        </h1>
-        <p class="text-slate-500">Compartilhe suas ideias com a comunidade</p>
-      {% endif %}
-    </div>
-
-    <!-- Form Card -->
-    <div class="blog-form-card">
-      {% if 'edit' in request.resolver_match.view_name %}
-        <form method="POST" action="{% url 'blog:update-post' post.id %}" class="space-y-6">
-      {% else %}
-        <form method="POST" action="{% url 'blog:create-post' %}" class="space-y-6">
-      {% endif %}
-        {% csrf_token %}
-
-        <!-- Form Fields -->
-        <div class="blog-form-fields space-y-4">
-          {{ form.as_p }}
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="flex flex-wrap items-center gap-3 pt-4 border-t border-slate-200">
-          {% if 'edit' in request.resolver_match.view_name %}
-            <button type="submit" class="blog-submit-btn">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-              Salvar Alterações
-            </button>
-            <a href="{% url 'blog:home' %}" class="blog-cancel-btn">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-              Cancelar
-            </a>
-          {% else %}
-            <button type="submit" class="blog-submit-btn">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
-              Publicar Post
-            </button>
-            <a href="{% url 'blog:category-form' %}" class="blog-category-btn">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
-              Adicionar Categoria
-            </a>
-          {% endif %}
-        </div>
-      </form>
-    </div>
-
-    <!-- Back to Home -->
-    <div class="mt-6 text-center">
-      <a href="{% url 'blog:home' %}" class="inline-flex items-center gap-2 text-slate-500 hover:text-primary-600 transition-colors duration-200">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-        Voltar para o blog
+<!-- Page Header -->
+<div class="app-page-header">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <!-- Back Button -->
+    <div class="mb-6 relative z-10">
+      <a href="{% url 'blog:home' %}" class="app-back-link">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+        Voltar para Blog
       </a>
+    </div>
+
+    <div class="text-center mb-8">
+      <h1 class="app-page-title">Blog</h1>
+      {% if 'edit' in request.resolver_match.view_name %}
+        <p class="app-page-subtitle">Edição de Post</p>
+      {% else %}
+        <p class="app-page-subtitle">Novo Post</p>
+      {% endif %}
     </div>
   </div>
 </div>
 
+<!-- Main Content -->
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  {% if 'edit' in request.resolver_match.view_name %}
+  <form method="POST" action="{% url 'blog:update-post' post.id %}" id="post-form">
+  {% else %}
+  <form method="POST" action="{% url 'blog:create-post' %}" id="post-form">
+  {% endif %}
+    {% csrf_token %}
+
+    <!-- Hidden author field -->
+    {{ form.author }}
+
+    <!-- Form Errors -->
+    {% if form.errors %}
+    <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+      <div class="flex items-start gap-3">
+        <svg class="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <div>
+          <p class="font-medium text-red-800">Por favor, corrija os seguintes erros:</p>
+          <ul class="mt-2 text-sm text-red-700 list-disc list-inside">
+            {% for field, errors in form.errors.items %}
+              {% for error in errors %}
+                <li>{{ error }}</li>
+              {% endfor %}
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Title Section -->
+    <div class="app-card mb-6">
+      <div class="app-card-body">
+        <div class="flex items-center gap-3 mb-4">
+          <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+          </svg>
+          <label class="text-sm font-semibold text-slate-700">Título do Post</label>
+        </div>
+        {{ form.title.label_tag }}
+        {{ form.title }}
+        {% if form.title.help_text %}
+          <p class="text-xs text-slate-500 mt-2">{{ form.title.help_text }}</p>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Content + Sidebar Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+      <!-- Main Content Area (2 columns) -->
+      <div class="lg:col-span-2 space-y-6">
+        <!-- Summary -->
+        <div class="app-card">
+          <div class="app-card-body">
+            <div class="flex items-center gap-3 mb-4">
+              <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/>
+              </svg>
+              <label class="text-sm font-semibold text-slate-700">Resumo</label>
+            </div>
+            {{ form.summary.label_tag }}
+            {{ form.summary }}
+            {% if form.summary.help_text %}
+              <p class="text-xs text-slate-500 mt-2">{{ form.summary.help_text }}</p>
+            {% else %}
+              <p class="text-xs text-slate-500 mt-2">Um breve resumo do post (aparece na lista de posts)</p>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Content Editor -->
+        <div class="app-card">
+          <div class="app-card-body">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center gap-3">
+                <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                <label class="text-sm font-semibold text-slate-700">Conteúdo</label>
+              </div>
+              <span class="text-xs text-slate-500">Editor com formatação</span>
+            </div>
+            {{ form.content.label_tag }}
+            {{ form.content }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar (1 column) -->
+      <div class="space-y-6">
+        <!-- Categories Card -->
+        <div class="app-card">
+          <div class="app-card-header pb-3">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                </svg>
+                <h3 class="text-sm font-semibold text-slate-700">Categorias</h3>
+              </div>
+              <a href="{% url 'blog:category-form' %}" class="text-xs text-primary-600 hover:text-primary-800 flex items-center gap-1">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                </svg>
+                Gerenciar
+              </a>
+            </div>
+          </div>
+          <div class="app-card-body">
+            {{ form.categories.label_tag }}
+            {{ form.categories }}
+            {% if form.categories.help_text %}
+              <p class="text-xs text-slate-500 mt-2">{{ form.categories.help_text }}</p>
+            {% else %}
+              <p class="text-xs text-slate-500 mt-2">Selecione uma ou mais categorias</p>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Keywords Card -->
+        <div class="app-card">
+          <div class="app-card-header pb-3">
+            <div class="flex items-center gap-2">
+              <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"/>
+              </svg>
+              <h3 class="text-sm font-semibold text-slate-700">Palavras-chave</h3>
+            </div>
+          </div>
+          <div class="app-card-body">
+            {{ form.keywords.label_tag }}
+            {{ form.keywords }}
+            {% if form.keywords.help_text %}
+              <p class="text-xs text-slate-500 mt-2">{{ form.keywords.help_text }}</p>
+            {% else %}
+              <p class="text-xs text-slate-500 mt-2">Separe por vírgula</p>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Quick Actions Card -->
+        <div class="app-card bg-gradient-to-br from-primary-50 to-purple-50 border border-primary-100">
+          <div class="app-card-body">
+            <h4 class="text-sm font-semibold text-slate-700 mb-3">Ações Rápidas</h4>
+            <div class="space-y-2">
+              <a href="{% url 'blog:category-form' %}" class="flex items-center gap-2 text-sm text-primary-600 hover:text-primary-800 py-2 px-3 rounded-lg hover:bg-white/50 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                </svg>
+                Nova Categoria
+              </a>
+              <a href="{% url 'blog:home' %}" class="flex items-center gap-2 text-sm text-slate-600 hover:text-slate-800 py-2 px-3 rounded-lg hover:bg-white/50 transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+                Voltar ao Blog
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions Bar -->
+    <div class="app-card sticky bottom-4 z-40 shadow-lg">
+      <div class="app-card-body">
+        <div class="flex flex-wrap gap-3 justify-between items-center">
+          <div class="flex items-center gap-2 text-sm text-slate-500">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <span>Revise antes de publicar</span>
+          </div>
+          <div class="flex gap-3">
+            <a href="{% url 'blog:home' %}" class="app-btn app-btn-secondary">
+              Cancelar
+            </a>
+            {% if 'edit' in request.resolver_match.view_name %}
+              <button type="submit" class="app-btn app-btn-primary">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+                Salvar Alterações
+              </button>
+            {% else %}
+              <button type="submit" class="app-btn app-btn-primary">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                </svg>
+                Publicar Post
+              </button>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+
+<style>
+  /* Hide Django's default labels while keeping them in DOM for validation */
+  .app-card-body > label:not([for*="author"]) {
+    display: none;
+  }
+</style>
+
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    // Update form field classes and wrap content field
-    const formInputs = document.querySelectorAll('input[type="text"], select');
-    formInputs.forEach(input => {
-      if (!input.classList.contains('d-none')) {
-        input.classList.add('w-full', 'px-4', 'py-2', 'border', 'border-slate-300', 'rounded-lg', 'focus:ring-2', 'focus:ring-primary-500', 'focus:border-primary-500', 'transition-all');
-      }
-    });
-
-    // Update labels styling
-    const labels = document.querySelectorAll('label');
-    labels.forEach(label => {
-      if (!label.classList.contains('d-none')) {
-        label.classList.add('block', 'text-sm', 'font-semibold', 'text-slate-700', 'mb-2');
-      }
-    });
+    // Remove required attribute from content field since TinyMCE will hide it
+    const contentField = document.querySelector('#id_content');
+    if (contentField) {
+      contentField.removeAttribute('required');
+    }
 
     // Initialize TinyMCE for content field
-    const contentField = document.querySelector('#id_content');
     if (contentField) {
       tinymce.init({
         selector: '#id_content',
         language: 'pt-BR',
-        height: 500,
+        height: 400,
         width: '100%',
         resize: true,
         menubar: false,
@@ -113,6 +268,25 @@
         license_key: 'gpl',
         base_url: 'https://cdn.tiny.cloud/1/{{ TINYMCE_API_KEY }}/tinymce/8/'
       });
+    }
+
+    // Apply styling to form fields
+    const titleField = document.querySelector('#id_title');
+    const summaryField = document.querySelector('#id_summary');
+    const categoriesField = document.querySelector('#id_categories');
+    const keywordsField = document.querySelector('#id_keywords');
+
+    if (titleField) {
+      titleField.classList.add('app-input', 'w-full', 'text-2xl', 'font-semibold');
+    }
+    if (summaryField) {
+      summaryField.classList.add('app-input', 'w-full', 'min-h-[100px]', 'resize-y');
+    }
+    if (categoriesField) {
+      categoriesField.classList.add('app-input', 'w-full');
+    }
+    if (keywordsField) {
+      keywordsField.classList.add('app-input', 'w-full');
     }
   });
 </script>

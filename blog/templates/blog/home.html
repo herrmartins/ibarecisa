@@ -2,27 +2,44 @@
 {% load static %}
 
 {% block content %}
-<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-  <!-- User info para JS -->
-  <div id="user-info" class="hidden" comment-author-id="{% if request.user.is_authenticated %}{{ request.user.id }}{% else %}null{% endif %}"></div>
+<!-- Page Header -->
+<div class="app-page-header">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="text-center mb-8">
+      <h1 class="app-page-title">Blog</h1>
+      <p class="app-page-subtitle">Notícias, reflexões e edificações</p>
+    </div>
+  </div>
+</div>
 
+<!-- User info para JS -->
+<div id="user-info" class="hidden" comment-author-id="{% if request.user.is_authenticated %}{{ request.user.id }}{% else %}null{% endif %}"></div>
+
+<!-- Main Content -->
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
   <!-- Posts Container -->
   <div id="posts-container" class="space-y-6">
     {% for post in posts %}
-    <article class="blog-card group">
+    <article class="app-card">
       <!-- Card Header -->
-      <div class="blog-card-header">
-        <h3 class="blog-card-title">{{ post.title }}</h3>
-        <div class="flex items-center gap-3 flex-wrap">
-          <p class="blog-card-meta">
-            Por {{ post.author.first_name }} {{ post.author.last_name }} em {{ post.created|date:"d/m/Y" }}
-            {% if post.created != post.modified %}
-              <span class="blog-card-updated">• Atualizado em {{ post.modified|date:"d/m/Y" }}</span>
-            {% endif %}
-          </p>
+      <div class="app-card-header">
+        <div class="flex items-start justify-between gap-4">
+          <div class="flex-1">
+            <h3 class="app-card-title text-xl">
+              <a href="#" class="hover:text-primary-600 transition-colors">{{ post.title }}</a>
+            </h3>
+            <p class="text-sm text-slate-500 mt-1">
+              Por {{ post.author.first_name }} {{ post.author.last_name }} em {{ post.created|date:"d/m/Y" }}
+              {% if post.created != post.modified %}
+              <span class="text-slate-400">• Atualizado em {{ post.modified|date:"d/m/Y" }}</span>
+              {% endif %}
+            </p>
+          </div>
           {% if post.author == request.user %}
-          <a href="{% url 'blog:edit' post.id %}" class="blog-edit-btn">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2h2.828l8.586-8.586z"/></svg>
+          <a href="{% url 'blog:edit' post.id %}" class="app-btn app-btn-secondary text-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2h2.828l8.586-8.586z"/>
+            </svg>
             Editar
           </a>
           {% endif %}
@@ -30,12 +47,12 @@
       </div>
 
       <!-- Card Body -->
-      <div class="blog-card-body">
-        <div class="blog-card-content">{{ post.content|safe }}</div>
+      <div class="app-card-body">
+        <div class="prose prose-slate max-w-none">{{ post.content|safe }}</div>
       </div>
 
       <!-- Card Footer -->
-      <div class="blog-card-footer">
+      <div class="app-card-footer">
         <!-- Categories -->
         <div class="flex-1">
           <span class="text-sm text-slate-500">Categorias:</span>
@@ -57,7 +74,7 @@
             liked: {% if user in post.likes.all %}true{% else %}false{% endif %},
             likeCount: {{ post.likes.count }},
             likers: [
-              {% for liker in post.likes.all|slice:":5" %}
+              {% for liker in post.likes.all|slice:':5' %}
               {
                 id: {{ liker.id }},
                 first_name: '{{ liker.first_name }}',
@@ -110,8 +127,8 @@
             <button
               @click="toggleLike"
               :disabled="loading"
-              class="blog-like-btn"
-              :class="{ 'blog-like-btn-liked': liked, 'blog-like-btn-loading': loading }"
+              class="app-btn app-btn-secondary"
+              :class="{ 'bg-red-50 border-red-200 text-red-600 hover:bg-red-100': liked }"
             >
               <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" :fill="liked ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2"/>
@@ -119,14 +136,16 @@
               <span class="font-semibold" x-text="likeCount"></span>
             </button>
             {% else %}
-            <button disabled class="blog-like-btn blog-like-btn-disabled">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+            <button disabled class="app-btn app-btn-secondary opacity-50 cursor-not-allowed">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+              </svg>
               <span class="font-semibold">{{ post.likes.count }}</span>
             </button>
             {% endif %}
 
             <!-- Likers Avatars -->
-            <div class="flex items-center -space-x-2" x-show="likers.length > 0" x-transition>
+            <div class="flex items-center -space-x-2" x-show="likers.length > 0">
               <template x-for="liker in likers.slice(0, 5)" :key="liker.id">
                 <img
                   :src="liker.profile_image || '/static/img/user.png'"
@@ -144,20 +163,25 @@
           </div>
 
           <!-- Comment Toggle -->
-          <button class="blog-comment-toggle" data-post-id="{{ post.id }}">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 16h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+          <button class="app-btn app-btn-secondary blog-comment-toggle" data-post-id="{{ post.id }}">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 16h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+            </svg>
+            <span class="ml-1">Comentar</span>
           </button>
         </div>
       </div>
 
       <!-- Comments Container -->
-      <div class="blog-comments-container hidden" id="comments-{{ post.id }}"></div>
+      <div class="app-card-body border-t border-slate-100 hidden" id="comments-{{ post.id }}"></div>
 
       <!-- Comment Form -->
-      <div class="blog-comment-form hidden" id="form-{{ post.id }}">
+      <div class="app-card-body border-t border-slate-100 hidden bg-slate-50" id="form-{{ post.id }}">
         {% if not user.is_authenticated %}
-        <div class="blog-login-notice">
-          <svg class="w-5 h-5 text-info-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <div class="flex items-center gap-3 p-4 bg-blue-50 border border-blue-100 rounded-lg text-blue-700">
+          <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
           <span><strong>Faça login</strong> para adicionar seu comentário e participar da discussão.</span>
         </div>
         {% else %}
@@ -165,9 +189,9 @@
           <!-- Avatar -->
           <div class="flex-shrink-0">
             {% if user.profile_image %}
-              <img src="{{ user.profile_image.url }}" alt="{{ user.username }}" class="w-12 h-12 rounded-full ring-2 ring-primary-200">
+              <img src="{{ user.profile_image.url }}" alt="{{ user.username }}" class="w-12 h-12 rounded-full ring-2 ring-slate-200">
             {% else %}
-              <div class="w-12 h-12 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 ring-2 ring-primary-200 flex items-center justify-center">
+              <div class="w-12 h-12 rounded-full bg-gradient-to-br from-primary-500 to-secondary-500 ring-2 ring-slate-200 flex items-center justify-center">
                 <span class="text-white font-bold text-lg">{{ user.first_name|first|upper }}</span>
               </div>
             {% endif %}
@@ -175,22 +199,19 @@
 
           <!-- Form -->
           <div class="flex-1">
-            <div class="relative">
-              <textarea
-                id="comment-{{ post.id }}"
-                class="blog-textarea"
-                rows="3"
-                placeholder="Compartilhe seus pensamentos..."
-                required
-              ></textarea>
-            </div>
+            <textarea
+              id="comment-{{ post.id }}"
+              class="app-input w-full min-h-[100px] resize-y"
+              rows="3"
+              placeholder="Compartilhe seus pensamentos..."
+              required
+            ></textarea>
             <div class="flex items-center justify-between mt-3">
-              <span class="text-xs text-slate-400 flex items-center gap-1">
-                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                Comentários são moderados
-              </span>
-              <button type="button" id="sendComment-{{ post.id }}" data-post-id="{{ post.id }}" class="blog-submit-btn">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+              <span class="text-xs text-slate-400">Comentários são moderados</span>
+              <button type="button" id="sendComment-{{ post.id }}" data-post-id="{{ post.id }}" class="app-btn app-btn-primary">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                </svg>
                 <span class="ml-1">Postar</span>
               </button>
             </div>
@@ -205,41 +226,53 @@
   <!-- Pagination -->
   {% if is_paginated and paginator.num_pages > 1 %}
   <nav class="mt-8" aria-label="Navegação do blog">
-    <ul class="flex justify-center items-center gap-2">
-      {% if page_obj.has_previous %}
-      <li>
-        <a href="?page=1" class="blog-pagination-link">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg>
-          Primeira
-        </a>
-      </li>
-      <li>
-        <a href="?page={{ page_obj.previous_page_number }}" class="blog-pagination-link">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-          Anterior
-        </a>
-      </li>
-      {% endif %}
+    <div class="app-card">
+      <div class="app-card-body">
+        <ul class="flex justify-center items-center gap-2 flex-wrap">
+          {% if page_obj.has_previous %}
+          <li>
+            <a href="?page=1" class="app-btn app-btn-secondary text-sm">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/>
+              </svg>
+              Primeira
+            </a>
+          </li>
+          <li>
+            <a href="?page={{ page_obj.previous_page_number }}" class="app-btn app-btn-secondary text-sm">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+              </svg>
+              Anterior
+            </a>
+          </li>
+          {% endif %}
 
-      <li class="blog-pagination-current">
-        Página {{ page_obj.number }} de {{ paginator.num_pages }}
-      </li>
+          <li class="text-sm text-slate-600 font-medium">
+            Página {{ page_obj.number }} de {{ paginator.num_pages }}
+          </li>
 
-      {% if page_obj.has_next %}
-      <li>
-        <a href="?page={{ page_obj.next_page_number }}" class="blog-pagination-link">
-          Próxima
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-        </a>
-      </li>
-      <li>
-        <a href="?page={{ paginator.num_pages }}" class="blog-pagination-link">
-          Última
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l14 14"/></svg>
-        </a>
-      </li>
-      {% endif %}
-    </ul>
+          {% if page_obj.has_next %}
+          <li>
+            <a href="?page={{ page_obj.next_page_number }}" class="app-btn app-btn-secondary text-sm">
+              Próxima
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+              </svg>
+            </a>
+          </li>
+          <li>
+            <a href="?page={{ paginator.num_pages }}" class="app-btn app-btn-secondary text-sm">
+              Última
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l14 14"/>
+              </svg>
+            </a>
+          </li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
   </nav>
   {% endif %}
 </div>

@@ -15,7 +15,8 @@ DEBUG = config("DEBUG", cast=bool)
 
 if not DEBUG:
     ALLOWED_HOSTS = ["ibarecisa.org.br", "diacono.ibarecisa.org.br",
-                     "104.251.208.79", "104.237.2.251", "https://104.237.2.251"]
+                     "104.251.208.79", "104.237.2.251",
+                     "https://104.237.2.251", 'mail.ibarecisa.org.br']
 else:
     ALLOWED_HOSTS = ["*"]
 
@@ -38,6 +39,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "reversion",
     "reversion_compare",
+    "storages",
     "blog.apps.BlogConfig",
     "events.apps.EventsConfig",
     "core.apps.CoreConfig",
@@ -59,6 +61,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "reversion.middleware.RevisionMiddleware",
     "core.middleware.ApprovalMiddleware",
+    "treasury.middleware.AccountingPeriodMiddleware",
 ]
 
 ROOT_URLCONF = "diacono.urls"
@@ -90,8 +93,17 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": BASE_DIR / "db.sqlite3",
+    },
+    "audit": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "audit.sqlite3",
     }
 }
+
+# Router para direcionar models de auditoria para banco separado
+DATABASE_ROUTERS = [
+    "treasury.routers.AuditRouter",
+]
 
 
 # Password validation
@@ -146,6 +158,42 @@ STATIC_URL = "/static/"
 MEDIA_ROOT = BASE_DIR / "media"
 MEDIA_URL = "/media/"
 
+# Storage Configuration
+# Desenvolvimento: armazenamento local
+# Produção: S3 compatível (Cloudflare R2, Backblaze B2, etc.)
+if not DEBUG:
+    # Configurações S3
+    AWS_ACCESS_KEY_ID = config("AWS_ACCESS_KEY_ID", default="")
+    AWS_SECRET_ACCESS_KEY = config("AWS_SECRET_ACCESS_KEY", default="")
+    AWS_STORAGE_BUCKET_NAME = config("AWS_STORAGE_BUCKET_NAME", default="")
+    AWS_S3_ENDPOINT_URL = config("AWS_S3_ENDPOINT_URL", default="")
+    AWS_S3_REGION_NAME = config("AWS_S3_REGION_NAME", default="auto")
+    AWS_QUERYSTRING_AUTH = False
+    AWS_DEFAULT_ACL = None
+    AWS_S3_FILE_OVERWRITE = False
+    # URL customizada para arquivos (útil para domínio customizado no R2)
+    AWS_S3_CUSTOM_DOMAIN = config("AWS_S3_CUSTOM_DOMAIN", default="")
+
+    # STORAGES (Django 4.2+)
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
+else:
+    # Desenvolvimento: armazenamento local
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
+
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "users.CustomUser"
@@ -184,7 +232,7 @@ EMAIL_HOST_USER = config("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD")
 EMAIL_PORT = config("EMAIL_PORT")
 EMAIL_USE_TLS = True
-DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="rafael@rdmartins.adv.br")
+DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="Rafael Martins <naoresponda@ibarecisa.org.br>")
 
 
 handler404 = "core.views.custom_404"
@@ -244,7 +292,13 @@ CAPTCHA_FONT_SIZE = 40
 CAPTCHA_TEST_MODE = True
 
 MISTRAL_API_KEY = config("MISTRAL_API_KEY", default="")
+USE_MISTRAL_OCR = config("USE_MISTRAL_OCR", default=False)  # False=Ollama em dev, True=Mistral sempre
 MISTRAL_MODEL = config("MISTRAL_MODEL", default="mistral-small-latest")
+
+# Ollama Configuration (desenvolvimento)
+OLLAMA_HOST = config("OLLAMA_HOST", default="http://localhost:11434")
+OLLAMA_OCR_MODEL = config("OLLAMA_OCR_MODEL", default="qwen3-vl:4b")
+OLLAMA_TEXT_MODEL = config("OLLAMA_TEXT_MODEL", default="gemma3n:e4b")
 
 if not DEBUG:
     sentry_sdk.init(
@@ -253,3 +307,16 @@ if not DEBUG:
         # see https://docs.sentry.io/platforms/python/data-management/data-collected/ for more info
         send_default_pii=True,
     )
+
+
+# Django REST Framework Configuration
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 50,
+}

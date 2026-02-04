@@ -2,11 +2,12 @@
 {% load static %}
 
 {% block content %}
-<div class="min-h-screen bg-gradient-to-b from-slate-50 to-white py-12">
-  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+<!-- Profile Header -->
+<div class="app-page-header">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
     <!-- Back Button -->
-    <div class="mb-6">
-      <a href="{% url 'users:user-profile' user_id %}" class="inline-flex items-center gap-2 text-slate-600 hover:text-primary-600 transition-colors">
+    <div class="mb-6 relative z-10">
+      <a href="{% url 'users:user-profile' pk=user_id %}" class="app-back-link">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
         </svg>
@@ -14,98 +15,115 @@
       </a>
     </div>
 
-    <!-- Update Form Card -->
-    <div class="user-profile-update-card">
-      <div class="user-profile-update-header">
-        <h4 class="user-profile-update-title">
-          <svg class="w-6 h-6 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2h2.828l8.586-8.586z"/>
-          </svg>
-          Atualize seus dados
-        </h4>
-      </div>
-      <div class="user-profile-update-body">
-        <form method="POST" enctype="multipart/form-data" class="user-profile-form-fields">
-          {% csrf_token %}
-          {{ form.media }}
+    <div class="text-center mb-8">
+      <h1 class="app-page-title">Perfil do Usuário</h1>
+      <p class="app-page-subtitle">Atualização Cadastral</p>
+    </div>
+  </div>
+</div>
 
-          <!-- Name Row -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- Main Content -->
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="app-card">
+    <div class="app-card-body">
+      <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.media }}
+
+        <!-- Form Errors -->
+        {% if form.errors %}
+        <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div class="flex items-start gap-3">
+            <svg class="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
             <div>
-              {{ form.first_name }}
-            </div>
-            <div>
-              {{ form.last_name }}
+              <p class="font-medium text-red-800">Por favor, corrija os seguintes erros:</p>
+              <ul class="mt-2 text-sm text-red-700 list-disc list-inside">
+                {% for field, errors in form.errors.items %}
+                  {% for error in errors %}
+                    <li>{{ error }}</li>
+                  {% endfor %}
+                {% endfor %}
+              </ul>
             </div>
           </div>
+        </div>
+        {% endif %}
 
-          <!-- Email -->
+        <!-- Name Row -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div>
-            {{ form.email }}
+            {{ form.first_name }}
           </div>
-
-          <!-- Phone Row -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              {{ form.phone_number }}
-            </div>
-            <div>
-              <label class="user-profile-form-checkbox">
-                {{ form.is_whatsapp }}
-                <label for="{{ form.is_whatsapp.id_for_label }}">
-                  {{ form.is_whatsapp.label }}
-                </label>
-              </label>
-            </div>
-          </div>
-
-          <!-- Address -->
           <div>
-            {{ form.address }}
+            {{ form.last_name }}
           </div>
+        </div>
 
-          <!-- Dates Row -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              {{ form.date_of_birth }}
-            </div>
-            <div>
-              {{ form.baptism_date }}
-            </div>
-          </div>
+        <!-- Email -->
+        <div class="mb-6">
+          {{ form.email }}
+        </div>
 
-          <!-- About -->
+        <!-- Phone Row -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div>
-            {{ form.about }}
+            {{ form.phone_number }}
           </div>
+          <div class="flex items-center">
+            <label class="flex items-center gap-2 cursor-pointer">
+              {{ form.is_whatsapp }}
+              <span class="text-sm text-slate-700">{{ form.is_whatsapp.label }}</span>
+            </label>
+          </div>
+        </div>
 
-          <!-- Profile Image -->
+        <!-- Address -->
+        <div class="mb-6">
+          {{ form.address }}
+        </div>
+
+        <!-- Dates Row -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div>
-            {{ form.profile_image }}
+            <label class="block text-sm font-medium text-slate-700 mb-1">Data de Nascimento</label>
+            {{ form.date_of_birth }}
           </div>
-
-          <!-- CPF -->
           <div>
-            {{ form.cpf }}
+            <label class="block text-sm font-medium text-slate-700 mb-1">Data de Batismo</label>
+            {{ form.baptism_date }}
           </div>
+        </div>
 
-          <!-- Actions -->
-          <div class="user-profile-form-actions">
-            <button type="submit" class="user-profile-save-btn">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-              </svg>
-              Salvar
-            </button>
-            <a href="{% url 'users:user-profile' user_id %}" class="user-profile-cancel-btn">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-              </svg>
-              Cancelar
-            </a>
-          </div>
-        </form>
-      </div>
+        <!-- About -->
+        <div class="mb-6">
+          {{ form.about }}
+        </div>
+
+        <!-- Profile Image -->
+        <div class="mb-6">
+          {{ form.profile_image }}
+        </div>
+
+        <!-- CPF -->
+        <div class="mb-6">
+          {{ form.cpf }}
+        </div>
+
+        <!-- Actions -->
+        <div class="flex gap-3">
+          <button type="submit" class="app-btn app-btn-primary flex-1">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            Salvar Alterações
+          </button>
+          <a href="{% url 'users:user-profile' pk=user_id %}" class="app-btn app-btn-secondary">
+            Cancelar
+          </a>
+        </div>
+      </form>
     </div>
   </div>
 </div>

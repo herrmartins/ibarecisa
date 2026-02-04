@@ -31,3 +31,4 @@ from .send_password_email_view import SendPasswordEmailView
 from .member_registration_view import MemberRegistrationView
 from .pdf_import_view import PDFImportView
 from .welcome_view import WelcomeView
+from .user_delete_view import UserDeleteView

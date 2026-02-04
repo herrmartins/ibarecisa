@@ -3,9 +3,10 @@ from treasury.models import (
     TransactionModel,
     TransactionEditHistory,
     CategoryModel,
-    MonthlyBalance,
-    MonthlyReportModel,
-    MonthlyTransactionByCategoryModel,
+    # REMOVED: MonthlyBalance (replaced by AccountingPeriod)
+    MonthlyReportModel,  # Still used for PDF generation
+    MonthlyTransactionByCategoryModel,  # Still used for PDF generation
+    AccountingPeriod,  # New period model
 )
 import reversion
 from reversion_compare.admin import CompareVersionAdmin
@@ -15,9 +16,10 @@ reversion.register(TransactionModel)
 
 admin.site.register(TransactionEditHistory)
 admin.site.register(CategoryModel)
-admin.site.register(MonthlyBalance)
+# REMOVED: admin.site.register(MonthlyBalance) - replaced by AccountingPeriod
 admin.site.register(MonthlyReportModel)
 admin.site.register(MonthlyTransactionByCategoryModel)
+admin.site.register(AccountingPeriod)
 
 
 @admin.register(TransactionModel)

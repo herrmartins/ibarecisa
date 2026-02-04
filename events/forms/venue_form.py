@@ -12,7 +12,7 @@ class VenueForm(forms.ModelForm):
             "capacity": "Capacidade",
         }
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control'}),
-            'address': forms.Textarea(attrs={'class': 'form-control'}),
-            'capacity': forms.NumberInput(attrs={'class': 'form-control'}),
+            'name': forms.TextInput(attrs={'class': 'app-input'}),
+            'address': forms.Textarea(attrs={'class': 'app-input'}),
+            'capacity': forms.NumberInput(attrs={'class': 'app-input'}),
         }

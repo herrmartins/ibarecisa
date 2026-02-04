@@ -11,6 +11,28 @@ except ImportError:
 
 
 def generate_minute_body(prompt):
+    """
+    Gera o corpo de uma ata usando IA.
+
+    Em desenvolvimento (DEBUG=True): Usa Ollama (modelo local)
+    Em produção (DEBUG=False): Usa Mistral API
+    Override: USE_MISTRAL_OCR=True força Mistral mesmo em dev
+    """
+    debug_mode = getattr(settings, 'DEBUG', False)
+    force_mistral = getattr(settings, 'USE_MISTRAL_OCR', False)
+
+    # Produção ou forçado: usa Mistral
+    # Desenvolvimento: usa Ollama
+    use_mistral = (not debug_mode) or force_mistral
+
+    if use_mistral:
+        return _generate_with_mistral(prompt)
+    else:
+        return _generate_with_ollama(prompt)
+
+
+def _generate_with_mistral(prompt):
+    """Gera ata usando API Mistral."""
     if not hasattr(settings, 'MISTRAL_API_KEY') or not settings.MISTRAL_API_KEY:
         return "Chave da API do Mistral não configurada. Configure MISTRAL_API_KEY em settings.py."
 
@@ -38,6 +60,48 @@ def generate_minute_body(prompt):
         return result['choices'][0]['message']['content']
     except requests.exceptions.RequestException as e:
         return f"Erro ao chamar a API do Mistral: {str(e)}"
+
+
+def _generate_with_ollama(prompt):
+    """Gera ata usando Ollama (modelo local)."""
+    ollama_host = getattr(settings, 'OLLAMA_HOST', 'http://localhost:11434')
+    ollama_model = getattr(settings, 'OLLAMA_TEXT_MODEL', 'gemma3n:e4b')
+
+    system_prompt = """Você é um assistente especializado em gerar atas de reunião formais para a Igreja Batista Regular de Cidade Satélite.
+
+Regras importantes:
+- Crie um texto narrativo fluido e contínuo
+- Evite divisões excessivas em seções, títulos ou subtítulos
+- Use parágrafos simples para conectar os eventos de forma natural
+- Adicione apenas elementos como abertura, decisões ou encerramento se explicitamente mencionados
+- Formate a saída em HTML puro, usando principalmente <p> para parágrafos
+- Use <strong> ou <em> para ênfase
+- Evite <h1>, <h2>, listas ou quebras desnecessárias
+- NÃO use blocos de código Markdown como ```html ou ``` – saia apenas com as tags HTML brutas"""
+
+    try:
+        payload = {
+            'model': ollama_model,
+            'prompt': f"{system_prompt}\n\nDescrição da reunião: {prompt}",
+            'stream': False,
+            'options': {
+                'temperature': 0.7,
+                'num_predict': 5000
+            }
+        }
+
+        response = requests.post(
+            f'{ollama_host}/api/generate',
+            json=payload,
+            timeout=300  # 5 minutos timeout para geração local
+        )
+        response.raise_for_status()
+
+        result = response.json()
+        return result.get('response', 'Resposta vazia do Ollama.')
+
+    except requests.exceptions.RequestException as e:
+        return f"Erro ao comunicar com Ollama: {str(e)}. Verifique se o Ollama está rodando em {ollama_host} e o modelo '{ollama_model}' está disponível."
 
 
 def extract_text_from_pdf(pdf_file):

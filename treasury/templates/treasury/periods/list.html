@@ -1,0 +1,205 @@
+{% extends "treasury/base.html" %}
+
+{% load static %}
+
+{% block header_title %}Tesouraria{% endblock %}
+{% block header_subtitle %}Fechamento e controle de períodos contábeis{% endblock %}
+
+{% block treasury_content %}
+<div class="container mx-auto px-4 py-6" x-data="periodList()">
+
+    <!-- Loading -->
+    <div x-show="loading" class="flex justify-center py-12">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+    </div>
+
+    <!-- Periods Grid -->
+    <div x-show="!loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <template x-for="period in periods" :key="period.id">
+            <div class="bg-white rounded-lg shadow hover:shadow-md transition-shadow">
+                <!-- Period Header -->
+                <div class="p-4 border-b" :class="{
+                    'bg-green-50 border-green-200': period.status === 'open',
+                    'bg-yellow-50 border-yellow-200': period.status === 'closed',
+                    'bg-gray-50 border-gray-200': period.status === 'archived'
+                }">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="text-lg font-semibold" x-text="period.month_name + '/' + period.year"></h3>
+                            <span class="inline-block px-2 py-1 text-xs rounded-full mt-1" :class="{
+                                'bg-green-200 text-green-800': period.status === 'open',
+                                'bg-yellow-200 text-yellow-800': period.status === 'closed',
+                                'bg-gray-200 text-gray-800': period.status === 'archived'
+                            }" x-text="period.status_label"></span>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm text-gray-500">Saldo Final</p>
+                            <p class="text-lg font-bold" :class="(period.closing_balance || period.calculated_balance || 0) >= 0 ? 'text-green-600' : 'text-red-600'"
+                               x-text="formatBRL(period.closing_balance || period.calculated_balance || 0)"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Period Body -->
+                <div class="p-4">
+                    <div class="grid grid-cols-2 gap-4 text-sm mb-4">
+                        <div>
+                            <p class="text-gray-500">Saldo Inicial</p>
+                            <p class="font-medium" x-text="formatBRL(period.opening_balance)"></p>
+                        </div>
+                        <div>
+                            <p class="text-gray-500">Transações</p>
+                            <p class="font-medium" x-text="period.transactions_summary?.count || 0"></p>
+                        </div>
+                        <div>
+                            <p class="text-gray-500">Receitas</p>
+                            <p class="font-medium text-green-600" x-text="formatBRL(period.transactions_summary?.total_positive || 0)"></p>
+                        </div>
+                        <div>
+                            <p class="text-gray-500">Despesas</p>
+                            <p class="font-medium text-red-600" x-text="formatBRL(period.transactions_summary?.total_negative || 0)"></p>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex gap-2">
+                        <a :href="`/treasury/periodos/${period.id}/`" class="flex-1 text-center bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded text-sm">
+                            Ver Detalhes
+                        </a>
+                        {% if user.is_treasurer or user.is_superuser %}
+                        <template x-if="period.status === 'open'">
+                            <button @click="closePeriod(period)" class="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded text-sm">
+                                Fechar
+                            </button>
+                        </template>
+                        <template x-if="period.status === 'closed'">
+                            <button @click="reopenPeriod(period)" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded text-sm">
+                                Reabrir
+                            </button>
+                        </template>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </template>
+    </div>
+
+    <!-- Close Period Modal -->
+    <div x-show="showCloseModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4" @click.away="showCloseModal = false">
+            <h3 class="text-lg font-bold mb-4">Fechar Período Contábil</h3>
+            <p class="text-gray-600 mb-4">
+                Confirmar o fechamento do período <span x-text="selectedPeriod?.month_name + '/' + selectedPeriod?.year"></span>?
+            </p>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Observações</label>
+                <textarea x-model="closeNotes" rows="3" class="w-full rounded-md border-gray-300 shadow-sm" placeholder="Opcional"></textarea>
+            </div>
+            <div class="flex justify-end gap-2">
+                <button @click="showCloseModal = false" class="px-4 py-2 text-gray-600">Cancelar</button>
+                <button @click="confirmClose" class="px-4 py-2 bg-yellow-500 text-white rounded">Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function periodList() {
+    return {
+        periods: [],
+        loading: true,
+        showCloseModal: false,
+        selectedPeriod: null,
+        closeNotes: '',
+
+        async init() {
+            await this.loadPeriods();
+        },
+
+        async loadPeriods() {
+            this.loading = true;
+            try {
+                const response = await fetch('/treasury/api/periods/', {
+                    headers: { 'X-CSRFToken': this.getCookie('csrftoken') }
+                });
+                const data = await response.json();
+                this.periods = data.results || data;
+                this.periods.forEach(p => {
+                    p.status_label = { 'open': 'Aberto', 'closed': 'Fechado', 'archived': 'Arquivado' }[p.status];
+                    p.calculated_balance = parseFloat(p.opening_balance) + (p.transactions_summary?.net || 0);
+                });
+            } catch (error) {
+                console.error('Error loading periods:', error);
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        closePeriod(period) {
+            this.selectedPeriod = period;
+            this.showCloseModal = true;
+            this.closeNotes = '';
+        },
+
+        async confirmClose() {
+            try {
+                const response = await fetch(`/treasury/api/periods/${this.selectedPeriod.id}/close/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': this.getCookie('csrftoken'),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ notes: this.closeNotes })
+                });
+                if (response.ok) {
+                    this.showCloseModal = false;
+                    await this.loadPeriods();
+                    this.$store.treasuryUi?.notify('Período fechado com sucesso!', 'success');
+                } else {
+                    const data = await response.json().catch(() => ({}));
+                    const errorMsg = data.error || data.detail || 'Erro ao fechar período';
+                    this.$store.treasuryUi?.notify(errorMsg, 'error');
+                }
+            } catch (error) {
+                console.error('Error closing period:', error);
+                this.$store.treasuryUi?.notify('Erro de conexão ao fechar período', 'error');
+            }
+        },
+
+        async reopenPeriod(period) {
+            if (!confirm('Reabrir este período?')) return;
+            try {
+                const response = await fetch(`/treasury/api/periods/${period.id}/reopen/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': this.getCookie('csrftoken'),
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (response.ok) {
+                    await this.loadPeriods();
+                    this.$store.treasuryUi?.notify('Período reaberto com sucesso!', 'success');
+                } else {
+                    const data = await response.json().catch(() => ({}));
+                    const errorMsg = data.error || data.detail || 'Erro ao reabrir período';
+                    this.$store.treasuryUi?.notify(errorMsg, 'error');
+                }
+            } catch (error) {
+                console.error('Error reopening period:', error);
+                this.$store.treasuryUi?.notify('Erro de conexão: ' + error.message, 'error');
+            }
+        },
+
+        getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        },
+
+        formatBRL(value) {
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+        }
+    };
+}
+</script>
+{% endblock %}

@@ -8,6 +8,5 @@ class CategoryForm(forms.ModelForm):
         fields = ['name']
         widgets = {
             'name': forms.TextInput(
-                attrs={'class': 'form-control',
-                       'placeholder': 'Digite a categoria'}),
+                attrs={'class': 'app-input', 'placeholder': 'Nome da categoria'}),
         }

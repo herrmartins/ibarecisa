@@ -71,22 +71,26 @@ class UserApprovalFunctionalityTest(TestCase):
         user.refresh_from_db()
         self.assertTrue(user.is_approved)
 
-    def test_user_disapproval_workflow(self):
-        """Testa a desaprovação de usuário"""
+    def test_user_approval_preservation(self):
+        """
+        Testa que o status de aprovação é preservado quando o checkbox
+        não é enviado (comportamento intencional para evitar desaprovação acidental).
+        """
         # Primeiro aprovar o usuário
         self.user_to_approve.is_approved = True
         self.user_to_approve.save()
 
-        # Secretário desaprova o usuário
+        # Secretário envia POST sem is_approved (checkbox não marcado)
+        # O comportamento esperado é PRESERVAR o status original
         response = self.client.post(
             reverse('users:update-user-functions', kwargs={'pk': self.user_to_approve.pk}),
             {}  # Checkbox não marcado
         )
         self.assertEqual(response.status_code, 302)
 
-        # Verificar que usuário está desaprovado
+        # Verificar que o status de aprovação foi PRESERVADO (não alterado)
         self.user_to_approve.refresh_from_db()
-        self.assertFalse(self.user_to_approve.is_approved)
+        self.assertTrue(self.user_to_approve.is_approved)
 
     def test_approval_form_display(self):
         """Testa se o form de aprovação é exibido corretamente"""

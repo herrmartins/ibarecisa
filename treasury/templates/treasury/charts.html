@@ -1,0 +1,1047 @@
+{% extends "treasury/base.html" %}
+
+{% load static %}
+
+{% block title %}Gráficos{% endblock %}
+
+{% block header_stats %}
+<!-- Empty - stats are in the page content -->
+{% endblock %}
+
+<style>
+.markdown-content h1 { font-size: 1.25rem; font-weight: 600; margin-top: 1rem; margin-bottom: 0.5rem; }
+.markdown-content h2 { font-size: 1.125rem; font-weight: 600; margin-top: 0.875rem; margin-bottom: 0.5rem; }
+.markdown-content h3 { font-size: 1rem; font-weight: 600; margin-top: 0.75rem; margin-bottom: 0.5rem; }
+.markdown-content p { margin-bottom: 0.5rem; line-height: 1.5; }
+.markdown-content ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 0.5rem; }
+.markdown-content ol { list-style-type: decimal; padding-left: 1.5rem; margin-bottom: 0.5rem; }
+.markdown-content li { margin-bottom: 0.25rem; }
+.markdown-content strong { font-weight: 600; }
+.markdown-content em { font-style: italic; }
+.markdown-content code { background: #f3f4f6; padding: 0.125rem 0.25rem; border-radius: 0.25rem; font-size: 0.875rem; }
+</style>
+
+{% block treasury_content %}
+<style>
+/* Fix chart overflow issues */
+.apexcharts-tooltip {
+    background: #1f2937 !important;
+    color: #fff !important;
+    border: none !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+}
+.apexcharts-tooltip-title {
+    background: #374151 !important;
+    border-bottom: 1px solid #4b5563 !important;
+    font-family: system-ui, -apple-system, sans-serif !important;
+    color: #fff !important;
+}
+.apexcharts-tooltip-text-y-value {
+    font-family: system-ui, -apple-system, sans-serif !important;
+    font-weight: 500 !important;
+    color: #fff !important;
+}
+.apexcharts-tooltip-text-y-label {
+    color: #9ca3af !important;
+}
+.apexcharts-tooltip-text-y-group {
+    color: #9ca3af !important;
+}
+.apexcharts-tooltip-series-group {
+    background: #1f2937 !important;
+}
+.apexcharts-xaxistooltip {
+    background: #1f2937 !important;
+    color: #fff !important;
+    border: none !important;
+}
+.apexcharts-xaxistooltip-text {
+    font-family: system-ui, -apple-system, sans-serif !important;
+}
+.chart-container {
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+</style>
+
+<div x-data="chartsPage()" x-init="init()">
+    <!-- Page Title & Filters -->
+    <div class="mb-8">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Gráficos Financeiros</h1>
+                <p class="text-sm text-gray-500 mt-1">Análise visual de dados financeiros</p>
+            </div>
+        </div>
+
+        <!-- Filters Card -->
+        <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6">
+            <div class="flex flex-col lg:flex-row lg:items-end gap-4">
+                <!-- Period Presets -->
+                <div class="flex-1 min-w-0">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Período</label>
+                    <div class="flex flex-wrap gap-x-3 gap-y-2 -mx-1 px-1">
+                        <button @click="setPeriodPreset('this_year')" class="app-btn text-sm whitespace-nowrap" :class="{ 'app-btn-primary': periodPreset === 'this_year' }">
+                            Este Ano
+                        </button>
+                        <button @click="setPeriodPreset('last_year')" class="app-btn text-sm whitespace-nowrap" :class="{ 'app-btn-primary': periodPreset === 'last_year' }">
+                            Ano Passado
+                        </button>
+                        <button @click="setPeriodPreset('last_6_months')" class="app-btn text-sm whitespace-nowrap" :class="{ 'app-btn-primary': periodPreset === 'last_6_months' }">
+                            6 Meses
+                        </button>
+                        <button @click="setPeriodPreset('last_3_months')" class="app-btn text-sm whitespace-nowrap" :class="{ 'app-btn-primary': periodPreset === 'last_3_months' }">
+                            3 Meses
+                        </button>
+                        <button @click="setPeriodPreset('last_month')" class="app-btn text-sm whitespace-nowrap" :class="{ 'app-btn-primary': periodPreset === 'last_month' }">
+                            Mês Passado
+                        </button>
+                        <button @click="setPeriodPreset('custom')" class="app-btn text-sm whitespace-nowrap" :class="{ 'app-btn-primary': periodPreset === 'custom' }">
+                            Customizado
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Custom Date Range -->
+                <div x-show="periodPreset === 'custom'" x-cloak class="flex gap-4 flex-wrap">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Data Inicial</label>
+                        <input type="date" x-model="customStartDate" @change="applyCustomDates()" class="app-input">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Data Final</label>
+                        <input type="date" x-model="customEndDate" @change="applyCustomDates()" class="app-input">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <!-- Total Revenues -->
+        <div class="bg-white rounded-xl shadow-sm p-4 border-l-4 border-green-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">Total Receitas</p>
+                    <p class="text-2xl font-bold text-gray-900 mt-1" x-text="formatCurrency(kpiData.total_revenues)"></p>
+                </div>
+                <div class="bg-green-100 p-3 rounded-lg">
+                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Expenses -->
+        <div class="bg-white rounded-xl shadow-sm p-4 border-l-4 border-red-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">Total Despesas</p>
+                    <p class="text-2xl font-bold text-gray-900 mt-1" x-text="formatCurrency(kpiData.total_expenses)"></p>
+                </div>
+                <div class="bg-red-100 p-3 rounded-lg">
+                    <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 13l-5 5m0 0l-5-5m5 5V6"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Current Balance -->
+        <div class="bg-white rounded-xl shadow-sm p-4 border-l-4 border-blue-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">Saldo Atual</p>
+                    <p class="text-2xl font-bold text-gray-900 mt-1" x-text="formatCurrency(kpiData.current_balance)"></p>
+                </div>
+                <div class="bg-blue-100 p-3 rounded-lg">
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Variation -->
+        <div class="bg-white rounded-xl shadow-sm p-4 border-l-4" :class="kpiData.variation >= 0 ? 'border-green-500' : 'border-red-500'">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500">Variação vs Período Anterior</p>
+                    <p class="text-2xl font-bold mt-1" :class="kpiData.variation >= 0 ? 'text-green-600' : 'text-red-600'">
+                        <span x-text="(kpiData.variation >= 0 ? '+' : '') + kpiData.variation + '%'"></span>
+                    </p>
+                </div>
+                <div :class="kpiData.variation >= 0 ? 'bg-green-100' : 'bg-red-100'" class="p-3 rounded-lg">
+                    <svg class="w-6 h-6" :class="kpiData.variation >= 0 ? 'text-green-600' : 'text-red-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Insights Section (apenas tesoureiros) -->
+    {% if user.is_treasurer or user.is_superuser %}
+    <div class="bg-white rounded-xl shadow-sm p-4 sm:p-6 mb-8">
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-purple-100 p-2 rounded-lg">
+                    <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900">Insights de IA</h3>
+                    <p x-show="insightsGeneratedAt" class="text-xs text-gray-500" x-text="'Gerado em ' + new Date(insightsGeneratedAt).toLocaleString('pt-BR')"></p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <!-- Cache status badge -->
+                <span x-show="insightsCached" x-cloak
+                      class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full"
+                      :class="insightsIsStale ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    <span x-text="insightsIsStale ? 'Antigo (30+ dias)' : 'Em cache'"></span>
+                </span>
+                <!-- Main button: Gerar Insights (usa cache se disponível) -->
+                <button @click="generateAIInsights(false)" :disabled="loadingInsights"
+                        class="app-btn app-btn-primary text-sm flex items-center gap-2"
+                        :class="{ 'opacity-50 cursor-not-allowed': loadingInsights }">
+                    <svg x-show="!loadingInsights" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                    <svg x-show="loadingInsights" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span x-text="loadingInsights ? 'Gerando...' : 'Gerar Insights'"></span>
+                </button>
+                <!-- Regenerate button (só aparece quando tem insights, sempre ignora cache) -->
+                <button x-show="aiInsights && !loadingInsights" x-cloak
+                        @click="generateAIInsights(true)"
+                        class="app-btn app-btn-secondary text-sm flex items-center gap-2"
+                        title="Gerar nova análise ignorando o cache">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    <span>Regenerar</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Insights Content -->
+        <div class="bg-gray-50 rounded-lg p-4 min-h-[150px] max-h-[400px] overflow-y-auto">
+            <div x-show="!aiInsights && !insightsError" class="flex items-center justify-center h-full text-gray-500 text-sm">
+                <p>Clique em "Gerar Insights" para obter análise inteligente dos dados financeiros do período selecionado.</p>
+            </div>
+            <div x-show="aiInsights" class="prose prose-sm max-w-none markdown-content" x-html="aiInsights"></div>
+            <div x-show="insightsError" class="text-red-600 text-sm p-4 bg-red-50 rounded-lg">
+                <p><strong>Erro:</strong> <span x-text="insightsError"></span></p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Charts Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Cashflow Chart -->
+        <div class="bg-white rounded-xl shadow-sm p-4 lg:col-span-2">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Fluxo de Caixa Mensal</h3>
+            <div class="chart-container">
+                <div id="cashflow-chart" class="min-h-[300px]" style="min-width: 100%;"></div>
+            </div>
+        </div>
+
+        <!-- Revenues by Category -->
+        <div class="bg-white rounded-xl shadow-sm p-4">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Receitas por Categoria</h3>
+            <div class="chart-container">
+                <div id="revenues-chart" class="min-h-[300px]" style="min-width: 100%;"></div>
+            </div>
+        </div>
+
+        <!-- Expenses by Category -->
+        <div class="bg-white rounded-xl shadow-sm p-4">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Despesas por Categoria</h3>
+            <div class="chart-container">
+                <div id="expenses-chart" class="min-h-[300px]" style="min-width: 100%;"></div>
+            </div>
+        </div>
+
+        <!-- Monthly Comparison -->
+        <div class="bg-white rounded-xl shadow-sm p-4">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Comparativo Mensal</h3>
+            <div class="chart-container">
+                <div id="comparison-chart" class="min-h-[300px]" style="min-width: 100%;"></div>
+            </div>
+        </div>
+
+        <!-- Balance History -->
+        <div class="bg-white rounded-xl shadow-sm p-4">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Histórico de Saldo</h3>
+            <div class="chart-container">
+                <div id="balance-chart" class="min-h-[300px]" style="min-width: 100%;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div x-show="loading" x-cloak
+         class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-8 flex items-center space-x-4">
+            <svg class="animate-spin h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span class="text-gray-700">Carregando gráficos...</span>
+        </div>
+    </div>
+</div>
+
+<!-- ApexCharts -->
+<script src="https://cdn.jsdelivr.net/npm/apexcharts@latest/dist/apexcharts.min.js"></script>
+
+<script>
+function chartsPage() {
+    return {
+        loading: true,
+        periodPreset: 'this_year',
+        customStartDate: '',
+        customEndDate: '',
+        kpiData: {
+            total_revenues: 0,
+            total_expenses: 0,
+            current_balance: 0,
+            current_net: 0,
+            variation: 0,
+            period: { start: '', end: '' }
+        },
+
+        // AI Insights
+        aiInsights: '',
+        loadingInsights: false,
+        insightsError: '',
+        insightsCached: false,
+        insightsIsStale: false,
+        insightsGeneratedAt: '',
+
+        // Chart instances
+        cashflowChart: null,
+        revenuesChart: null,
+        expensesChart: null,
+        comparisonChart: null,
+        balanceChart: null,
+
+        async init() {
+            this.setPeriodPreset('last_6_months');
+            await this.loadAllData();
+            this.loading = false;
+        },
+
+        setPeriodPreset(preset) {
+            this.periodPreset = preset;
+            const today = new Date();
+            let startDate, endDate;
+
+            switch (preset) {
+                case 'this_year':
+                    startDate = new Date(today.getFullYear(), 0, 1);
+                    endDate = today;
+                    break;
+                case 'last_year':
+                    startDate = new Date(today.getFullYear() - 1, 0, 1);
+                    endDate = new Date(today.getFullYear() - 1, 11, 31);
+                    break;
+                case 'last_6_months':
+                    startDate = new Date(today.getFullYear(), today.getMonth() - 6, 1);
+                    endDate = today;
+                    break;
+                case 'last_3_months':
+                    startDate = new Date(today.getFullYear(), today.getMonth() - 3, 1);
+                    endDate = today;
+                    break;
+                case 'last_month':
+                    startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                    endDate = new Date(today.getFullYear(), today.getMonth(), 0);
+                    break;
+                case 'custom':
+                    // Don't auto-load for custom
+                    return;
+            }
+
+            this.customStartDate = this.formatDateForInput(startDate);
+            this.customEndDate = this.formatDateForInput(endDate);
+            this.clearInsights();
+            this.loadAllData();
+        },
+
+        async applyCustomDates() {
+            if (this.customStartDate && this.customEndDate) {
+                this.clearInsights();
+                this.loadAllData();
+            }
+        },
+
+        clearInsights() {
+            // Limpa insights ao mudar o período
+            this.aiInsights = '';
+            this.insightsCached = false;
+            this.insightsIsStale = false;
+            this.insightsGeneratedAt = '';
+            this.insightsError = '';
+        },
+
+        async loadAllData() {
+            this.loading = true;
+            const params = new URLSearchParams({
+                start_date: this.customStartDate,
+                end_date: this.customEndDate
+            });
+
+            try {
+                await Promise.all([
+                    this.loadKPI(params),
+                    this.loadCashflowChart(params),
+                    this.loadRevenuesChart(params),
+                    this.loadExpensesChart(params),
+                    this.loadComparisonChart(params),
+                    this.loadBalanceChart(params)
+                ]);
+            } catch (error) {
+                console.error('Error loading charts:', error);
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async loadKPI(params) {
+            const response = await fetch(`/treasury/api/charts/kpi/?${params}`, {
+                headers: { 'X-CSRFToken': this.getCookie('csrftoken') }
+            });
+            if (response.ok) {
+                this.kpiData = await response.json();
+            }
+        },
+
+        async loadCashflowChart(params) {
+            const response = await fetch(`/treasury/api/charts/cashflow/?${params}`);
+            if (response.ok) {
+                const data = await response.json();
+                this.renderCashflowChart(data);
+            }
+        },
+
+        async loadRevenuesChart(params) {
+            const response = await fetch(`/treasury/api/charts/revenues-by-category/?${params}`);
+            if (response.ok) {
+                const data = await response.json();
+                this.renderRevenuesChart(data);
+            }
+        },
+
+        async loadExpensesChart(params) {
+            const response = await fetch(`/treasury/api/charts/expenses-by-category/?${params}`);
+            if (response.ok) {
+                const data = await response.json();
+                this.renderExpensesChart(data);
+            }
+        },
+
+        async loadComparisonChart(params) {
+            const response = await fetch(`/treasury/api/charts/monthly-comparison/?${params}`);
+            if (response.ok) {
+                const data = await response.json();
+                this.renderComparisonChart(data);
+            }
+        },
+
+        async loadBalanceChart(params) {
+            const response = await fetch(`/treasury/api/charts/balance-history/?${params}`);
+            if (response.ok) {
+                const data = await response.json();
+                this.renderBalanceChart(data);
+            }
+        },
+
+        renderCashflowChart(data) {
+            const options = {
+                series: data.series,
+                chart: {
+                    type: 'line',
+                    height: 350,
+                    toolbar: { show: false },
+                    parentHeightOffset: 0,
+                },
+                stroke: {
+                    curve: 'smooth',
+                    width: 2
+                },
+                markers: {
+                    size: 4,
+                    colors: ['#10B981', '#EF4444', '#3B82F6'],
+                    strokeColors: ['#fff'],
+                    strokeWidth: 2,
+                    hover: {
+                        size: 6
+                    }
+                },
+                xaxis: {
+                    categories: data.categories,
+                    labels: {
+                        style: {
+                            fontSize: '12px',
+                            fontFamily: 'system-ui, -apple-system, sans-serif'
+                        }
+                    }
+                },
+                yaxis: {
+                    labels: {
+                        formatter: (value) => this.formatCompactCurrency(value),
+                        style: {
+                            fontSize: '12px',
+                            fontFamily: 'system-ui, -apple-system, sans-serif'
+                        }
+                    }
+                },
+                colors: ['#10B981', '#EF4444', '#3B82F6'],
+                fill: {
+                    type: 'gradient',
+                    gradient: {
+                        shadeIntensity: 1,
+                        opacityFrom: 0.4,
+                        opacityTo: 0.3,
+                        stops: [0, 90, 100]
+                    }
+                },
+                dataLabels: { enabled: false },
+                tooltip: {
+                    theme: 'dark',
+                    style: { fontSize: '12px' },
+                    y: {
+                        formatter: (value) => this.formatCurrency(value)
+                    }
+                },
+                grid: {
+                    borderColor: '#e5e7eb',
+                    strokeDashArray: 4,
+                }
+            };
+
+            if (this.cashflowChart) {
+                this.cashflowChart.destroy();
+            }
+            this.cashflowChart = new ApexCharts(document.querySelector('#cashflow-chart'), options);
+            this.cashflowChart.render();
+        },
+
+        renderRevenuesChart(data) {
+            // Handle empty data
+            if (!data.labels || data.labels.length === 0) {
+                const chartEl = document.querySelector('#revenues-chart');
+                chartEl.innerHTML = '<div class="flex items-center justify-center h-full text-gray-500 text-sm">Sem dados para exibir</div>';
+                return;
+            }
+
+            // Limit to top 10 for better visualization
+            const maxCategories = 10;
+            let labels = data.labels;
+            let values = data.values;
+
+            if (labels.length > maxCategories) {
+                // Group remaining as "Outros"
+                const othersValue = values.slice(maxCategories - 1).reduce((a, b) => a + b, 0);
+                labels = labels.slice(0, maxCategories - 1);
+                values = values.slice(0, maxCategories - 1);
+                labels.push('Outros');
+                values.push(othersValue);
+            }
+
+            const totalValue = values.reduce((a, b) => a + b, 0);
+            const self = this;
+
+            const options = {
+                series: values,
+                chart: {
+                    type: 'donut',
+                    height: 350,
+                    parentHeightOffset: 0,
+                },
+                labels: labels,
+                colors: ['#10B981', '#34D399', '#6EE7B7', '#A7F3D0', '#D1FAE5', '#059669', '#047857', '#065F46', '#064E3B', '#022C22', '#F59E0B', '#FBBF24', '#FCD34D', '#FDE68A'],
+                plotOptions: {
+                    pie: {
+                        donut: {
+                            size: '65%',
+                            labels: {
+                                show: true,
+                                name: {
+                                    fontSize: '11px',
+                                    fontFamily: 'system-ui, -apple-system, sans-serif',
+                                    color: '#6b7280'
+                                },
+                                value: {
+                                    fontSize: '20px',
+                                    fontFamily: 'system-ui, -apple-system, sans-serif',
+                                    fontWeight: 600,
+                                    color: '#111827',
+                                    formatter: function(value) {
+                                        return new Intl.NumberFormat('pt-BR', {
+                                            style: 'currency',
+                                            currency: 'BRL'
+                                        }).format(value);
+                                    }
+                                },
+                                total: {
+                                    show: true,
+                                    label: 'Total',
+                                    fontSize: '12px',
+                                    fontFamily: 'system-ui, -apple-system, sans-serif',
+                                    color: '#6b7280',
+                                    formatter: function(val) {
+                                        return this.formatCurrency(totalValue);
+                                    }.bind(this)
+                                }
+                            }
+                        }
+                    }
+                },
+                dataLabels: {
+                    enabled: false
+                },
+                legend: {
+                    position: 'bottom',
+                    fontSize: '11px',
+                    fontFamily: 'system-ui, -apple-system, sans-serif',
+                    formatter: function(seriesName, opts) {
+                        const value = opts.w.globals.series[opts.seriesIndex];
+                        const formatted = this.formatCurrency(value);
+                        return seriesName + ': ' + formatted;
+                    }.bind(this)
+                },
+                tooltip: {
+                    theme: 'dark',
+                    style: { fontSize: '11px' },
+                    y: {
+                        formatter: function(value) {
+                            return new Intl.NumberFormat('pt-BR', {
+                                style: 'currency',
+                                currency: 'BRL'
+                            }).format(value);
+                        }
+                    }
+                }
+            };
+
+            if (this.revenuesChart) {
+                this.revenuesChart.destroy();
+            }
+            this.revenuesChart = new ApexCharts(document.querySelector('#revenues-chart'), options);
+            this.revenuesChart.render();
+        },
+
+        renderExpensesChart(data) {
+            // Handle empty data
+            if (!data.labels || data.labels.length === 0) {
+                const chartEl = document.querySelector('#expenses-chart');
+                chartEl.innerHTML = '<div class="flex items-center justify-center h-full text-gray-500 text-sm">Sem dados para exibir</div>';
+                return;
+            }
+
+            // Limit to top 10 for better visualization
+            const maxCategories = 10;
+            let labels = data.labels;
+            let values = data.values;
+
+            if (labels.length > maxCategories) {
+                // Group remaining as "Outros"
+                const othersValue = values.slice(maxCategories - 1).reduce((a, b) => a + b, 0);
+                labels = labels.slice(0, maxCategories - 1);
+                values = values.slice(0, maxCategories - 1);
+                labels.push('Outros');
+                values.push(othersValue);
+            }
+
+            const totalValue = values.reduce((a, b) => a + b, 0);
+            const self = this;
+
+            const options = {
+                series: values,
+                chart: {
+                    type: 'donut',
+                    height: 350,
+                    parentHeightOffset: 0,
+                },
+                labels: labels,
+                colors: ['#EF4444', '#F87171', '#FCA5A5', '#FECACA', '#FEE2E2', '#DC2626', '#B91C1C', '#991B1B', '#7F1D1D', '#450A0A', '#F59E0B', '#FBBF24', '#FCD34D', '#FDE68A'],
+                plotOptions: {
+                    pie: {
+                        donut: {
+                            size: '65%',
+                            labels: {
+                                show: true,
+                                name: {
+                                    fontSize: '11px',
+                                    fontFamily: 'system-ui, -apple-system, sans-serif',
+                                    color: '#6b7280'
+                                },
+                                value: {
+                                    fontSize: '20px',
+                                    fontFamily: 'system-ui, -apple-system, sans-serif',
+                                    fontWeight: 600,
+                                    color: '#111827',
+                                    formatter: function(value) {
+                                        return new Intl.NumberFormat('pt-BR', {
+                                            style: 'currency',
+                                            currency: 'BRL'
+                                        }).format(value);
+                                    }
+                                },
+                                total: {
+                                    show: true,
+                                    label: 'Total',
+                                    fontSize: '12px',
+                                    fontFamily: 'system-ui, -apple-system, sans-serif',
+                                    color: '#6b7280',
+                                    formatter: function(val) {
+                                        return this.formatCurrency(totalValue);
+                                    }.bind(this)
+                                }
+                            }
+                        }
+                    }
+                },
+                dataLabels: {
+                    enabled: false
+                },
+                legend: {
+                    position: 'bottom',
+                    fontSize: '11px',
+                    fontFamily: 'system-ui, -apple-system, sans-serif',
+                    formatter: function(seriesName, opts) {
+                        const value = opts.w.globals.series[opts.seriesIndex];
+                        const formatted = this.formatCurrency(value);
+                        return seriesName + ': ' + formatted;
+                    }.bind(this)
+                },
+                tooltip: {
+                    theme: 'dark',
+                    style: { fontSize: '11px' },
+                    y: {
+                        formatter: function(value) {
+                            return new Intl.NumberFormat('pt-BR', {
+                                style: 'currency',
+                                currency: 'BRL'
+                            }).format(value);
+                        }
+                    }
+                }
+            };
+
+            if (this.expensesChart) {
+                this.expensesChart.destroy();
+            }
+            this.expensesChart = new ApexCharts(document.querySelector('#expenses-chart'), options);
+            this.expensesChart.render();
+        },
+
+        renderComparisonChart(data) {
+            const options = {
+                series: data.series,
+                chart: {
+                    type: 'bar',
+                    height: 350,
+                    stacked: false,
+                    toolbar: { show: false },
+                    parentHeightOffset: 0,
+                },
+                plotOptions: {
+                    bar: {
+                        horizontal: false,
+                        columnWidth: '60%',
+                        borderRadius: 4,
+                        dataLabels: {
+                            position: 'top'
+                        }
+                    }
+                },
+                xaxis: {
+                    categories: data.categories,
+                    labels: {
+                        rotate: -45,
+                        rotateAlways: true,
+                        style: {
+                            fontSize: '11px',
+                            fontFamily: 'system-ui, -apple-system, sans-serif'
+                        }
+                    },
+                    tickPlacement: 'on'
+                },
+                yaxis: {
+                    labels: {
+                        formatter: (value) => this.formatCompactCurrency(value),
+                        style: {
+                            fontSize: '12px',
+                            fontFamily: 'system-ui, -apple-system, sans-serif'
+                        }
+                    }
+                },
+                colors: ['#10B981', '#EF4444'],
+                dataLabels: {
+                    enabled: false
+                },
+                tooltip: {
+                    theme: 'dark',
+                    style: { fontSize: '12px' },
+                    y: {
+                        formatter: (value) => this.formatCurrency(value)
+                    }
+                },
+                legend: {
+                    position: 'top',
+                    fontSize: '12px',
+                    fontFamily: 'system-ui, -apple-system, sans-serif'
+                },
+                grid: {
+                    borderColor: '#e5e7eb',
+                    strokeDashArray: 4,
+                }
+            };
+
+            if (this.comparisonChart) {
+                this.comparisonChart.destroy();
+            }
+            this.comparisonChart = new ApexCharts(document.querySelector('#comparison-chart'), options);
+            this.comparisonChart.render();
+        },
+
+        renderBalanceChart(data) {
+            // Handle empty data
+            if (!data.categories || data.categories.length === 0) {
+                const chartEl = document.querySelector('#balance-chart');
+                chartEl.innerHTML = '<div class="flex items-center justify-center h-full text-gray-500 text-sm">Sem dados para exibir</div>';
+                return;
+            }
+
+            const options = {
+                series: [{
+                    name: 'Saldo',
+                    data: data.values
+                }],
+                chart: {
+                    type: 'bar',
+                    height: 350,
+                    toolbar: { show: false },
+                    parentHeightOffset: 0,
+                },
+                plotOptions: {
+                    bar: {
+                        borderRadius: 4,
+                        columnWidth: '60%',
+                        dataLabels: { position: 'top' }
+                    }
+                },
+                xaxis: {
+                    categories: data.categories,
+                    labels: {
+                        rotate: -45,
+                        rotateAlways: true,
+                        style: {
+                            fontSize: '11px',
+                            fontFamily: 'system-ui, -apple-system, sans-serif'
+                        }
+                    },
+                    tickPlacement: 'on'
+                },
+                yaxis: {
+                    labels: {
+                        formatter: (value) => this.formatCompactCurrency(value),
+                        style: {
+                            fontSize: '12px',
+                            fontFamily: 'system-ui, -apple-system, sans-serif'
+                        }
+                    }
+                },
+                colors: data.values.map(v => v >= 0 ? '#3B82F6' : '#EF4444'),
+                tooltip: {
+                    theme: 'dark',
+                    style: { fontSize: '12px' },
+                    y: {
+                        formatter: (value) => this.formatCurrency(value)
+                    }
+                },
+                dataLabels: {
+                    enabled: true,
+                    formatter: (value) => this.formatCompactCurrency(value),
+                    style: {
+                        fontSize: '10px',
+                        fontFamily: 'system-ui, -apple-system, sans-serif',
+                        colors: ['#374151']
+                    },
+                    offsetY: -20
+                },
+                grid: {
+                    borderColor: '#e5e7eb',
+                    strokeDashArray: 4,
+                }
+            };
+
+            if (this.balanceChart) {
+                this.balanceChart.destroy();
+            }
+            this.balanceChart = new ApexCharts(document.querySelector('#balance-chart'), options);
+            this.balanceChart.render();
+        },
+
+        formatDateForInput(date) {
+            return date.toISOString().split('T')[0];
+        },
+
+        formatCurrency(value) {
+            const num = parseFloat(value);
+            return new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            }).format(num);
+        },
+
+        formatCompactCurrency(value) {
+            const num = parseFloat(value);
+            if (isNaN(num)) return '0';
+            if (Math.abs(num) >= 1000000) {
+                return (num / 1000000).toFixed(1) + 'M';
+            } else if (Math.abs(num) >= 1000) {
+                return (num / 1000).toFixed(1) + 'k';
+            }
+            return num.toFixed(0);
+        },
+
+        getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        },
+
+        async generateAIInsights(force = false) {
+            this.loadingInsights = true;
+            this.insightsError = '';
+            // Don't clear existing insights immediately - show them during loading if cached
+
+            try {
+                const response = await fetch('/treasury/api/charts/ai-insights/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': this.getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        start_date: this.customStartDate,
+                        end_date: this.customEndDate,
+                        force: force
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.error && !data.insights) {
+                        this.insightsError = data.error;
+                    } else {
+                        // Remove ```markdown wrapper if present
+                        let insights = data.insights;
+                        insights = insights.replace(/^```markdown\s*\n/i, '');
+                        insights = insights.replace(/^```\s*\n/i, '');
+                        insights = insights.replace(/\n```$/m, '');
+                        // Convert markdown to HTML
+                        this.aiInsights = this.markdownToHtml(insights);
+
+                        // Update cache status
+                        this.insightsCached = data.cached || false;
+                        this.insightsIsStale = data.is_stale || false;
+                        this.insightsGeneratedAt = data.generated_at || null;
+                    }
+                } else {
+                    this.insightsError = 'Erro ao comunicar com a API';
+                }
+            } catch (error) {
+                this.insightsError = error.message;
+            } finally {
+                this.loadingInsights = false;
+            }
+        },
+
+        // Função simples para converter markdown básico para HTML
+        markdownToHtml(markdown) {
+            if (!markdown) return '';
+
+            // First, handle code blocks and prevent them from being processed
+            const codeBlocks = [];
+            markdown = markdown.replace(/```(\w*)\n([\s\S]*?)```/g, (match, lang, code) => {
+                codeBlocks.push(`<pre><code class="language-${lang}">${this.escapeHtml(code.trim())}</code></pre>`);
+                return `__CODEBLOCK_${codeBlocks.length - 1}__`;
+            });
+
+            // Handle inline code
+            markdown = markdown.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+            // Handle tables
+            markdown = markdown.replace(/\|(.+)\|/g, (match) => {
+                const cells = match.split('|').filter(c => c.trim());
+                return '<tr>' + cells.map(c => `<td>${c.trim()}</td>`).join('') + '</tr>';
+            });
+            markdown = markdown.replace(/(<tr>.*<\/tr>\n?)+/g, '<table class="min-w-full divide-y divide-gray-200">$&</table>');
+            markdown = markdown.replace(/<table>(<tr>.*?<\/tr>)\n?/g, (match, firstRow) => {
+                // First row is header
+                const headerRow = firstRow.replace(/<td>/g, '<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase bg-gray-50">');
+                return `<table class="min-w-full divide-y divide-gray-200">${headerRow}</table>`;
+            });
+
+            // Handle headers
+            markdown = markdown.replace(/^#### (.*$)/gim, '<h4 class="text-base font-semibold mt-3 mb-1">$1</h4>');
+            markdown = markdown.replace(/^### (.*$)/gim, '<h3 class="text-lg font-semibold mt-3 mb-1">$1</h3>');
+            markdown = markdown.replace(/^## (.*$)/gim, '<h2 class="text-xl font-semibold mt-4 mb-2">$1</h2>');
+            markdown = markdown.replace(/^# (.*$)/gim, '<h1 class="text-2xl font-bold mt-4 mb-2">$1</h1>');
+
+            // Handle bold and italic
+            markdown = markdown.replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>');
+            markdown = markdown.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            markdown = markdown.replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+            // Handle lists
+            markdown = markdown.replace(/^[\*\-] (.*$)/gim, '<li class="ml-4">$1</li>');
+            markdown = markdown.replace(/^(\d+)\. (.*$)/gim, '<li class="ml-4">$2</li>');
+
+            // Wrap consecutive list items
+            markdown = markdown.replace(/(<li[^>]*>.*<\/li>\n?)+/g, (match) => {
+                return '<ul class="list-disc pl-6 my-2">' + match + '</ul>';
+            });
+
+            // Handle horizontal rules
+            markdown = markdown.replace(/^---$/gim, '<hr class="my-4 border-gray-300">');
+
+            // Handle line breaks and paragraphs
+            markdown = markdown.replace(/\n\n/g, '</p><p class="my-2">');
+            markdown = '<p class="my-2">' + markdown + '</p>';
+
+            // Restore code blocks
+            markdown = markdown.replace(/__CODEBLOCK_(\d+)__/g, (match, index) => codeBlocks[index]);
+
+            // Clean up empty paragraphs
+            markdown = markdown.replace(/<p class="my-2"><\/p>/g, '');
+            markdown = markdown.replace(/<p class="my-2">\s*<(h[1-4]|ul|table|hr|pre)/g, '<$1');
+            markdown = markdown.replace(/<\/(h[1-4]|ul|table|pre)>\s*<\/p>/g, '</$1>');
+
+            return markdown;
+        },
+
+        escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    };
+}
+</script>
+{% endblock %}

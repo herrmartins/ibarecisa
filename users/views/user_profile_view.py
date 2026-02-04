@@ -16,6 +16,5 @@ class UserProfileView(PermissionRequiredMixin, DetailView):
         user = self.request.user
         obj = self.get_object()
 
-        if obj == user:
-            return True
-        return super().has_permission()
+        # Apenas o dono do perfil pode visualizar
+        return obj == user

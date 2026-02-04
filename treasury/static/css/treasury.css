@@ -138,3 +138,237 @@
     font-size: 8px;
   }
 }
+
+/* ============================================
+   TREASURY STANDARD COMPONENTS (Tailwind)
+   ============================================ */
+
+/* Buttons */
+.treasury-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+}
+
+.treasury-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}
+
+.treasury-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.treasury-btn-primary {
+    background-color: rgb(37, 99, 235);
+    color: white;
+}
+
+.treasury-btn-primary:hover {
+    background-color: rgb(29, 78, 216);
+}
+
+.treasury-btn-success {
+    background-color: rgb(22, 163, 74);
+    color: white;
+}
+
+.treasury-btn-success:hover {
+    background-color: rgb(21, 128, 61);
+}
+
+.treasury-btn-warning {
+    background-color: rgb(234, 179, 8);
+    color: white;
+}
+
+.treasury-btn-warning:hover {
+    background-color: rgb(202, 138, 4);
+}
+
+.treasury-btn-danger {
+    background-color: rgb(220, 38, 38);
+    color: white;
+}
+
+.treasury-btn-danger:hover {
+    background-color: rgb(185, 28, 28);
+}
+
+.treasury-btn-ghost {
+    background-color: transparent;
+    color: rgb(55, 65, 81);
+}
+
+.treasury-btn-ghost:hover {
+    background-color: rgb(243, 244, 246);
+}
+
+/* Form Controls */
+.treasury-input,
+.treasury-select,
+.treasury-textarea {
+    width: 100%;
+    padding: 0.5rem 1rem;
+    border: 1px solid rgb(203, 213, 225);
+    border-radius: 0.5rem;
+    background-color: rgb(255, 255, 255);
+    color: rgb(15, 23, 42);
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    transition: all 0.15s ease-in-out;
+}
+
+.treasury-input::placeholder,
+.treasury-select::placeholder,
+.treasury-textarea::placeholder {
+    color: rgb(100, 116, 139);
+}
+
+.treasury-input:hover,
+.treasury-select:hover,
+.treasury-textarea:hover {
+    border-color: rgb(148, 163, 184);
+}
+
+.treasury-input:focus,
+.treasury-select:focus,
+.treasury-textarea:focus {
+    outline: none;
+    border-color: rgb(139, 92, 246);
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+}
+
+.treasury-input:disabled,
+.treasury-select:disabled,
+.treasury-textarea:disabled {
+    background-color: rgb(248, 250, 252);
+    color: rgb(100, 116, 139);
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.treasury-select {
+    padding-right: 2.5rem;
+    background-color: rgb(255, 255, 255);
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2394A3B8' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.75rem center;
+    background-repeat: no-repeat;
+    background-size: 1em 1em;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    cursor: pointer;
+    font-size: 0.875rem;
+    line-height: 1.5rem;
+    color: rgb(17, 24, 39);
+    transition: all 0.2s ease;
+}
+
+.treasury-select:hover {
+    border-color: rgb(148, 163, 184);
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+.treasury-select:focus {
+    outline: none;
+    border-color: rgb(139, 92, 246);
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+}
+
+/* Select dropdown styling */
+.treasury-select option {
+    background-color: rgb(255, 255, 255);
+    color: rgb(17, 24, 39);
+    padding: 0.5rem 0.75rem;
+}
+
+.treasury-select option:checked {
+    background-color: rgb(139, 92, 246);
+    color: white;
+}
+
+.treasury-select option:hover {
+    background-color: rgb(243, 244, 246);
+}
+
+.treasury-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: rgb(55, 65, 81);
+    margin-bottom: 0.25rem;
+}
+
+/* Search input with icon wrapper */
+.treasury-search-wrapper {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.treasury-search-wrapper .treasury-input:focus {
+    border-color: rgb(139, 92, 246);
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.treasury-search-input {
+    padding-left: 2.5rem;
+}
+
+.treasury-search-icon {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgb(156, 163, 175);
+    pointer-events: none;
+    transition: color 0.2s;
+}
+
+.treasury-search-wrapper .treasury-input:focus + .treasury-search-icon,
+.treasury-search-wrapper:focus-within .treasury-search-icon {
+    color: rgb(139, 92, 246);
+}
+
+/* Badges */
+.treasury-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.625rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.treasury-badge-success {
+    background-color: rgb(220, 252, 231);
+    color: rgb(22, 101, 52);
+}
+
+.treasury-badge-warning {
+    background-color: rgb(254, 252, 232);
+    color: rgb(120, 53, 15);
+}
+
+.treasury-badge-danger {
+    background-color: rgb(254, 236, 236);
+    color: rgb(153, 27, 27);
+}
+
+.treasury-badge-info {
+    background-color: rgb(219, 234, 254);
+    color: rgb(30, 58, 138);
+}
+
+.treasury-badge-gray {
+    background-color: rgb(243, 244, 246);
+    color: rgb(75, 85, 99);
+}

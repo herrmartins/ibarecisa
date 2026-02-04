@@ -12,6 +12,7 @@
         {% endblock pre_alpine_scripts %}
         <script defer src="{% static 'js/alpinejs.min.js' %}"></script>
         <link rel="stylesheet" href="{% static 'css/tailwind/output.css' %}">
+        {% block extra_head %}{% endblock %}
     </head>
 
     <body>

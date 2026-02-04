@@ -1,0 +1,287 @@
+{% extends "treasury/base.html" %}
+
+{% load static %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block header_back_button %}
+<!-- Dashboard não tem botão voltar -->
+{% endblock %}
+
+{% block header_stats %}
+<!-- Stats Cards no Header -->
+<div class="flex justify-center gap-4 sm:gap-6 flex-wrap" x-data="dashboardStats()" x-init="init()">
+  <!-- Saldo Atual -->
+  <div class="app-header-card app-header-current">
+    <div class="flex items-center justify-center gap-3 mb-2">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" class="text-slate-700" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+      </svg>
+      <span class="text-sm font-medium text-white/90">Saldo Atual</span>
+    </div>
+    <div class="text-3xl font-bold text-white" x-text="formatBalance(currentBalance)"></div>
+  </div>
+
+  <!-- Entradas do Mês -->
+  <div class="app-header-card app-header-income">
+    <div class="flex items-center justify-center gap-3 mb-2">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" class="text-slate-700" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12"/>
+      </svg>
+      <span class="text-sm font-medium text-white/90">Entradas</span>
+    </div>
+    <div class="text-3xl font-bold text-white" x-text="formatAmount(monthlySummary.total_positive)"></div>
+  </div>
+
+  <!-- Saídas do Mês -->
+  <div class="app-header-card app-header-expense">
+    <div class="flex items-center justify-center gap-3 mb-2">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" class="text-slate-700" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 13l-5 5m0 0l-5-5m5 5V6"/>
+      </svg>
+      <span class="text-sm font-medium text-white/90">Saídas</span>
+    </div>
+    <div class="text-3xl font-bold text-white" x-text="formatAmount(monthlySummary.total_negative)"></div>
+  </div>
+
+  <!-- Resultado Mensal -->
+  <div class="app-header-card" :class="monthlySummary.net >= 0 ? 'app-header-monthly' : 'app-header-balance'">
+    <div class="flex items-center justify-center gap-3 mb-2">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" class="text-slate-700" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+      </svg>
+      <span class="text-sm font-medium text-white/90">Variação</span>
+    </div>
+    <div class="text-3xl font-bold text-white" x-text="formatAmount(monthlySummary.net)"></div>
+  </div>
+</div>
+
+<script>
+function dashboardStats() {
+    return {
+        _initialized: false,
+        get currentBalance() {
+            // Use the store's current balance to avoid duplicate API calls
+            return this.$store.reports?.currentBalance?.current_balance || 0;
+        },
+        monthlySummary: { total_positive: 0, total_negative: 0, net: 0 },
+
+        init() {
+            if (this._initialized) return;
+            this._initialized = true;
+            this.loadMonthlySummary();
+        },
+
+        async loadMonthlySummary() {
+            try {
+                const today = new Date();
+                const year = today.getFullYear();
+                const month = today.getMonth() + 1;
+                const response = await fetch(`/treasury/api/reports/monthly/${year}/${month}/`, {
+                    headers: { 'X-CSRFToken': this.getCookie('csrftoken') }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    this.monthlySummary.total_positive = data.summary.total_positive || 0;
+                    this.monthlySummary.total_negative = data.summary.total_negative || 0;
+                    this.monthlySummary.net = data.summary.net || 0;
+                    console.log('Monthly summary loaded:', this.monthlySummary);
+                } else {
+                    console.error('Monthly report not found (404)');
+                    this.monthlySummary.total_positive = 0;
+                    this.monthlySummary.total_negative = 0;
+                    this.monthlySummary.net = 0;
+                }
+            } catch (e) {
+                console.error('Error loading monthly summary:', e);
+            }
+        },
+
+        getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        },
+
+        formatBalance(value) {
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+        },
+
+        formatAmount(value) {
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+        }
+    };
+}
+</script>
+{% endblock %}
+
+{% block treasury_content %}
+<div x-data="dashboardContent()" x-init="init()">
+    <!-- Quick Actions -->
+    <div class="mb-8">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">Ações Rápidas</h2>
+        <div class="grid grid-cols-1 {% if user.is_treasurer or user.is_superuser %}sm:grid-cols-3{% else %}sm:grid-cols-2{% endif %} gap-4">
+            {% if user.is_treasurer or user.is_superuser %}
+            <a href="{% url 'treasury:transaction-create' %}" class="flex items-center gap-3 p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow border border-gray-100">
+                <div class="bg-green-100 p-2 rounded-lg">
+                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" class="text-slate-700" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="font-medium text-gray-900">Nova Transação</p>
+                    <p class="text-sm text-gray-500">Adicionar entrada ou saída</p>
+                </div>
+            </a>
+            {% endif %}
+
+            <a href="{% url 'treasury:period-list' %}" class="flex items-center gap-3 p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow border border-gray-100">
+                <div class="bg-blue-100 p-2 rounded-lg">
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" class="text-slate-700" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="font-medium text-gray-900">Períodos Contábeis</p>
+                    <p class="text-sm text-gray-500">Gerenciar fechamentos</p>
+                </div>
+            </a>
+
+            <a href="{% url 'treasury:balance-sheet' %}" class="flex items-center gap-3 p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow border border-gray-100">
+                <div class="bg-purple-100 p-2 rounded-lg">
+                    <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" class="text-slate-700" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="font-medium text-gray-900">Relatórios</p>
+                    <p class="text-sm text-gray-500">Balanço e extratos</p>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Recent Periods -->
+    <div class="mb-8">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold text-gray-800">Períodos Recentes</h2>
+            <a href="{% url 'treasury:period-list' %}" class="text-sm text-blue-600 hover:text-blue-800">Ver todos →</a>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4" x-show="recentPeriods.length > 0">
+            <template x-for="period in recentPeriods.slice(0, 6)" :key="period.id">
+                <a :href="`/treasury/periodos/${period.id}/`" class="block bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-4 border border-gray-100">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="font-medium text-gray-900" x-text="period.month_name"></span>
+                        <span class="text-xs px-2 py-1 rounded-full" :class="{
+                            'bg-green-100 text-green-800': period.status === 'open',
+                            'bg-yellow-100 text-yellow-800': period.status === 'closed',
+                            'bg-gray-100 text-gray-800': period.status === 'archived'
+                        }" x-text="period.status === 'open' ? 'Aberto' : period.status === 'closed' ? 'Fechado' : 'Arquivado'"></span>
+                    </div>
+                    <p class="text-sm text-gray-600">Saldo: <span class="font-medium" :class="getPeriodBalance(period) >= 0 ? 'text-green-600' : 'text-red-600'" x-text="formatAmount(getPeriodBalance(period))"></span></p>
+                </a>
+            </template>
+        </div>
+        <p x-show="recentPeriods.length === 0" class="text-gray-500 text-center py-8">Nenhum período encontrado</p>
+    </div>
+
+    <!-- Recent Transactions -->
+    <div>
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold text-gray-800">Transações Recentes</h2>
+            <a href="{% url 'treasury:transaction-list' %}" class="text-sm text-blue-600 hover:text-blue-800">Ver todas →</a>
+        </div>
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Descrição</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Valor</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    <template x-for="tx in recentTransactions.slice(0, 5)" :key="tx.id">
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900" x-text="formatDate(tx.date)"></td>
+                            <td class="px-6 py-4 text-sm text-gray-600" x-text="tx.description"></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-medium" :class="tx.is_positive ? 'text-green-600' : 'text-red-600'" x-text="formatAmount(tx.amount)"></td>
+                        </tr>
+                    </template>
+                    <tr x-show="recentTransactions.length === 0">
+                        <td colspan="3" class="px-6 py-8 text-center text-gray-500">Nenhuma transação encontrada</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+function dashboardContent() {
+    return {
+        _initialized: false,
+        recentPeriods: [],
+        recentTransactions: [],
+
+        async init() {
+            if (this._initialized) return;
+            this._initialized = true;
+            await Promise.all([
+                this.loadRecentPeriods(),
+                this.loadRecentTransactions()
+            ]);
+        },
+
+        async loadRecentPeriods() {
+            try {
+                const response = await fetch('/treasury/api/periods/', {
+                    headers: { 'X-CSRFToken': this.getCookie('csrftoken') }
+                });
+                const data = await response.json();
+                this.recentPeriods = data.results || data;
+            } catch (e) {
+                console.error('Error loading periods:', e);
+            }
+        },
+
+        async loadRecentTransactions() {
+            try {
+                const response = await fetch('/treasury/api/transactions/?page_size=10', {
+                    headers: { 'X-CSRFToken': this.getCookie('csrftoken') }
+                });
+                const data = await response.json();
+                this.recentTransactions = data.results || data;
+            } catch (e) {
+                console.error('Error loading transactions:', e);
+            }
+        },
+
+        getPeriodBalance(period) {
+            // Se o período tem closing_balance (fechado), usa ele
+            if (period.closing_balance !== null && period.closing_balance !== undefined) {
+                return period.closing_balance;
+            }
+            // Senão, calcula: opening_balance + net do transactions_summary
+            const opening = parseFloat(period.opening_balance) || 0;
+            const net = period.transactions_summary?.net || 0;
+            return opening + net;
+        },
+
+        getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        },
+
+        formatAmount(value) {
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+        },
+
+        formatDate(dateStr) {
+            return new Date(dateStr).toLocaleDateString('pt-BR');
+        }
+    };
+}
+</script>
+{% endblock %}

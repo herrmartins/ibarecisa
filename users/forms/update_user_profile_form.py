@@ -85,61 +85,61 @@ class UpdateUserProfileModelForm(ModelForm):
         widgets = {
             "first_name": forms.TextInput(
                 attrs={
-                    "class": "form-control my-2",
+                    "class": "app-input",
                     "placeholder": "Prenome",
                 }
             ),
             "last_name": forms.TextInput(
                 attrs={
-                    "class": "form-control my-2",
+                    "class": "app-input",
                     "placeholder": "Sobrenome",
                 }
             ),
             "email": forms.EmailInput(
                 attrs={
-                    "class": "form-control my-2",
+                    "class": "app-input",
                     "placeholder": "E-mail",
                 }
             ),
             "address": forms.TextInput(
                 attrs={
-                    "class": "form-control my-2",
+                    "class": "app-input",
                     "placeholder": "Endereço",
                 }
             ),
             "phone_number": forms.TextInput(
                 attrs={
-                    "class": "form-control my-2",
+                    "class": "app-input",
                     "placeholder": "Phone",
                 }
             ),
             "date_of_birth": DateInput(
                 attrs={
-                    "class": "datepicker form-control",
+                    "class": "app-input",
                     "type": "date",
                 },
             ),
             "about": forms.Textarea(
                 attrs={
-                    "class": "form-control my-2",
+                    "class": "app-input",
                     "placeholder": "Sobre você...",
                 },
             ),
             "profile_image": ClearableFileInput(
                 attrs={
-                    "class": "form-control mt-2",
+                    "class": "app-input",
                     "accept": "image/png, image/jpeg, image/jpg",
                 }
             ),
             "cpf": forms.TextInput(
                 attrs={
-                    "class": "form-control my-2",
+                    "class": "app-input",
                     "placeholder": "XXX.XXX.XXX-XX",
                 }
             ),
             "baptism_date": DateInput(
                 attrs={
-                    "class": "datepicker form-control",
+                    "class": "app-input",
                     "type": "date",
                 },
             ),

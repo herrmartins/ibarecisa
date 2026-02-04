@@ -1,28 +1,96 @@
 {% extends 'core/base.html' %}
 {% load static %}
+
 {% block content %}
 
-<p class="fs-3 fw-light text-center">Lista de local de eventos...</p>
+<!-- Page Header -->
+<div class="app-page-header">
+  <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <!-- Back Button -->
+    <div class="mb-6 relative z-10">
+      <a href="{% url 'events:register' %}" class="app-back-link">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+        Voltar para Eventos
+      </a>
+    </div>
 
-<div class="container my-4">
-  <div class="row row-cols-1 row-cols-md-2 g-4">
-    {% for venue in venues %}
-    <div class="col">
-      <div class="card h-100">
-        <div class="card-body">
-          <h5 class="card-title">{{ venue.name }} <a href="{% url 'events:edit-venue' venue.id %}"> <i
-                class="bi bi-pencil-square"></i></a></h5>
-          <p class="card-text">{{ venue.address }}</p>
-          <p class="card-text"><small class="text-muted">Capacidade: {{ venue.capacity }}</small></p>
+    <div class="text-center mb-8">
+      <h1 class="app-page-title">Eventos</h1>
+      <p class="app-page-subtitle">Locais Cadastrados</p>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="relative z-10 flex flex-wrap justify-center gap-3">
+      <a href="{% url 'events:register-venue' %}" class="app-btn app-btn-primary">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+        </svg>
+        Novo Local
+      </a>
+      <a href="{% url 'events:category-form' %}" class="app-btn app-btn-secondary">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+        </svg>
+        Gerenciar Categorias
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Main Content -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  {% if venues %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {% for venue in venues %}
+        <div class="app-card">
+          <div class="app-card-body">
+            <div class="flex items-start justify-between mb-4">
+              <h3 class="text-lg font-semibold text-slate-900">{{ venue.name }}</h3>
+              <a href="{% url 'events:edit-venue' venue.id %}" class="text-slate-500 hover:text-slate-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
+              </a>
+            </div>
+            <div class="space-y-3">
+              <div class="flex items-start gap-3 text-slate-600">
+                <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <p class="text-sm">{{ venue.address }}</p>
+              </div>
+              <div class="flex items-center gap-3 text-slate-600">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+                <p class="text-sm">Capacidade: {{ venue.capacity }}</p>
+              </div>
+            </div>
+          </div>
         </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="app-card">
+      <div class="app-card-body text-center py-12">
+        <svg class="w-16 h-16 text-slate-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+        <h3 class="text-lg font-medium text-slate-900 mb-2">Nenhum local cadastrado</h3>
+        <p class="text-slate-600 mb-6">Comece adicionando um local para eventos</p>
+        <a href="{% url 'events:register-venue' %}" class="app-btn app-btn-primary inline-flex">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+          </svg>
+          Cadastrar Local
+        </a>
       </div>
     </div>
-    {% empty %}
-    <div class="col">
-      <p>Não há locais de eventos cadastrados.</p>
-    </div>
-    {% endfor %}
-  </div>
+  {% endif %}
 </div>
 
 {% endblock %}
