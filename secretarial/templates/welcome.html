@@ -1,54 +1,130 @@
-{% extends 'core/base.html' %}
-{% block content %}
-<div class="container">
-  <div class="row justify-content-center">
-    <div class="col-md-8">
-      <div class="card">
-        <div class="card-body text-center">
-          {% if user.is_authenticated %}
-            {% if user.is_approved %}
-              <h1 class="card-title mb-4">Bem-vindo de volta!</h1>
-              <div class="alert alert-success" role="alert">
-                <h4 class="alert-heading">Acesso liberado</h4>
-                <p>Seu acesso à comunidade foi aprovado. Você pode navegar normalmente.</p>
-              </div>
-              <div class="mt-4">
-                <a href="{% url 'core:home' %}" class="btn btn-primary">Ir para a página inicial</a>
-                <form method="post" action="{% url 'logout' %}" style="display: inline;">
-                  {% csrf_token %}
-                  <button type="submit" class="btn btn-secondary">Sair</button>
-                </form>
-              </div>
-            {% else %}
-              <h1 class="card-title mb-4">Bem-vindo à nossa comunidade!</h1>
-              <div class="alert alert-info" role="alert">
-                <h4 class="alert-heading">Acesso em análise</h4>
-                <p>Para ter acesso à nossa comunidade, escreva para <strong>jusrafaelmartins@gmail.com</strong></p>
-                <hr>
-                <p class="mb-0">O secretário irá avaliar seu cadastro e liberar o acesso em breve.</p>
-              </div>
-              <div class="mt-4">
-                <form method="post" action="{% url 'logout' %}">
-                  {% csrf_token %}
-                  <button type="submit" class="btn btn-secondary">Sair</button>
-                </form>
-              </div>
-            {% endif %}
-          {% else %}
-            <h1 class="card-title mb-4">Página de Boas-vindas</h1>
-            <div class="alert alert-warning" role="alert">
-              <h4 class="alert-heading">Acesso restrito</h4>
-              <p>Esta página é destinada a usuários cadastrados aguardando aprovação.</p>
-              <p>Para acessar, faça login ou registre-se.</p>
-            </div>
-            <div class="mt-4">
-              <a href="{% url 'login' %}" class="btn btn-primary">Fazer login</a>
-              <a href="{% url 'users:register' %}" class="btn btn-secondary">Registrar-se</a>
-            </div>
-          {% endif %}
+{% extends "treasury/base.html" %}
+
+{% load static %}
+
+{% block title %}Boas-vindas{% endblock %}
+
+{% block header_back_button %}
+<!-- Welcome não tem botão voltar -->
+{% endblock %}
+
+{% block header_title %}Bem-vindo{% endblock %}
+
+{% block header_subtitle %}
+{% if user.is_authenticated %}
+  {% if user.is_approved %}
+    Acesso liberado
+  {% else %}
+    Acesso em análise
+  {% endif %}
+{% else %}
+  Página de Boas-vindas
+{% endif %}
+{% endblock %}
+
+{% block header_stats %}
+<!-- Stats não aplicável para welcome -->
+{% endblock %}
+
+{% block treasury_content %}
+<div class="max-w-2xl mx-auto">
+  {% if user.is_authenticated %}
+    {% if user.is_approved %}
+      <!-- Acesso Liberado -->
+      <div class="bg-white rounded-xl shadow-sm p-8 text-center mb-6">
+        <div class="flex justify-center mb-4">
+          <div class="bg-green-100 p-4 rounded-full">
+            <svg class="w-12 h-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-900 mb-2">Bem-vindo de volta!</h2>
+        <p class="text-gray-600 mb-6">Seu acesso à comunidade foi aprovado. Você pode navegar normalmente.</p>
+        <div class="flex flex-col sm:flex-row gap-3 justify-center">
+          <a href="{% url 'core:home' %}" class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+            </svg>
+            Ir para a página inicial
+          </a>
+          <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+              </svg>
+              Sair
+            </button>
+          </form>
         </div>
       </div>
+
+    {% else %}
+      <!-- Acesso em Análise -->
+      <div class="bg-white rounded-xl shadow-sm p-8 text-center mb-6">
+        <div class="flex justify-center mb-4">
+          <div class="bg-amber-100 p-4 rounded-full">
+            <svg class="w-12 h-12 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+        </div>
+        <h2 class="text-2xl font-bold text-gray-900 mb-2">Bem-vindo à nossa comunidade!</h2>
+        <p class="text-gray-600 mb-6">Para ter acesso à nossa comunidade, escreva para o secretário.</p>
+
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <div class="flex items-center justify-center gap-2 text-blue-800">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+            </svg>
+            <a href="mailto:jusrafaelmartins@gmail.com" class="font-medium hover:underline">jusrafaelmartins@gmail.com</a>
+          </div>
+        </div>
+
+        <p class="text-sm text-gray-500 mb-6">O secretário irá avaliar seu cadastro e liberar o acesso em breve.</p>
+
+        <form method="post" action="{% url 'logout' %}" class="inline">
+          {% csrf_token %}
+          <button type="submit" class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+            </svg>
+            Sair
+          </button>
+        </form>
+      </div>
+    {% endif %}
+
+  {% else %}
+    <!-- Não Autenticado -->
+    <div class="bg-white rounded-xl shadow-sm p-8 text-center mb-6">
+      <div class="flex justify-center mb-4">
+        <div class="bg-yellow-100 p-4 rounded-full">
+          <svg class="w-12 h-12 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+          </svg>
+        </div>
+      </div>
+      <h2 class="text-2xl font-bold text-gray-900 mb-2">Página de Boas-vindas</h2>
+      <p class="text-gray-600 mb-6">Esta página é destinada a usuários cadastrados aguardando aprovação.</p>
+      <p class="text-sm text-gray-500 mb-6">Para acessar, faça login ou registre-se.</p>
+
+      <div class="flex flex-col sm:flex-row gap-3 justify-center">
+        <a href="{% url 'login' %}" class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+          </svg>
+          Fazer login
+        </a>
+        <a href="{% url 'users:register' %}" class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+          </svg>
+          Registrar-se
+        </a>
+      </div>
     </div>
-  </div>
+  {% endif %}
 </div>
 {% endblock %}
