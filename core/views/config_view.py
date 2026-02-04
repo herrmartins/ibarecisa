@@ -1,5 +1,5 @@
 from django.views.generic import TemplateView
-from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.http import JsonResponse
 from django.contrib import messages
 from django.core.mail import send_mail
@@ -9,11 +9,13 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class ConfigView(PermissionRequiredMixin, TemplateView):
-    permission_required = [
-        "users.add_customuser",
-    ]
+class ConfigView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
+    """Painel de configurações e testes - apenas superusuários."""
     template_name = 'core/config.html'
+
+    def test_func(self):
+        """Apenas superusuários podem acessar."""
+        return self.request.user.is_superuser
 
     def post(self, request, *args, **kwargs):
         """Handle test actions."""
