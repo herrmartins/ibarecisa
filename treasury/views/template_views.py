@@ -144,30 +144,33 @@ class TransactionDeleteView(IsSuperUserOnlyMixin, LoginRequiredMixin, DeleteView
         context['page_title'] = f'Excluir: {self.object.description}'
         return context
 
-    def dispatch(self, request, *args, **kwargs):
-        obj = self.get_object()
-        if not obj.can_be_deleted:
-            # Redirecionar para detalhes se não pode deletar
-            return redirect('treasury:transaction-detail', pk=obj.pk)
-        return super().dispatch(request, *args, **kwargs)
-
     def delete(self, request, *args, **kwargs):
         """Sobrescreve para adicionar log de auditoria antes de deletar."""
-        obj = self.get_object()
+        self.object = self.get_object()
+
+        if not self.object.can_be_deleted:
+            return redirect('treasury:transaction-detail', pk=self.object.pk)
+
         # Log de auditoria antes de deletar
-        AuditLog.log(
-            action='transaction_deleted',
-            entity_type='TransactionModel',
-            entity_id=obj.id,
-            user=request.user,
-            old_values={
-                'description': obj.description,
-                'amount': str(obj.amount),
-                'category': obj.category.name if obj.category else None,
-                'date': str(obj.date),
-                'is_positive': obj.is_positive,
-            }
-        )
+        try:
+            AuditLog.log(
+                action='transaction_deleted',
+                entity_type='TransactionModel',
+                entity_id=self.object.id,
+                user=request.user,
+                old_values={
+                    'description': self.object.description,
+                    'amount': str(self.object.amount),
+                    'category': self.object.category.name if self.object.category else None,
+                    'date': str(self.object.date),
+                    'is_positive': self.object.is_positive,
+                }
+            )
+        except Exception as e:
+            # Se falhar o log, não impede a deleção (mas loga no stderr)
+            import sys
+            print(f"Erro ao criar log de auditoria: {e}", file=sys.stderr)
+
         return super().delete(request, *args, **kwargs)
 
 
