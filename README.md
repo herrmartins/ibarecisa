@@ -4,6 +4,8 @@
 
 [IBARECISA](https://ibarecisa.org.br/)
 
+Licença MIT
+
 ## Technologies and versions
 
   Tools               |  Version
