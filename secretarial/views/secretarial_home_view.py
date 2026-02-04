@@ -1,12 +1,11 @@
 from django.views.generic import TemplateView
 from users.models import CustomUser
 from django.db.models import Q
-from django.contrib.auth.mixins import PermissionRequiredMixin
+from secretarial.mixins import IsSecretarialUserMixin
 
 
-class SecretarialHomeView(PermissionRequiredMixin, TemplateView):
+class SecretarialHomeView(IsSecretarialUserMixin, TemplateView):
     template_name = "secretarial/home.html"
-    permission_required = "secretarial.view_meetingminutemodel"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
