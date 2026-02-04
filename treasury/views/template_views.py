@@ -185,6 +185,11 @@ class TransactionDeleteView(IsSuperUserOnlyMixin, LoginRequiredMixin, DeleteView
             logger.info(f"[DELETE] Log de auditoria criado para transação {transaction_id}")
         except Exception as log_error:
             logger.error(f"[DELETE] Erro ao criar log de auditoria: {log_error}", exc_info=True)
+            # Força stderr para aparecer no journal
+            import sys
+            print(f"[DELETE] [ERROR] AuditLog failed: {log_error}", file=sys.stderr, flush=True)
+            # Mostra erro para o usuário
+            messages.warning(request, f'Aviso: Log de auditoria falhou, mas transação foi excluída.')
 
         # Adiciona mensagem de sucesso ANTES de deletar
         messages.success(request, f'Transação #{transaction_id} "{transaction_desc}" excluída com sucesso.')
