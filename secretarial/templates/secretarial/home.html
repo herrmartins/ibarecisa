@@ -1,188 +1,165 @@
-{% extends 'core/base.html' %}
+{% extends "treasury/base.html" %}
+
 {% load static %}
 
-{% block content %}
-<div class="min-h-screen bg-gradient-to-b from-slate-50 to-white">
-  <!-- Header Section -->
-  <div class="secretarial-home-header">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div class="text-center mb-8">
-        <h1 class="secretarial-home-title">
-          Secretaria
-        </h1>
-        <p class="secretarial-home-subtitle">
-          Bem-vindo ao painel de administração da igreja
-        </p>
-      </div>
+{% block title %}Secretaria{% endblock %}
 
-      <!-- Stats Cards -->
-      <div class="flex justify-center gap-4 sm:gap-6 flex-wrap">
-        <div class="app-header-card app-header-members">
-          <div class="flex items-center justify-center gap-3 mb-2">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" class="text-slate-700" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-            </svg>
-            <span class="text-sm font-medium text-white/90">Membros</span>
-          </div>
-          <div class="text-3xl font-bold text-white">{{ number_of_members }}</div>
-        </div>
+{% block header_back_button %}
+<!-- Secretaria não tem botão voltar no dashboard -->
+{% endblock %}
 
-        <div class="app-header-card app-header-visitors">
-          <div class="flex items-center justify-center gap-3 mb-2">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" class="text-slate-700" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
-            </svg>
-            <span class="text-sm font-medium text-white/90">Congregados</span>
-          </div>
-          <div class="text-3xl font-bold text-white">{{ number_of_visitors }}</div>
-        </div>
+{% block header_title %}Secretaria{% endblock %}
 
-        <div class="app-header-card app-header-total">
-          <div class="flex items-center justify-center gap-3 mb-2">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" class="text-slate-700" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-            </svg>
-            <span class="text-sm font-medium text-white/90">Total</span>
-          </div>
-          <div class="text-3xl font-bold text-white">{{ total_members }}</div>
-        </div>
-      </div>
+{% block header_subtitle %}Gestão de atas e documentos{% endblock %}
+
+{% block header_stats %}
+<!-- Stats Cards no Header -->
+<div class="flex justify-center gap-4 sm:gap-6 flex-wrap">
+  <!-- Membros -->
+  <div class="app-header-card app-header-members">
+    <div class="flex items-center justify-center gap-3 mb-2">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" class="text-slate-700" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+      </svg>
+      <span class="text-sm font-medium text-white/90">Membros</span>
     </div>
+    <div class="text-3xl font-bold text-white">{{ number_of_members }}</div>
   </div>
 
-  <!-- Main Content -->
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <!-- Search Section -->
-    <div class="secretarial-search-card mb-8">
-      <div class="flex items-center gap-3 mb-4">
-        <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" class="text-slate-700" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-        </svg>
-        <h2 class="text-lg font-semibold text-white">Busca Rápida</h2>
-      </div>
-      <form id="search-form">
-        {% csrf_token %}
-        <div class="flex flex-col sm:flex-row gap-3">
-          <input type="search" id="searched"
-                 class="secretarial-search-input flex-1"
-                 placeholder="O que você está procurando?..." />
-          <select id="search-type" class="secretarial-search-select">
-            <option value="minutes">Em atas</option>
-            {% if perms.secretarial.add_meetingminutemodel or perms.users.add_customuser %}
-            <option value="templates">Em modelos de atas</option>
-            <option value="users">Em usuários</option>
-            <option value="members">Em membros</option>
-            {% endif %}
-          </select>
-          <button type="submit" class="app-btn app-btn-primary">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" class="text-slate-700" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-            </svg>
-            Buscar
-          </button>
-        </div>
-      </form>
-      <div id="search-results" class="mt-4"></div>
+  <!-- Congregados -->
+  <div class="app-header-card app-header-visitors">
+    <div class="flex items-center justify-center gap-3 mb-2">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" class="text-slate-700" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+      </svg>
+      <span class="text-sm font-medium text-white/90">Congregados</span>
     </div>
+    <div class="text-3xl font-bold text-white">{{ number_of_visitors }}</div>
+  </div>
 
-    <!-- Navigation Cards -->
-    <div class="mb-4">
-      <h2 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
-        <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" class="text-slate-700" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
-        </svg>
-        Acesso Rápido
-      </h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <!-- Registro de Assembléias -->
-        <a href="{% url 'secretarial:minute-home' %}" class="secretarial-nav-card">
-          <div class="secretarial-nav-icon secretarial-nav-icon-assembly">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" class="text-slate-700" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-            </svg>
-          </div>
-          <div class="secretarial-nav-content">
-            <h3 class="secretarial-nav-title">Registro de Assembléias</h3>
-            <p class="secretarial-nav-desc">
-              Redija registros de reuniões, consulte registros anteriores e crie modelos para atas.
-            </p>
-          </div>
-          <div class="secretarial-nav-arrow">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" class="text-slate-700" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-            </svg>
-          </div>
-        </a>
-
-        {% if perms.secretarial.add_meetingminutemodel or perms.users.add_customuser %}
-        <!-- Usuários -->
-        <a href="{% url 'secretarial:users-qualifying' %}" class="secretarial-nav-card">
-          <div class="secretarial-nav-icon secretarial-nav-icon-users">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" class="text-slate-700" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
-            </svg>
-          </div>
-          <div class="secretarial-nav-content">
-            <h3 class="secretarial-nav-title">Usuários</h3>
-            <p class="secretarial-nav-desc">
-              Classifique usuários, atribua funções e gerencie permissões do sistema.
-            </p>
-          </div>
-          <div class="secretarial-nav-arrow">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" class="text-slate-700" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-            </svg>
-          </div>
-        </a>
-        {% endif %}
-
-        {% if perms.events.add_event %}
-        <!-- Eventos -->
-        <a href="{% url 'events:register' %}" class="secretarial-nav-card">
-          <div class="secretarial-nav-icon secretarial-nav-icon-events">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" class="text-slate-700" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-            </svg>
-          </div>
-          <div class="secretarial-nav-content">
-            <h3 class="secretarial-nav-title">Eventos</h3>
-            <p class="secretarial-nav-desc">
-              Cadastre e edite eventos da igreja, gerencie agenda e calendário.
-            </p>
-          </div>
-          <div class="secretarial-nav-arrow">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" class="text-slate-700" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-            </svg>
-          </div>
-        </a>
-        {% endif %}
-
-        {% if perms.blog.add_post %}
-        <!-- Blog -->
-        <a href="{% url 'blog:create-post' %}" class="secretarial-nav-card">
-          <div class="secretarial-nav-icon secretarial-nav-icon-blog">
-            <svg class="w-8 h-8" fill="none" stroke="currentColor" class="text-slate-700" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-            </svg>
-          </div>
-          <div class="secretarial-nav-content">
-            <h3 class="secretarial-nav-title">Blog</h3>
-            <p class="secretarial-nav-desc">
-              Escreva posts para edificação da igreja e compartilhe conteúdo com os membros.
-            </p>
-          </div>
-          <div class="secretarial-nav-arrow">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" class="text-slate-700" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-            </svg>
-          </div>
-        </a>
-        {% endif %}
-      </div>
+  <!-- Total -->
+  <div class="app-header-card app-header-total">
+    <div class="flex items-center justify-center gap-3 mb-2">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" class="text-slate-700" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+      </svg>
+      <span class="text-sm font-medium text-white/90">Total</span>
     </div>
+    <div class="text-3xl font-bold text-white">{{ total_members }}</div>
+  </div>
+</div>
+{% endblock %}
+
+{% block treasury_content %}
+<!-- Quick Actions -->
+<div class="mb-8">
+  <h2 class="text-xl font-semibold text-gray-800 mb-4">Acesso Rápido</h2>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <!-- Registro de Assembléias -->
+    <a href="{% url 'secretarial:minute-home' %}" class="flex items-center gap-3 p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow border border-gray-100">
+      <div class="bg-indigo-100 p-2 rounded-lg">
+        <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+      </div>
+      <div>
+        <p class="font-medium text-gray-900">Registro de Assembléias</p>
+        <p class="text-sm text-gray-500">Atas e reuniões</p>
+      </div>
+      <svg class="w-5 h-5 text-gray-400 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+      </svg>
+    </a>
+
+    {% if perms.secretarial.add_meetingminutemodel or perms.users.add_customuser %}
+    <!-- Usuários -->
+    <a href="{% url 'secretarial:users-qualifying' %}" class="flex items-center gap-3 p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow border border-gray-100">
+      <div class="bg-amber-100 p-2 rounded-lg">
+        <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+        </svg>
+      </div>
+      <div>
+        <p class="font-medium text-gray-900">Usuários</p>
+        <p class="text-sm text-gray-500">Gerenciar membros</p>
+      </div>
+      <svg class="w-5 h-5 text-gray-400 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+      </svg>
+    </a>
+    {% endif %}
+
+    {% if perms.events.add_event %}
+    <!-- Eventos -->
+    <a href="{% url 'events:register' %}" class="flex items-center gap-3 p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow border border-gray-100">
+      <div class="bg-cyan-100 p-2 rounded-lg">
+        <svg class="w-6 h-6 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+        </svg>
+      </div>
+      <div>
+        <p class="font-medium text-gray-900">Eventos</p>
+        <p class="text-sm text-gray-500">Agenda e calendário</p>
+      </div>
+      <svg class="w-5 h-5 text-gray-400 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+      </svg>
+    </a>
+    {% endif %}
+
+    {% if perms.blog.add_post %}
+    <!-- Blog -->
+    <a href="{% url 'blog:create-post' %}" class="flex items-center gap-3 p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow border border-gray-100">
+      <div class="bg-purple-100 p-2 rounded-lg">
+        <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+        </svg>
+      </div>
+      <div>
+        <p class="font-medium text-gray-900">Blog</p>
+        <p class="text-sm text-gray-500">Criar postagem</p>
+      </div>
+      <svg class="w-5 h-5 text-gray-400 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+      </svg>
+    </a>
+    {% endif %}
   </div>
 </div>
 
-<script type="module" src="{% static 'js/secretarial_search.js' %}"></script>
+<!-- Search Section -->
+<div class="bg-white rounded-xl shadow-sm p-6 mb-8">
+  <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+    <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+    </svg>
+    Busca Rápida
+  </h3>
+  <form id="search-form">
+    {% csrf_token %}
+    <div class="flex flex-col sm:flex-row gap-3">
+      <input type="search" id="searched"
+             class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+             placeholder="O que você está procurando?..." />
+      <select id="search-type" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+        <option value="minutes">Em atas</option>
+        {% if perms.secretarial.add_meetingminutemodel or perms.users.add_customuser %}
+        <option value="templates">Em modelos de atas</option>
+        <option value="users">Em usuários</option>
+        <option value="members">Em membros</option>
+        {% endif %}
+      </select>
+      <button type="submit" class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+        </svg>
+        Buscar
+      </button>
+    </div>
+  </form>
+  <div id="search-results" class="mt-4"></div>
+</div>
+
 {% endblock %}
+
+<script type="module" src="{% static 'js/secretarial_search.js' %}"></script>
