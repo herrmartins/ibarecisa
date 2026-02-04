@@ -8,8 +8,6 @@
     --color-red-50: oklch(97.1% 0.013 17.38);
     --color-red-100: oklch(93.6% 0.032 17.717);
     --color-red-200: oklch(88.5% 0.062 18.334);
-    --color-red-300: oklch(80.8% 0.114 19.571);
-    --color-red-400: oklch(70.4% 0.191 22.216);
     --color-red-500: oklch(63.7% 0.237 25.331);
     --color-red-600: oklch(57.7% 0.245 27.325);
     --color-red-700: oklch(50.5% 0.213 27.518);
@@ -48,9 +46,6 @@
     --color-green-700: oklch(52.7% 0.154 150.069);
     --color-green-800: oklch(44.8% 0.119 151.328);
     --color-emerald-50: oklch(97.9% 0.021 166.113);
-    --color-emerald-500: oklch(69.6% 0.17 162.48);
-    --color-emerald-600: oklch(59.6% 0.145 163.225);
-    --color-emerald-700: oklch(50.8% 0.118 165.612);
     --color-cyan-500: oklch(71.5% 0.143 215.221);
     --color-blue-50: oklch(97% 0.014 254.604);
     --color-blue-100: oklch(93.2% 0.032 255.585);
@@ -386,9 +381,6 @@
   }
   .top-0 {
     top: calc(var(--spacing) * 0);
-  }
-  .top-1 {
-    top: calc(var(--spacing) * 1);
   }
   .top-1\/2 {
     top: calc(1/2 * 100%);
@@ -804,9 +796,6 @@
   .table-row {
     display: table-row;
   }
-  .h-1 {
-    height: calc(var(--spacing) * 1);
-  }
   .h-1\.5 {
     height: calc(var(--spacing) * 1.5);
   }
@@ -837,9 +826,6 @@
   .h-16 {
     height: calc(var(--spacing) * 16);
   }
-  .h-20 {
-    height: calc(var(--spacing) * 20);
-  }
   .h-24 {
     height: calc(var(--spacing) * 24);
   }
@@ -857,15 +843,6 @@
   }
   .h-100 {
     height: calc(var(--spacing) * 100);
-  }
-  .h-\[40px\] {
-    height: 40px;
-  }
-  .h-\[60px\] {
-    height: 60px;
-  }
-  .h-\[72px\] {
-    height: 72px;
   }
   .h-auto {
     height: auto;
@@ -885,20 +862,8 @@
   .max-h-80 {
     max-height: calc(var(--spacing) * 80);
   }
-  .max-h-\[40px\] {
-    max-height: 40px;
-  }
-  .max-h-\[60px\] {
-    max-height: 60px;
-  }
   .max-h-\[60vh\] {
     max-height: 60vh;
-  }
-  .max-h-\[72px\] {
-    max-height: 72px;
-  }
-  .max-h-\[80px\] {
-    max-height: 80px;
   }
   .max-h-\[80vh\] {
     max-height: 80vh;
@@ -912,17 +877,8 @@
   .max-h-\[400px\] {
     max-height: 400px;
   }
-  .min-h-\[40px\] {
-    min-height: 40px;
-  }
-  .min-h-\[60px\] {
-    min-height: 60px;
-  }
   .min-h-\[60vh\] {
     min-height: 60vh;
-  }
-  .min-h-\[72px\] {
-    min-height: 72px;
   }
   .min-h-\[80px\] {
     min-height: 80px;
@@ -944,9 +900,6 @@
   }
   .min-h-screen {
     min-height: 100vh;
-  }
-  .w-1 {
-    width: calc(var(--spacing) * 1);
   }
   .w-1\.5 {
     width: calc(var(--spacing) * 1.5);
@@ -978,9 +931,6 @@
   .w-16 {
     width: calc(var(--spacing) * 16);
   }
-  .w-20 {
-    width: calc(var(--spacing) * 20);
-  }
   .w-24 {
     width: calc(var(--spacing) * 24);
   }
@@ -1007,15 +957,6 @@
   }
   .w-100 {
     width: calc(var(--spacing) * 100);
-  }
-  .w-\[40px\] {
-    width: 40px;
-  }
-  .w-\[60px\] {
-    width: 60px;
-  }
-  .w-\[72px\] {
-    width: 72px;
   }
   .w-auto {
     width: auto;
@@ -1044,18 +985,6 @@
   .max-w-7xl {
     max-width: var(--container-7xl);
   }
-  .max-w-\[40px\] {
-    max-width: 40px;
-  }
-  .max-w-\[60px\] {
-    max-width: 60px;
-  }
-  .max-w-\[72px\] {
-    max-width: 72px;
-  }
-  .max-w-\[80px\] {
-    max-width: 80px;
-  }
   .max-w-\[150px\] {
     max-width: 150px;
   }
@@ -1079,18 +1008,6 @@
   }
   .min-w-0 {
     min-width: calc(var(--spacing) * 0);
-  }
-  .min-w-\[40px\] {
-    min-width: 40px;
-  }
-  .min-w-\[60px\] {
-    min-width: 60px;
-  }
-  .min-w-\[72px\] {
-    min-width: 72px;
-  }
-  .min-w-\[80px\] {
-    min-width: 80px;
   }
   .min-w-full {
     min-width: 100%;
@@ -1138,10 +1055,6 @@
   }
   .translate-x-full {
     --tw-translate-x: 100%;
-    translate: var(--tw-translate-x) var(--tw-translate-y);
-  }
-  .-translate-y-1 {
-    --tw-translate-y: calc(var(--spacing) * -1);
     translate: var(--tw-translate-x) var(--tw-translate-y);
   }
   .-translate-y-1\/2 {
@@ -1708,9 +1621,6 @@
   .bg-slate-800 {
     background-color: var(--color-slate-800);
   }
-  .bg-slate-900 {
-    background-color: var(--color-slate-900);
-  }
   .bg-slate-900\/75 {
     background-color: color-mix(in srgb, oklch(20.8% 0.042 265.755) 75%, transparent);
     @supports (color: color-mix(in lab, red, red)) {
@@ -2210,9 +2120,6 @@
   }
   .text-blue-900 {
     color: var(--color-blue-900);
-  }
-  .text-current {
-    color: currentcolor;
   }
   .text-current\/70 {
     color: currentcolor;
@@ -2984,13 +2891,6 @@
       }
     }
   }
-  .hover\:opacity-90 {
-    &:hover {
-      @media (hover: hover) {
-        opacity: 90%;
-      }
-    }
-  }
   .hover\:shadow-lg {
     &:hover {
       @media (hover: hover) {
@@ -3065,11 +2965,6 @@
   .disabled\:opacity-50 {
     &:disabled {
       opacity: 50%;
-    }
-  }
-  .sm\:col-span-1 {
-    @media (width >= 40rem) {
-      grid-column: span 1 / span 1;
     }
   }
   .sm\:col-span-2 {
