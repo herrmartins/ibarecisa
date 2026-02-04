@@ -14,7 +14,7 @@ from django.utils import timezone
 from datetime import datetime, timedelta
 
 from treasury.models import AccountingPeriod, TransactionModel, CategoryModel, AuditLog
-from treasury.mixins import IsTreasuryUserMixin, IsTreasurerOnlyMixin, IsSuperUserOnlyMixin
+from treasury.mixins import IsTreasuryUserMixin, IsTreasurerOnlyMixin, IsAdminOrTreasuryUserMixin, IsSuperUserOnlyMixin
 
 
 class TreasuryDashboardView(IsTreasuryUserMixin, LoginRequiredMixin, TemplateView):
