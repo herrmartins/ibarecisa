@@ -9,6 +9,7 @@ from treasury.views.template_views import (
     TransactionDetailView,
     TransactionCreateView,
     TransactionUpdateView,
+    TransactionDeleteView,
     BatchTransactionReviewView,
     CategoryListView,
     MonthlyReportView,
@@ -41,6 +42,7 @@ urlpatterns = [
     path('transacoes/importacao-multipla/', BatchTransactionReviewView.as_view(), name='batch-review'),
     path('transacoes/<int:pk>/editar/', TransactionUpdateView.as_view(), name='transaction-update'),
     path('transacoes/<int:pk>/estornar/', ReversalView.as_view(), name='transaction-reversal'),
+    path('transacoes/<int:pk>/excluir/', TransactionDeleteView.as_view(), name='transaction-delete'),
 
     # ===== REPORTS =====
     path('relatorios/mensal/<int:year>/<int:month>/', MonthlyReportView.as_view(), name='monthly-report'),

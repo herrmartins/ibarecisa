@@ -97,3 +97,23 @@ class IsAdminOrTreasuryUserMixin(UserPassesTestMixin):
         if self.request.user.is_authenticated:
             raise PermissionDenied("Você não tem permissão para acessar esta página.")
         return super().handle_no_permission()
+
+
+class IsSuperUserOnlyMixin(UserPassesTestMixin):
+    """
+    Mixin que restringe acesso APENAS a superusuários.
+
+    Usuários autorizados:
+    - Superuser (is_superuser) apenas
+
+    Tesoureiros, secretários, pastores e staff em geral NÃO têm acesso.
+    """
+    def test_func(self):
+        user = self.request.user
+        return user.is_authenticated and user.is_superuser
+
+    def handle_no_permission(self):
+        """Redireciona para página de permissão negada."""
+        if self.request.user.is_authenticated:
+            raise PermissionDenied("Apenas superusuários podem acessar esta página.")
+        return super().handle_no_permission()

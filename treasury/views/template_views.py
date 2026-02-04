@@ -6,7 +6,7 @@ templates renderizados no servidor com interatividade via Alpine.js.
 """
 
 import json
-from django.views.generic import TemplateView, ListView, DetailView, CreateView, UpdateView
+from django.views.generic import TemplateView, ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from django.shortcuts import get_object_or_404, redirect
@@ -14,7 +14,7 @@ from django.utils import timezone
 from datetime import datetime, timedelta
 
 from treasury.models import AccountingPeriod, TransactionModel, CategoryModel, AuditLog
-from treasury.mixins import IsTreasuryUserMixin, IsTreasurerOnlyMixin
+from treasury.mixins import IsTreasuryUserMixin, IsTreasurerOnlyMixin, IsSuperUserOnlyMixin
 
 
 class TreasuryDashboardView(IsTreasuryUserMixin, LoginRequiredMixin, TemplateView):
@@ -130,6 +130,45 @@ class TransactionUpdateView(IsTreasurerOnlyMixin, LoginRequiredMixin, UpdateView
 
     def get_success_url(self):
         return reverse_lazy('treasury:transaction-detail', kwargs={'pk': self.object.pk})
+
+
+class TransactionDeleteView(IsSuperUserOnlyMixin, LoginRequiredMixin, DeleteView):
+    """View para deletar transação (apenas superusuários)."""
+    model = TransactionModel
+    template_name = 'treasury/transactions/delete.html'
+    context_object_name = 'transaction'
+    success_url = reverse_lazy('treasury:transaction-list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['page_title'] = f'Excluir: {self.object.description}'
+        return context
+
+    def dispatch(self, request, *args, **kwargs):
+        obj = self.get_object()
+        if not obj.can_be_deleted:
+            # Redirecionar para detalhes se não pode deletar
+            return redirect('treasury:transaction-detail', pk=obj.pk)
+        return super().dispatch(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        """Sobrescreve para adicionar log de auditoria antes de deletar."""
+        obj = self.get_object()
+        # Log de auditoria antes de deletar
+        AuditLog.log(
+            action='transaction_deleted',
+            entity_type='TransactionModel',
+            entity_id=obj.id,
+            user=request.user,
+            old_values={
+                'description': obj.description,
+                'amount': str(obj.amount),
+                'category': obj.category.name if obj.category else None,
+                'date': str(obj.date),
+                'is_positive': obj.is_positive,
+            }
+        )
+        return super().delete(request, *args, **kwargs)
 
 
 class BatchTransactionReviewView(IsTreasurerOnlyMixin, LoginRequiredMixin, TemplateView):

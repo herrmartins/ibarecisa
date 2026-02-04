@@ -167,7 +167,8 @@ if not DEBUG:
     AWS_STORAGE_BUCKET_NAME = config("AWS_STORAGE_BUCKET_NAME", default="")
     AWS_S3_ENDPOINT_URL = config("AWS_S3_ENDPOINT_URL", default="")
     AWS_S3_REGION_NAME = config("AWS_S3_REGION_NAME", default="auto")
-    AWS_QUERYSTRING_AUTH = False
+    AWS_QUERYSTRING_AUTH = config("AWS_QUERYSTRING_AUTH", default="auto")
+    AWS_S3_SIGNATURE_VERSION = 's3v4'
     AWS_DEFAULT_ACL = None
     AWS_S3_FILE_OVERWRITE = False
     # URL customizada para arquivos (útil para domínio customizado no R2)
