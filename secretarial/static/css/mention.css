@@ -1,0 +1,128 @@
+/**
+ * Mention menu styles
+ */
+
+.mention-menu {
+    position: absolute;
+    z-index: 9999;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    max-height: 300px;
+    overflow-y: auto;
+    min-width: 250px;
+    max-width: 350px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-size: 14px;
+}
+
+.mention-menu::-webkit-scrollbar {
+    width: 8px;
+}
+
+.mention-menu::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+}
+
+.mention-menu::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+.mention-menu::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+.mention-item {
+    padding: 10px 14px;
+    cursor: pointer;
+    border-bottom: 1px solid #f1f5f9;
+    transition: background-color 0.15s ease;
+}
+
+.mention-item:last-child {
+    border-bottom: none;
+}
+
+.mention-item:hover,
+.mention-item-active {
+    background-color: #f0f9ff;
+}
+
+.mention-item-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.mention-item-name {
+    font-weight: 500;
+    color: #1e293b;
+    flex: 1;
+}
+
+.mention-item-name strong {
+    color: #0284c7;
+    font-weight: 600;
+}
+
+.mention-item-type {
+    font-size: 12px;
+    color: #64748b;
+    background-color: #f1f5f9;
+    padding: 2px 8px;
+    border-radius: 12px;
+    white-space: nowrap;
+}
+
+.mention-menu-empty {
+    padding: 16px;
+    text-align: center;
+    color: #64748b;
+    font-style: italic;
+}
+
+/* Loading state */
+.mention-menu-loading {
+    padding: 16px;
+    text-align: center;
+    color: #64748b;
+}
+
+.mention-menu-loading::after {
+    content: '';
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    margin-left: 8px;
+    border: 2px solid #e2e8f0;
+    border-top-color: #0284c7;
+    border-radius: 50%;
+    animation: mention-spin 0.6s linear infinite;
+}
+
+@keyframes mention-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+    .mention-menu {
+        min-width: 200px;
+        max-width: calc(100vw - 40px);
+    }
+
+    .mention-item {
+        padding: 8px 12px;
+    }
+
+    .mention-item-type {
+        font-size: 11px;
+        padding: 1px 6px;
+    }
+}

@@ -3158,6 +3158,19 @@
   pointer-events: none;
 }
 
+/* Responsive pagination */
+@media (max-width: 599px) {
+  .minutes-pagination {
+    padding: 1rem;
+    gap: 0.25rem;
+  }
+  
+  .minutes-pagination-link {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.75rem;
+  }
+}
+
 /* PDF Button */
 .minutes-pdf-btn {
   padding: 0.5rem 1rem;
@@ -3179,6 +3192,60 @@
   background: linear-gradient(135deg, #5a6fd6 0%, #6a4190 100%);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+/* Responsive styles for mobile */
+@media (max-width: 599px) {
+  .minutes-pdf-btn {
+    padding: 0.5rem;
+    font-size: 0.7rem;
+  }
+  
+  .minutes-pdf-btn .mr-1 {
+    margin-right: 0.25rem;
+  }
+  
+  .excerpt-edit-btn {
+    padding: 0.5rem;
+    font-size: 0.7rem;
+  }
+  
+  .excerpt-edit-btn .mr-1 {
+    margin-right: 0.25rem;
+  }
+  
+  .excerpt-delete-btn {
+    padding: 0.5rem;
+    font-size: 0.7rem;
+  }
+  
+  .excerpt-delete-btn .mr-1 {
+    margin-right: 0.25rem;
+  }
+
+  /* Hide button text on very small screens, show only icon */
+  @media (max-width: 400px) {
+    .minutes-pdf-btn,
+    .excerpt-edit-btn,
+    .excerpt-delete-btn {
+      padding: 0.5rem;
+    }
+    
+    .minutes-pdf-btn .sr-only,
+    .minutes-pdf-btn svg,
+    .excerpt-edit-btn .sr-only,
+    .excerpt-edit-btn svg,
+    .excerpt-delete-btn .sr-only,
+    .excerpt-delete-btn svg {
+      margin-right: 0;
+    }
+    
+    .minutes-pdf-btn span:not(svg),
+    .excerpt-edit-btn span:not(svg),
+    .excerpt-delete-btn span:not(svg) {
+      display: none;
+    }
+  }
 }
 
 .minutes-edit-btn {

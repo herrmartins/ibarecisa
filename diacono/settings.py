@@ -91,10 +91,26 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": BASE_DIR / "db.sqlite3",
+        "OPTIONS": {
+                    'timeout': 20,
+                    'init_command': (
+                        'PRAGMA journal_mode=WAL;'
+                        'PRAGMA synchronous=NORMAL;'
+                        'PRAGMA busy_timeout=5000;'
+                    ),
+                },
     },
     "audit": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": BASE_DIR / "audit.sqlite3",
+        "OPTIONS": {
+                    'timeout': 20,
+                    'init_command': (
+                        'PRAGMA journal_mode=WAL;'
+                        'PRAGMA synchronous=NORMAL;'
+                        'PRAGMA busy_timeout=5000;'
+                    ),
+                },
     }
 }
 
@@ -225,6 +241,7 @@ DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL", default="Rafael Martins <naore
 
 handler404 = "core.views.custom_404"
 handler403 = "core.views.custom_403"
+handler500 = "core.views.custom_500"
 
 
 if not DEBUG:

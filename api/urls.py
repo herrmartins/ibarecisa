@@ -21,4 +21,5 @@ urlpatterns = [
         name="delete-transaction",
     ),
     path("search", views.unifiedSearch, name="secretarial-search"),
+    path("mention-users", views.getMentionUsers, name="mention-users"),
 ]

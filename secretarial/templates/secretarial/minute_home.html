@@ -1,5 +1,9 @@
 {% extends 'core/base.html' %} {% load static %}
 
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/mention.css' %}">
+{% endblock %}
+
 {% block content %}
 <div class="min-h-screen bg-gradient-to-b from-slate-50 to-white">
   <!-- Header Section -->
@@ -145,10 +149,28 @@
                 </select>
               </div>
 
-              <div class="mb-4">
-                <label class="block text-sm font-medium text-slate-700 mb-2">Prompt para IA</label>
+              <div class="mb-4" x-data="mentionManager('prompt')">
+                <label class="block text-sm font-medium text-slate-700 mb-2">Prompt para IA <span class="text-xs text-slate-500">(digite @ para mencionar membros)</span></label>
                 <textarea class="app-input w-full min-h-[120px]" id="prompt" name="prompt"
                           placeholder="Descreva a reunião para gerar a ata com IA..."></textarea>
+                <!-- Mention Menu -->
+                <div x-ref="menu" class="mention-menu" x-show="showMenu" x-cloak
+                     :style="`left: ${cursorX}px; top: ${cursorY}px`">
+                  <template x-for="(user, index) in filteredUsers" :key="user.id">
+                    <div class="mention-item"
+                         :class="{ 'mention-item-active': index === selectedIndex }"
+                         @click="selectUser(user)"
+                         @mouseenter="selectedIndex = index">
+                      <div class="mention-item-content">
+                        <span class="mention-item-name" x-html="getHighlightedName(user, searchQuery)"></span>
+                        <span class="mention-item-type" x-text="getUserType(user)"></span>
+                      </div>
+                    </div>
+                  </template>
+                  <div x-show="filteredUsers.length === 0" class="mention-menu-empty">
+                    Nenhum membro encontrado
+                  </div>
+                </div>
               </div>
 
               <div class="flex flex-wrap gap-3">
@@ -288,4 +310,5 @@
 </div>
 
 <script type="module" src="{% static 'js/secretarial_search.js' %}"></script>
+<script src="{% static 'js/mention.js' %}"></script>
 {% endblock %}

@@ -7,3 +7,7 @@ def custom_404(request, exception):
 
 def custom_403(request, exception):
     return render(request, 'errors/403.html', status=403)
+
+
+def custom_500(request):
+    return render(request, 'errors/500.html', status=500)

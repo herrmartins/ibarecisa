@@ -26,6 +26,31 @@ from treasury.models import TransactionModel
 
 
 @api_view(["GET"])
+def getMentionUsers(request):
+    """Get users for mention functionality (members and staff)"""
+    search_query = request.GET.get('q', '').strip()
+
+    # Filter for members and staff
+    queryset = CustomUser.objects.filter(
+        Q(type=CustomUser.Types.REGULAR) | Q(type=CustomUser.Types.STAFF),
+        is_approved=True
+    )
+
+    # Apply search filter if provided
+    if search_query:
+        queryset = queryset.filter(
+            Q(first_name__icontains=search_query) | Q(last_name__icontains=search_query)
+        )
+
+    # Order by name
+    queryset = queryset.order_by('first_name', 'last_name')
+
+    # Serialize and return
+    serializer = CustomUserSerializer(queryset, many=True)
+    return Response(serializer.data)
+
+
+@api_view(["GET"])
 def getCurrentBalance(request):
     from datetime import datetime
 

@@ -34,6 +34,7 @@ wheels/
 *.egg
 venv/
 MANIFEST
+.well-known
 
 # PyInstaller
 #  Usually these files are written by a python script from a template

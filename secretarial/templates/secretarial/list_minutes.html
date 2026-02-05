@@ -36,7 +36,7 @@
         {% for m in minutes %}
         <div class="minutes-list-card">
           <div class="minutes-list-header-section">
-            <div class="flex items-center justify-between gap-4">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div class="flex items-center gap-3">
                 <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
@@ -50,7 +50,7 @@
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
                 </svg>
-                PDF
+                <span>PDF</span>
               </a>
             </div>
             {% if m.president %}
@@ -76,7 +76,7 @@
 
       <!-- Pagination -->
       {% if is_paginated %}
-      <nav class="minutes-pagination">
+      <nav class="minutes-pagination flex flex-wrap justify-center gap-2">
         {% if page_obj.has_previous %}
           <a href="?page=1" class="minutes-pagination-link">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
