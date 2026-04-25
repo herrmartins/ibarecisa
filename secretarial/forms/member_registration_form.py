@@ -27,12 +27,14 @@ class MemberRegistrationForm(forms.ModelForm):
             "last_name": forms.TextInput(attrs={"class": "form-control"}),
             "email": forms.EmailInput(attrs={"class": "form-control"}),
             "date_of_birth": forms.DateInput(
-                attrs={"class": "form-control", "type": "date"}
+                attrs={"class": "datepicker form-control", "type": "text", "placeholder": "DD/MM/AAAA"},
+                format='%d/%m/%Y'
             ),
             "phone_number": forms.TextInput(attrs={"class": "form-control"}),
             "cpf": forms.TextInput(attrs={"class": "form-control"}),
             "baptism_date": forms.DateInput(
-                attrs={"class": "form-control", "type": "date"}
+                attrs={"class": "datepicker form-control", "type": "text", "placeholder": "DD/MM/AAAA"},
+                format='%d/%m/%Y'
             ),
             "address": forms.Textarea(attrs={"class": "form-control", "rows": 2}),
             "about": forms.Textarea(attrs={"class": "form-control", "rows": 3}),

@@ -8,6 +8,7 @@ Em produção (DEBUG=False): Usa Mistral OCR
 import base64
 import io
 import json
+import logging
 import re
 from decimal import Decimal, InvalidOperation
 from datetime import datetime
@@ -17,6 +18,8 @@ import requests
 from django.conf import settings
 from PIL import Image
 from pdf2image import convert_from_bytes
+
+logger = logging.getLogger(__name__)
 
 try:
     from mistralai import Mistral
@@ -356,8 +359,15 @@ RETORNE APENAS O ARRAY JSON. COMECE COM [ E TERMINA COM ]."""
             result = response.json()
             ocr_text = result.get('response', '')
 
-            # Tentar parsear array JSON
+            print(f'\n{"="*60}', flush=True)
+            print(f'[OCR MULTIPLO OLLAMA] Resposta bruta:\n{ocr_text}', flush=True)
+            print(f'{"="*60}', flush=True)
+
             transactions = self._parse_multiple_json(ocr_text, categories)
+
+            print(f'[OCR MULTIPLO OLLAMA] Transacoes parseadas: {len(transactions)}', flush=True)
+            for i, tx in enumerate(transactions):
+                print(f'  TX {i}: raw_category={tx.get("raw_data", {}).get("category")} | category_name={tx.get("category_name")} | category_id={tx.get("category_id")}', flush=True)
 
             return {'transactions': transactions}
 
@@ -526,8 +536,14 @@ Regras:
 
             response_text = chat_response.choices[0].message.content
 
+            print(f'\n{"="*60}', flush=True)
+            print(f'[OCR MULTIPLO MISTRAL] Resposta bruta:\n{response_text}', flush=True)
+            print(f'{"="*60}', flush=True)
+
             # A resposta pode ter um wrapper, tentar extrair o array
             result = json.loads(response_text)
+
+            print(f'[OCR MULTIPLO MISTRAL] JSON tipo={type(result).__name__} keys={list(result.keys()) if isinstance(result, dict) else "N/A"}', flush=True)
 
             # Se result for um objeto com uma propriedade array, extrair
             if isinstance(result, dict):
@@ -541,6 +557,10 @@ Regras:
                 transactions = self._parse_multiple_json(response_text, categories)
             else:
                 transactions = [self._normalize_extracted_data(tx, categories) for tx in result]
+
+            print(f'[OCR MULTIPLO MISTRAL] Transacoes normalizadas: {len(transactions)}', flush=True)
+            for i, tx in enumerate(transactions):
+                print(f'  TX {i}: raw_category={tx.get("raw_data", {}).get("category")} | category_name={tx.get("category_name")} | category_id={tx.get("category_id")}', flush=True)
 
             return {'transactions': transactions}
 

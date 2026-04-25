@@ -1,4 +1,4 @@
-from .date_utils import date_to_words
+from secretarial.utils.date_utils import date_to_words
 
 
 def make_minute(name_dict):

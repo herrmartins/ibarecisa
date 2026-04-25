@@ -19,7 +19,7 @@ class WorshipServiceForm(forms.ModelForm):
             "notes",
         ]
         widgets = {
-            "service_date": forms.DateInput(attrs={"type": "date", "class": "app-input w-full"}),
+            "service_date": forms.DateInput(attrs={"type": "text", "class": "datepicker app-input w-full", "placeholder": "DD/MM/AAAA"}, format='%d/%m/%Y'),
             "service_time": forms.TimeInput(attrs={"type": "time", "class": "app-input w-full"}),
             "title": forms.TextInput(attrs={"class": "app-input w-full"}),
             "service_kind": forms.Select(attrs={"class": "app-input w-full"}),

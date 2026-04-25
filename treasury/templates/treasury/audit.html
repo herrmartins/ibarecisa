@@ -56,13 +56,15 @@
                     <!-- Data Início -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Data Início</label>
-                        <input type="date" x-model="filters.date_from" @change="applyFilters" class="app-input w-full">
+                        <input type="text" class="datepicker app-input w-full"
+                            x-init="$nextTick(() => { initDatePicker($el, { onChange: (dates, str) => { filters.date_from = dateBRtoISO(str); applyFilters } }) })">
                     </div>
 
                     <!-- Data Fim -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Data Fim</label>
-                        <input type="date" x-model="filters.date_to" @change="applyFilters" class="app-input w-full">
+                        <input type="text" class="datepicker app-input w-full"
+                            x-init="$nextTick(() => { initDatePicker($el, { onChange: (dates, str) => { filters.date_to = dateBRtoISO(str); applyFilters } }) })">
                     </div>
                 </div>
 

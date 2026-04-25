@@ -5,7 +5,7 @@ from ckeditor.fields import RichTextField
 from blog.models import Category
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
-from datetime import datetime
+from django.utils import timezone
 
 
 class Post(BaseModel):
@@ -29,7 +29,7 @@ class Post(BaseModel):
 
 @receiver(pre_save, sender=Post)
 def update_post_modified_date(sender, instance, **kwargs):
-    current_date = datetime.now().date()
+    current_date = timezone.now().date()
     if instance.pk:
         pre_save.disconnect(update_post_modified_date, sender=Post)
         instance.modified = current_date

@@ -81,7 +81,7 @@ class AccountingPeriod(models.Model):
         ]
 
     def __str__(self):
-        return self.month.strftime('%B/%Y').capitalize()
+        return f"{self.month_name}/{self.month.year}"
 
     @property
     def year(self):

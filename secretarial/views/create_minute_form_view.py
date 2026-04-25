@@ -21,7 +21,7 @@ class CreateMinuteFormView(PermissionRequiredMixin, FormView):
                 )
                 initial["president"] = minute_data.president
                 initial["secretary"] = minute_data.secretary
-                initial["meeting_date"] = minute_data.meeting_date.isoformat()
+                initial["meeting_date"] = minute_data.meeting_date
                 initial["number_of_attendees"] = minute_data.number_of_attendees
                 initial["body"] = minute_data.body
             except MinuteProjectModel.DoesNotExist:

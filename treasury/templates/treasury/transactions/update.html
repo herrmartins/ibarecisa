@@ -69,7 +69,11 @@
             <!-- Date -->
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Data</label>
-                <input type="date" x-model="form.date" :disabled="!canEditDate" class="app-input" required>
+                <input type="text" class="datepicker app-input" required :disabled="!canEditDate"
+                    x-init="$nextTick(() => {
+                        const fp = initDatePicker($el, { defaultDate: dateISOtoBR(form.date), onChange: (dates, str) => { form.date = dateBRtoISO(str) } });
+                        $watch('form.date', (val) => { fp.setDate(dateISOtoBR(val)) });
+                    })">
                 <p x-show="!canEditDate" class="text-xs text-gray-500 mt-1">Data não pode ser alterada</p>
             </div>
 

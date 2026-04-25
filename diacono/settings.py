@@ -154,6 +154,20 @@ USE_I18N = True
 
 USE_TZ = True
 
+DATE_FORMAT = "d/m/Y"
+DATETIME_FORMAT = "d/m/Y H:i"
+DATE_INPUT_FORMATS = [
+    "%d/%m/%Y",
+    "%Y-%m-%d",
+]
+DATETIME_INPUT_FORMATS = [
+    "%d/%m/%Y %H:%M",
+    "%d/%m/%Y %H:%M:%S",
+    "%Y-%m-%d %H:%M:%S",
+    "%Y-%m-%dT%H:%M",
+    "%Y-%m-%dT%H:%M:%S",
+]
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
@@ -231,10 +245,6 @@ mimetypes.add_type("image/jpeg", ".jpg", strict=True)
 mimetypes.add_type("image/jpeg", ".jpeg", strict=True)
 mimetypes.init()
 
-
-LANGUAGE_CODE = "pt-br"
-USE_I18N = True
-USE_L10N = True
 
 EMAIL_BACKEND = config("EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
 EMAIL_HOST = config("EMAIL_HOST")
