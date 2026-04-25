@@ -91,7 +91,7 @@ class CreateMinuteFormViewTestCase(TestCase):
         self.assertIn("secretary", initial_data)
         self.assertEqual(initial_data["secretary"].first_name, "Sample Secretary")
         self.assertIn("meeting_date", initial_data)
-        self.assertEqual(initial_data["meeting_date"], expected_meeting_date_str)
+        self.assertEqual(initial_data["meeting_date"], project_with_data.meeting_date)
         self.assertIn("number_of_attendees", initial_data)
         self.assertEqual(
             initial_data["number_of_attendees"], expected_number_of_atendees

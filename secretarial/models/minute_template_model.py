@@ -1,13 +1,12 @@
 from core.models import BaseModel
 from django.db import models
-from ckeditor.fields import RichTextField
 from secretarial.models import MeetingAgendaModel
 from django.urls import reverse
 
 
 class MinuteTemplateModel(BaseModel):
     title = models.CharField(max_length=255)
-    body = RichTextField(blank=True, null=True)
+    body = models.TextField(blank=True, null=True)
     agenda = models.ManyToManyField(
         MeetingAgendaModel, blank=True)
 
