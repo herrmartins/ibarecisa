@@ -1,288 +1,101 @@
 {% extends 'core/base.html' %}
+
 {% block content %}
-{% load static %}
-<script src="https://cdn.tiny.cloud/1/{{ TINYMCE_API_KEY }}/tinymce/8/tinymce.min.js" referrerpolicy="origin"></script>
-<link rel="stylesheet" href="{% static 'css/worship.css' %}">
+<div class="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+  <div class="app-page-header">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
+      <div class="text-center mb-8">
+        <h1 class="app-page-title">Música</h1>
+        <p class="app-page-subtitle">Catálogo de canções, ordens de culto e histórico do que foi cantado</p>
+      </div>
 
-<div class="container" x-data="songSearch" x-cloak>
-    <div class="worship-header">
-        <div class="row align-items-center">
-            <div class="col-md-9">
-                <h1 class="worship-title">Departamento de Música</h1>
-            </div>
-            <div class="col-md-3 text-end">
-                <button type="button" class="add-song-btn"
-                    data-bs-toggle="modal" data-bs-target="#addSongModal">
-                    <i class="bi bi-plus-circle-fill me-2"></i>Adicionar Canção
-                </button>
-            </div>
+      <div class="flex justify-center gap-4 sm:gap-6 flex-wrap">
+        <div class="app-header-card app-header-current">
+          <div class="text-sm font-medium text-white/90 mb-1">Canções cadastradas</div>
+          <div class="text-3xl font-bold text-white">{{ song_count }}</div>
         </div>
+        <div class="app-header-card app-header-income">
+          <div class="text-sm font-medium text-white/90 mb-1">Cultos registrados</div>
+          <div class="text-3xl font-bold text-white">{{ service_count }}</div>
+        </div>
+        <div class="app-header-card app-header-expense">
+          <div class="text-sm font-medium text-white/90 mb-1">Pendências de vínculo</div>
+          <div class="text-3xl font-bold text-white">{{ pending_count }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-4">
+      <a href="{% url 'worship:service-list' %}" class="bg-white rounded-xl shadow-sm border border-slate-100 p-5 hover:shadow-md transition-shadow">
+        <h3 class="text-base font-semibold text-slate-900 mb-1">Ordem do Culto</h3>
+        <p class="text-sm text-slate-600">Criar, editar e fechar registros de canções cantadas.</p>
+      </a>
+      <a href="{% url 'worship:song-list' %}" class="bg-white rounded-xl shadow-sm border border-slate-100 p-5 hover:shadow-md transition-shadow">
+        <h3 class="text-base font-semibold text-slate-900 mb-1">Catálogo de Canções</h3>
+        <p class="text-sm text-slate-600">Buscar por título, compositor, tema e hinário.</p>
+      </a>
+      <a href="{% url 'worship:song-create' %}" class="bg-white rounded-xl shadow-sm border border-slate-100 p-5 hover:shadow-md transition-shadow">
+        <h3 class="text-base font-semibold text-slate-900 mb-1">Cadastrar Canção</h3>
+        <p class="text-sm text-slate-600">Adicionar letra, hinário, número e metadados.</p>
+      </a>
+      <a href="{% url 'worship:service-import' %}" class="bg-white rounded-xl shadow-sm border border-slate-100 p-5 hover:shadow-md transition-shadow">
+        <h3 class="text-base font-semibold text-slate-900 mb-1">Importar Programação</h3>
+        <p class="text-sm text-slate-600">Gerar estrutura de culto a partir de texto com IA.</p>
+      </a>
+      <a href="{% url 'worship:catalog-settings' %}" class="bg-white rounded-xl shadow-sm border border-slate-100 p-5 hover:shadow-md transition-shadow">
+        <h3 class="text-base font-semibold text-slate-900 mb-1">Cadastros Base</h3>
+        <p class="text-sm text-slate-600">Manter compositores, hinários e temas.</p>
+      </a>
     </div>
 
-    <div class="card search-card">
-        <div class="card-body">
-            <div class="d-flex justify-content-center">
-                <div class="input-group input-group-lg">
-                    <input type="text" class="form-control" placeholder="Busca uma canção..." x-model="query"
-                        x-on:input.debounce.300ms="searchSongs">
-                </div>
-            </div>
-        </div>
+    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
+      <h2 class="text-lg font-semibold text-slate-800 mb-3">Busca rápida no catálogo</h2>
+      <form method="get" action="{% url 'worship:song-list' %}" class="flex flex-col md:flex-row gap-3">
+        <input type="search" name="q" class="app-input w-full" placeholder="Digite título, compositor, tema ou trecho da letra">
+        <button class="app-btn app-btn-primary" type="submit">Buscar canções</button>
+      </form>
     </div>
 
-    <div class="row mt-4">
-        <div class="col-lg-6 mb-4">
-            <div class="card result-card" x-show="results.title_matches.length > 0">
-                <div class="card-header">
-                    <h3 class="card-title">Resultados por Título</h3>
-                </div>
-                <div class="card-body">
-                    <table class="table table-striped table-sm">
-                        <thead>
-                            <tr>
-                                <th scope="col">Título</th>
-                                <th scope="col">Artista</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <template x-for="item in results.title_matches" :key="item.id">
-                                <tr>
-                                    <td>
-                                        <a :href="getSongDetailUrl(item.id)" x-text="item.title"></a>
-                                    </td>
-                                    <td x-text="item.artist"></td>
-                                </tr>
-                            </template>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+      <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+          <h2 class="text-lg font-semibold text-slate-800">Canções recentes</h2>
+          <a href="{% url 'worship:song-list' %}" class="text-sm text-primary-700 font-medium">Ver catálogo</a>
         </div>
+        <div class="divide-y divide-slate-100">
+          {% for song in recent_songs %}
+          <a href="{% url 'worship:song-detail' song.pk %}" class="block px-5 py-3 hover:bg-slate-50 transition-colors">
+            <p class="font-medium text-slate-900">{{ song.title }}</p>
+            <p class="text-sm text-slate-500">
+              {% if song.artist %}{{ song.artist.name }}{% else %}Compositor não informado{% endif %}
+              {% if song.hymnal %} · {{ song.hymnal.title }}{% if song.hymn_number %} {{ song.hymn_number }}{% endif %}{% endif %}
+            </p>
+          </a>
+          {% empty %}
+          <p class="px-5 py-6 text-sm text-slate-500">Nenhuma canção cadastrada ainda.</p>
+          {% endfor %}
+        </div>
+      </div>
 
-        <div class="col-lg-6 mb-4">
-            <div class="card result-card" x-show="results.artist_matches.length > 0">
-                <div class="card-header">
-                    <h3 class="card-title">Resultados por Artista</h3>
-                </div>
-                <div class="card-body">
-                    <table class="table table-striped table-sm">
-                        <thead>
-                            <tr>
-                                <th scope="col">Título</th>
-                                <th scope="col">Artista</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <template x-for="item in results.artist_matches" :key="item.id">
-                                <tr>
-                                    <td>
-                                        <a :href="getSongDetailUrl(item.id)" x-text="item.title"></a>
-                                    </td>
-                                    <td x-text="item.artist"></td>
-                                </tr>
-                            </template>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+      <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+          <h2 class="text-lg font-semibold text-slate-800">Cultos recentes</h2>
+          <a href="{% url 'worship:service-list' %}" class="text-sm text-primary-700 font-medium">Ver cultos</a>
         </div>
-
-        <div class="col-lg-6 mb-4">
-            <div class="card result-card" x-show="results.lyrics_matches.length > 0">
-                <div class="card-header">
-                    <h3 class="card-title">Resultados por Letras</h3>
-                </div>
-                <div class="card-body">
-                    <table class="table table-striped table-sm">
-                        <thead>
-                            <tr>
-                                <th scope="col">Título</th>
-                                <th scope="col">Artista</th>
-                                <th scope="col">Trecho</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <template x-for="item in results.lyrics_matches" :key="item.id">
-                                <tr>
-                                    <td>
-                                        <a :href="getSongDetailUrl(item.id)" x-text="item.title"></a>
-                                    </td>
-                                    <td x-text="item.artist"></td>
-                                    <td x-html="item.snippet"></td>
-                                </tr>
-                            </template>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+        <div class="divide-y divide-slate-100">
+          {% for service in recent_services %}
+          <a href="{% url 'worship:service-detail' service.pk %}" class="block px-5 py-3 hover:bg-slate-50 transition-colors">
+            <p class="font-medium text-slate-900">{{ service.title }}</p>
+            <p class="text-sm text-slate-500">{{ service.service_date|date:"d/m/Y" }} · {{ service.get_service_kind_display }}</p>
+          </a>
+          {% empty %}
+          <p class="px-5 py-6 text-sm text-slate-500">Nenhum culto registrado ainda.</p>
+          {% endfor %}
         </div>
-
-        <div class="col-lg-6 mb-4">
-            <div class="card result-card" x-show="results.theme_matches.length > 0">
-                <div class="card-header">
-                    <h3 class="card-title">Resultados por Tema</h3>
-                </div>
-                <div class="card-body">
-                    <table class="table table-striped table-sm">
-                        <thead>
-                            <tr>
-                                <th scope="col">Título</th>
-                                <th scope="col">Temas</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <template x-for="item in results.theme_matches" :key="item.id">
-                                <tr>
-                                    <td>
-                                        <a :href="getSongDetailUrl(item.id)" x-text="item.title"></a>
-                                    </td>
-                                    <td x-text="item.theme.join(', ')"></td>
-                                </tr>
-                            </template>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+      </div>
     </div>
-        
-
-        <div class="modal fade" id="addSongModal" tabindex="-1">
-            <div class="modal-dialog modal-xl modal-dialog-centered">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <h5 class="modal-title">Adicionar nova canção</h5>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                  <!-- Initialize the Alpine component -->
-                  <form x-data="songForm()" x-init="initAddSongForm()" method="POST">
-                    {% csrf_token %}
-                    <div class="row">
-                      <div class="col-md-6">
-                        <div class="mb-3">
-                          <label for="songTitle" class="form-label">Título</label>
-                          <input type="text" id="songTitle" class="form-control" x-model="title" required>
-                        </div>
-                        <div class="mb-3">
-                          <label for="artist" class="form-label">Compositor</label>
-                          <select id="artist" class="form-control" x-model="artist">
-                            <option value="">Selecione um compositor</option>
-                            <template x-for="artist in artists" :key="artist.id">
-                              <option :value="artist.id" x-text="artist.text"></option>
-                            </template>
-                          </select>
-                        </div>
-                        <div class="mb-3">
-                          <label for="theme" class="form-label">Tema</label>
-                          <select id="theme" class="form-control" x-model="theme">
-                            <option value="">Selecione um tema</option>
-                            <template x-for="theme in themes" :key="theme.id">
-                              <option :value="theme.id" x-text="theme.text"></option>
-                            </template>
-                          </select>
-                        </div>
-                        <div class="mb-3">
-                          <label for="hymnal" class="form-label">Hinário</label>
-                          <select id="hymnal" class="form-control" x-model="hymnal">
-                            <option value="">Selecione um hinário</option>
-                            <template x-for="hymnal in hymnals" :key="hymnal.id">
-                              <option :value="hymnal.id" x-text="hymnal.text"></option>
-                            </template>
-                          </select>
-                        </div>
-                        <div class="row mb-3">
-                          <div class="col-md-7">
-                            <label for="songMetrics" class="form-label">Métrica</label>
-                            <input type="text" id="songMetrics" class="form-control" x-model="metrics">
-                          </div>
-                          <div class="col-md-5">
-                            <label for="songKey" class="form-label">Tom</label>
-                            <select id="songKey" class="form-control" x-model="key">
-                              <option value="">Selecione uma nota</option>
-                              <option value="C">C</option>
-                              <option value="C#">C#</option>
-                              <option value="Db">Db</option>
-                              <option value="D">D</option>
-                              <option value="D#">D#</option>
-                              <option value="Eb">Eb</option>
-                              <option value="E">E</option>
-                              <option value="F">F</option>
-                              <option value="F#">F#</option>
-                              <option value="Gb">Gb</option>
-                              <option value="G">G</option>
-                              <option value="G#">G#</option>
-                              <option value="Ab">Ab</option>
-                              <option value="A">A</option>
-                              <option value="A#">A#</option>
-                              <option value="Bb">Bb</option>
-                              <option value="B">B</option>
-                            </select>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="col-md-6">
-                        <div class="mb-3">
-                          <div id="editor"></div>
-                        </div>
-                      </div>
-                    </div>
-                    <button type="button" class="btn btn-primary" @click="submitForm">Salvar</button>
-                    
-                    <div x-show="success" x-transition class="alert alert-success mt-3" role="alert" x-text="message"></div>
-
-                    <div x-show="songId" class="mt-4 border-top pt-3">
-                        <h6>Arquivos relacionados à canção</h6>
-                        
-                        <div class="d-flex flex-wrap">
-                          <template x-for="file in files" :key="file.id">
-                            <div class="text-center m-2">
-                              <a :href="file.url" target="_blank" class="text-decoration-none">
-                                <template x-if="file.file_type === 'audio'">
-                                  <i class="bi bi-file-earmark-music" style="font-size: 2rem;"></i>
-                                </template>
-                                <template x-if="file.file_type === 'sheet'">
-                                  <i class="bi bi-file-earmark-text" style="font-size: 2rem;"></i>
-                                </template>
-                                <template x-if="file.file_type === 'other'">
-                                  <i class="bi bi-file-earmark" style="font-size: 2rem;"></i>
-                                </template>
-                                <template x-if="file.file_type === ''">
-                                    <i class="bi bi-file-earmark" style="font-size: 2rem;"></i>
-                                  </template>
-                                <div x-text="file.file_title || file.file_type" class="small mt-1"></div>
-                              </a>
-                            </div>
-                          </template>
-                        </div>
-                        
-                        <div class="mt-3">
-                          <h6>Enviar novo arquivo</h6>
-                          <div class="mb-2">
-                            <input type="file" @change="selectedFile = $event.target.files[0]" class="form-control">
-                          </div>
-                          <div class="mb-2">
-                            <select x-model="fileType" class="form-control">
-                              <option value="">Selecione o tipo de arquivo</option>
-                              <option value="audio">Áudio</option>
-                              <option value="sheet">Partitura</option>
-                              <option value="other">Outro</option>
-                            </select>
-                          </div>
-                          <div class="mb-2">
-                            <input type="text" placeholder="Título" x-model="file_title" class="form-control">
-                          </div>
-                          <div class="mb-2">
-                            <input type="text" placeholder="Descrição" x-model="description" class="form-control">
-                          </div>
-                          <button type="button" class="btn btn-primary" @click="submitFile">Enviar Arquivo</button>
-                        </div>
-                      </div>
-                  </form>
-                </div>
-              </div>
-            </div>
-          </div>          
+  </div>
 </div>
-<script src="{% static 'js/song_search.js' %}"></script>
 {% endblock %}

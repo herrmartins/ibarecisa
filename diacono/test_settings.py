@@ -14,7 +14,12 @@ DATABASES = {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": TMP_DIR / "db.sqlite3",
         "TEST": {"NAME": TMP_DIR / "db_test.sqlite3"},
-    }
+    },
+    "audit": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": TMP_DIR / "audit_test.sqlite3",
+        "TEST": {"NAME": TMP_DIR / "audit_test_db.sqlite3"},
+    },
 }
 
 PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
@@ -28,3 +33,5 @@ SECURE_HSTS_INCLUDE_SUBDOMAINS = False
 SECURE_HSTS_PRELOAD = False
 SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SECURE = False
+
+INSTALLED_APPS += ["ckeditor"]

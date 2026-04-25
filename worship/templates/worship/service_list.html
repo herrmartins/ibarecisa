@@ -1,0 +1,61 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+  <div class="app-page-header">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
+      <div class="text-center">
+        <h1 class="app-page-title">Cultos</h1>
+        <p class="app-page-subtitle">Histórico de programações e canções cantadas</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5 mb-6">
+      <div class="flex flex-wrap gap-3 justify-between items-center">
+        <form method="get" class="flex-1 min-w-[260px]">
+          <input type="text" name="q" value="{{ request.GET.q }}" class="app-input w-full" placeholder="Buscar por título do culto">
+        </form>
+        <div class="flex flex-wrap gap-2">
+          <a href="{% url 'worship:song-list' %}" class="app-btn app-btn-secondary">Catálogo de Canções</a>
+          <a href="{% url 'worship:service-import' %}" class="app-btn app-btn-secondary">Gerar com IA</a>
+          <a href="{% url 'worship:service-create' %}" class="app-btn app-btn-primary">Novo Culto</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+      <table class="w-full text-sm">
+        <thead class="bg-slate-50 text-slate-600 border-b border-slate-200">
+          <tr>
+            <th class="text-left p-3">Data</th>
+            <th class="text-left p-3">Título</th>
+            <th class="text-left p-3">Tipo</th>
+            <th class="text-left p-3">Ordem</th>
+            <th class="text-right p-3">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for service in services %}
+          <tr class="border-b border-slate-100 hover:bg-slate-50/60">
+            <td class="p-3">{{ service.service_date|date:"d/m/Y" }}</td>
+            <td class="p-3 font-medium text-slate-800">{{ service.title }}</td>
+            <td class="p-3">{{ service.get_service_kind_display }}</td>
+            <td class="p-3">{% if service.program_html %}Preenchida{% else %}Vazia{% endif %}</td>
+            <td class="p-3 text-right"><a href="{% url 'worship:service-detail' service.pk %}" class="text-primary-700 hover:text-primary-800 font-semibold">Abrir</a></td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="5" class="p-8 text-center text-slate-500">
+              Nenhum culto cadastrado ainda. Crie em <a href="{% url 'worship:service-create' %}" class="text-primary-700 font-semibold">Novo Culto</a>
+              ou <a href="{% url 'worship:service-import' %}" class="text-primary-700 font-semibold">gere com IA</a>.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

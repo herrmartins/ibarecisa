@@ -45,6 +45,7 @@ class Song(models.Model):
         blank=True,
         null=True,
     )
+    hymn_number = models.PositiveIntegerField(blank=True, null=True)
     metrics = models.CharField(max_length=50, blank=True, null=True)
     """ syllable_counts_json = models.JSONField(default=dict) """
 

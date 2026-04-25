@@ -1,0 +1,92 @@
+{% extends 'core/base.html' %}
+
+{% block pre_alpine_scripts %}
+<script src="https://cdn.tiny.cloud/1/{{ TINYMCE_API_KEY }}/tinymce/8/tinymce.min.js" referrerpolicy="origin"></script>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+  <div class="app-page-header">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
+      <div class="mb-6">
+        <a href="{% url 'worship:service-list' %}" class="app-back-link">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+          Voltar para Cultos
+        </a>
+      </div>
+      <div class="text-center">
+        <h1 class="app-page-title">{% if object %}Editar Culto{% else %}Novo Culto{% endif %}</h1>
+        <p class="app-page-subtitle">Monte do zero no editor ou gere a programação com IA</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <form method="post" class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+      {% csrf_token %}
+      {% if form.non_field_errors %}
+        <div class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 mb-4">{{ form.non_field_errors }}</div>
+      {% endif %}
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {% for field in form.visible_fields %}
+        <div class="{% if field.name == 'program_html' or field.name == 'notes' %}md:col-span-2{% endif %}">
+          <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-slate-700 mb-1">{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}<p class="text-xs text-red-600 mt-1">{{ field.errors|striptags }}</p>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+
+      <div class="flex flex-wrap gap-2 pt-4 mt-2 border-t border-slate-100">
+        <button type="submit" class="app-btn app-btn-primary">Salvar</button>
+        <a href="{% url 'worship:service-list' %}" class="app-btn app-btn-secondary">Voltar</a>
+      </div>
+    </form>
+
+    {% if object %}
+    <form method="post" action="{% url 'worship:service-generate' object.pk %}" class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+      {% csrf_token %}
+      <div class="flex items-center gap-3 mb-3">
+        <svg class="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707"/>
+        </svg>
+        <h2 class="text-lg font-semibold text-slate-800">Gerar com IA</h2>
+      </div>
+      <p class="text-sm text-slate-600 mb-4">Cole um texto base (Word/WhatsApp) para preencher título, liderança, ordem e canções cantadas.</p>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div class="lg:col-span-2">
+          <label class="block text-sm font-medium text-slate-700 mb-1">Texto base</label>
+          <textarea name="raw_text" rows="8" class="app-input w-full"></textarea>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Instrução extra (opcional)</label>
+          <input name="model_hint" type="text" class="app-input w-full" placeholder="Ex: manter formato tradicional e incluir ceia quando houver">
+        </div>
+      </div>
+      <div class="mt-4">
+        <button type="submit" class="app-btn app-btn-primary">Gerar programação com IA</button>
+      </div>
+    </form>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+  if (window.tinymce) {
+    tinymce.init({
+      selector: '#id_program_html, #id_notes',
+      language: 'pt-BR',
+      height: 320,
+      menubar: false,
+      plugins: 'lists link',
+      toolbar: 'undo redo | bold italic underline | bullist numlist | link | removeformat',
+      branding: false,
+      promotion: false,
+      license_key: 'gpl'
+    });
+  }
+</script>
+{% endblock %}

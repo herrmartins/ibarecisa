@@ -1,0 +1,115 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    @page {
+      size: {% if layout == '2up' %}A4 landscape{% else %}A4 portrait{% endif %};
+      margin: {% if layout == '2up' %}0.8cm{% else %}1cm{% endif %};
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      color: #0f172a;
+      margin: 0;
+      padding: 0;
+    }
+
+    .spread {
+      display: flex;
+      gap: 0.6cm;
+      width: 100%;
+      height: 19.7cm;
+    }
+
+    .sheet {
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 12px;
+      position: relative;
+      height: {% if layout == '2up' %}19.7cm{% else %}25.7cm{% endif %};
+      page-break-after: always;
+    }
+
+    .sheet-half {
+      flex: 1;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 14px;
+      height: 19.7cm;
+      position: relative;
+    }
+
+    /* Watermark using ::before */
+    .sheet-half::before,
+    .sheet::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 350px;
+      height: 350px;
+      background-image: url('{% get_static_prefix %}img/logo.jpg');
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      opacity: 0.03;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .title { text-align: center; position: relative; z-index: 1; }
+    .title h1 { margin: 6px 0; font-size: {% if layout == '2up' %}18px{% else %}22px{% endif %}; }
+    .title p { margin: 0; font-size: 12px; }
+    .leaders { margin: 12px 0; font-size: 12px; position: relative; z-index: 1; }
+    .leaders span { margin-right: 12px; }
+    .program { font-size: {% if layout == '2up' %}11px{% else %}12px{% endif %}; position: relative; z-index: 1; }
+    .program ol { margin: 0; padding-left: 20px; }
+    .program li { margin-bottom: 4px; }
+    .program-scaled {
+      line-height: 1.3;
+    }
+    .program-scaled * {
+      font-size: inherit !important;
+    }
+  </style>
+</head>
+<body>
+  {% if layout == '2up' %}
+    <section class="spread">
+      {% for copy in copies %}
+      <article class="sheet-half">
+        <div class="title">
+          <p><strong>{{ church_info.name }}</strong></p>
+          <h1>{{ service.title }}</h1>
+          <p>{{ service.service_date|date:"d \d\e F \d\e Y" }}</p>
+        </div>
+        <div class="leaders">
+          <span><strong>Liderança:</strong> {{ service.leaders_text|default:"Sem liderança cadastrada." }}</span>
+        </div>
+        <p><strong>Ordem:</strong></p>
+        <div class="program program-scaled" style="font-size: {{ service.program_font_scale }}%;">{{ service.program_html|safe }}</div>
+      </article>
+      {% endfor %}
+    </section>
+  {% else %}
+  {% for copy in copies %}
+    <section class="sheet">
+      <div class="title">
+        <p><strong>{{ church_info.name }}</strong></p>
+        <h1>{{ service.title }}</h1>
+        <p>{{ service.service_date|date:"d \d\e F \d\e Y" }}</p>
+      </div>
+      <div class="leaders">
+        <span><strong>Liderança:</strong> {{ service.leaders_text|default:"Sem liderança cadastrada." }}</span>
+      </div>
+      <p><strong>Ordem:</strong></p>
+      <div class="program program-scaled" style="font-size: {{ service.program_font_scale }}%;">{{ service.program_html|safe }}</div>
+    </section>
+  {% endfor %}
+  {% endif %}
+</body>
+</html>

@@ -1,4 +1,5 @@
 import os
+import importlib.util
 from pathlib import Path
 from decouple import config
 import mimetypes
@@ -37,7 +38,6 @@ INSTALLED_APPS = [
     "corsheaders",
     "reversion",
     "reversion_compare",
-    "storages",
     "blog.apps.BlogConfig",
     "events.apps.EventsConfig",
     "core.apps.CoreConfig",
@@ -47,6 +47,10 @@ INSTALLED_APPS = [
     "worship.apps.WorshipConfig",
     "api2",
 ]
+
+HAS_DJANGO_STORAGES = importlib.util.find_spec("storages") is not None
+if HAS_DJANGO_STORAGES:
+    INSTALLED_APPS.append("storages")
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -155,7 +159,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 
-if not DEBUG:
+if not DEBUG and HAS_DJANGO_STORAGES:
     STATIC_ROOT = BASE_DIR / "staticfiles"
     STATICFILES_DIRS = [
         BASE_DIR / "static",
@@ -200,6 +204,8 @@ if not DEBUG:
     }
 else:
     # Desenvolvimento: armazenamento local
+    if not DEBUG and not HAS_DJANGO_STORAGES:
+        sys.stderr.write("[settings] django-storages nao encontrado; usando FileSystemStorage.\n")
     STORAGES = {
         "default": {
             "BACKEND": "django.core.files.storage.FileSystemStorage",
