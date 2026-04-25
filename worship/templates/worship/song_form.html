@@ -1,5 +1,9 @@
 {% extends 'core/base.html' %}
 
+{% block pre_alpine_scripts %}
+<script src="https://cdn.tiny.cloud/1/{{ TINYMCE_API_KEY }}/tinymce/8/tinymce.min.js" referrerpolicy="origin"></script>
+{% endblock %}
+
 {% block content %}
 <div class="min-h-screen bg-gradient-to-b from-slate-50 to-white">
   <div class="app-page-header">
@@ -53,4 +57,20 @@
     </form>
   </div>
 </div>
+
+<script>
+  if (window.tinymce) {
+    tinymce.init({
+      selector: '#id_lyrics',
+      language: 'pt-BR',
+      height: 320,
+      menubar: false,
+      plugins: 'lists link',
+      toolbar: 'undo redo | bold italic underline | bullist numlist | link | removeformat',
+      branding: false,
+      promotion: false,
+      license_key: 'gpl'
+    });
+  }
+</script>
 {% endblock %}
