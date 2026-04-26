@@ -938,8 +938,7 @@ Regras:
                         "content": f"{prompt}\n\nTexto do comprovante:\n{ocr_text}"
                     }
                 ],
-                response_format={"type": "json_object"},
-                max_tokens=1000,
+                max_tokens=2000,
                 temperature=0.1
             )
 
@@ -948,6 +947,10 @@ Regras:
             print(f'\n{"="*50}', flush=True)
             print(f'[OCR SINGLE MISTRAL] Resposta bruta (len={len(response_text) if response_text else 0}):\n{response_text}', flush=True)
             print(f'{"="*50}', flush=True)
+
+            if not response_text:
+                print(f'[OCR SINGLE MISTRAL] Resposta vazia!', flush=True)
+                raise Exception("Resposta vazia da Mistral")
 
             try:
                 extracted = json.loads(response_text)
