@@ -12,6 +12,8 @@ import logging
 import re
 from decimal import Decimal, InvalidOperation
 from datetime import datetime
+
+from django.utils.timezone import localtime, now as django_now
 from typing import Optional, Dict, Any
 
 import requests
@@ -585,7 +587,7 @@ Regras IMPORTANTES:
 - Tabelas: cada coluna = uma transação. Use o NOME DO HEADER como categoria.
 - NORMALIZE: use o nome EXATO da lista acima (ex: "dízimo" não "Dízimo")
 - amount: número decimal positivo (ex: 2.50)
-- date: YYYY-MM-DD ou hoje: {datetime.now().strftime('%Y-%m-%d')}
+- date: YYYY-MM-DD ou hoje: {localtime(django_now()).strftime('%Y-%m-%d')}
 - is_positive: SEMPRE true. NUNCA false.
 - confidence: 70 a 90
 
@@ -658,7 +660,7 @@ RETORNE APENAS O ARRAY JSON. COMECE COM [ E TERMINA COM ]."""
         return {
             'description': 'Erro no parsing',
             'amount': None,
-            'date': datetime.now().strftime('%Y-%m-%d'),
+            'date': localtime(django_now()).strftime('%Y-%m-%d'),
             'category': 'Outros',
             'is_positive': True,
             'confidence': 10
@@ -705,7 +707,7 @@ RETORNE APENAS O ARRAY JSON. COMECE COM [ E TERMINA COM ]."""
         current_tx = {
             'description': '',
             'amount': None,
-            'date': datetime.now().strftime('%Y-%m-%d'),
+            'date': localtime(django_now()).strftime('%Y-%m-%d'),
             'category': 'Dízimos',
             'is_positive': True,
             'confidence': 60
@@ -731,7 +733,7 @@ RETORNE APENAS O ARRAY JSON. COMECE COM [ E TERMINA COM ]."""
                         current_tx = {
                             'description': line[:50],
                             'amount': amount,
-                            'date': datetime.now().strftime('%Y-%m-%d'),
+                            'date': localtime(django_now()).strftime('%Y-%m-%d'),
                             'category': 'Dízimos',
                             'is_positive': True,
                             'confidence': 50
@@ -1051,7 +1053,7 @@ Retorne APENAS este JSON:
                 return parsed_date.strftime('%Y-%m-%d')
             except ValueError:
                 continue
-        return datetime.now().strftime('%Y-%m-%d')
+        return localtime(django_now()).strftime('%Y-%m-%d')
 
     def _parse_amount(self, amount_str: str) -> float:
         """Parseia valor de diversos formatos brasileiros."""
@@ -1189,7 +1191,7 @@ Retorne APENAS este JSON:
 
         # Se não achou data, usar hoje
         if not result['date']:
-            result['date'] = datetime.now().strftime('%Y-%m-%d')
+            result['date'] = localtime(django_now()).strftime('%Y-%m-%d')
 
         # Extrair descrição - tentar pegar nome do estabelecimento ou informações úteis
         # Dividir por palavras-chave comuns que separam cabeçalho do conteúdo
@@ -1316,11 +1318,11 @@ Retorne APENAS este JSON:
                     except ValueError:
                         continue
                 else:
-                    date = datetime.now().strftime('%Y-%m-%d')
+                    date = localtime(django_now()).strftime('%Y-%m-%d')
             except Exception:
-                date = datetime.now().strftime('%Y-%m-%d')
+                date = localtime(django_now()).strftime('%Y-%m-%d')
         else:
-            date = datetime.now().strftime('%Y-%m-%d')
+            date = localtime(django_now()).strftime('%Y-%m-%d')
 
         # Categoria - usar a que veio do JSON se existir no BD
         category_name = data.get('category', 'Outros')

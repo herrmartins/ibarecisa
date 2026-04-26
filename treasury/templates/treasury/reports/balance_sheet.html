@@ -628,14 +628,13 @@ document.addEventListener('alpine:init', () => {
             if (periods.length === 0) return [];
 
             // Ordenar períodos em ordem CRESCENTE para o cálculo (do mais antigo para o mais novo)
-            const sortedPeriods = [...periods].sort((a, b) => new Date(a.month) - new Date(b.month));
+            const sortedPeriods = [...periods].sort((a, b) => a.month.localeCompare(b.month));
 
-            // Buscar o saldo acumulado antes do primeiro período (o mais antigo)
             let runningBalance = 0;
             const firstPeriod = sortedPeriods[0];
-            const firstMonth = new Date(firstPeriod.month);
-            const year = firstMonth.getFullYear();
-            const month = firstMonth.getMonth() + 1;
+            const [firstYear, firstMonthNum] = firstPeriod.month.split('-');
+            const year = parseInt(firstYear);
+            const month = parseInt(firstMonthNum);
 
             try {
                 const response = await fetch(`/treasury/api/reports/accumulated-balance-before/${year}/${month}/`, {

@@ -298,7 +298,9 @@ function transactionUpdate() {
         },
 
         formatDate(dateStr) {
-            return new Date(dateStr).toLocaleDateString('pt-BR');
+            if (!dateStr) return '';
+            const [year, month, day] = dateStr.split('-');
+            return `${day}/${month}/${year}`;
         }
     };
 }

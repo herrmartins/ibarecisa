@@ -181,7 +181,7 @@ function reversalForm() {
             description: '',
             amount: '',
             category: '',
-            date: new Date().toISOString().split('T')[0],
+            date: new Date().toLocaleDateString('en-CA'),
             reason: '',
             authorized_by: ''
         },
@@ -336,7 +336,9 @@ function reversalForm() {
         },
 
         formatDate(dateStr) {
-            return new Date(dateStr).toLocaleDateString('pt-BR');
+            if (!dateStr) return '';
+            const [year, month, day] = dateStr.split('-');
+            return `${day}/${month}/${year}`;
         }
     };
 }
