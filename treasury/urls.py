@@ -23,6 +23,9 @@ from treasury.views.template_views import (
 from treasury.views.generate_balance_sheet_pdf_view import GenerateBalanceSheetPDFView
 from treasury.views.generate_analytical_report_pdf_view import generate_analytical_report_pdf
 
+# Excel export view
+from treasury.views.generate_monthly_excel_view import generate_monthly_excel
+
 app_name = "treasury"
 
 urlpatterns = [
@@ -46,6 +49,7 @@ urlpatterns = [
 
     # ===== REPORTS =====
     path('relatorios/mensal/<int:year>/<int:month>/', MonthlyReportView.as_view(), name='monthly-report'),
+    path('relatorios/mensal/<int:year>/<int:month>/excel/', generate_monthly_excel, name='monthly-report-excel'),
     path('relatorios/balanco/', BalanceSheetView.as_view(), name='balance-sheet'),
     path('relatorios/balanco/pdf/', GenerateBalanceSheetPDFView, name='balance-sheet-pdf'),
 
