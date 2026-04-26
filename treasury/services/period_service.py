@@ -265,13 +265,13 @@ class PeriodService:
             total=Coalesce(Sum('amount'), Decimal('0.00'), output_field=DecimalField())
         )['total'] or Decimal('0.00')
 
-        # Somar negativas
+        # Somar negativas (amount sempre positivo)
         negative = transactions.filter(is_positive=False).aggregate(
             total=Coalesce(Sum('amount'), Decimal('0.00'), output_field=DecimalField())
         )['total'] or Decimal('0.00')
 
-        # Net = positivas + negativas (negative já é negativo)
-        return positive + negative
+        # Net = positivas - negativas (subtrair despesas)
+        return positive - negative
 
     def can_edit_transaction(self, transaction):
         """

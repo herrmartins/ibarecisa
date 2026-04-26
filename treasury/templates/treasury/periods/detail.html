@@ -104,7 +104,7 @@ function periodHeaderStats() {
                 });
                 this.period = await response.json();
                 this.period.status_label = { 'open': 'Aberto', 'closed': 'Fechado', 'archived': 'Arquivado' }[this.period.status];
-                const net = this.period.transactions_summary?.net || 0;
+                const net = parseFloat(this.period.transactions_summary?.net || 0);
                 this.calculatedBalance = parseFloat(this.period.opening_balance) + net;
             } catch (error) {
                 console.error('Error loading period:', error);
@@ -370,7 +370,7 @@ function periodDetailContent() {
                 });
                 this.period = await response.json();
                 this.period.status_label = { 'open': 'Aberto', 'closed': 'Fechado', 'archived': 'Arquivado' }[this.period.status];
-                const net = this.period.transactions_summary?.net || 0;
+                const net = parseFloat(this.period.transactions_summary?.net || 0);
                 this.calculatedBalance = parseFloat(this.period.opening_balance) + net;
             } catch (error) {
                 console.error('Error loading period:', error);

@@ -528,13 +528,13 @@ class AccountingPeriod(models.Model):
             total=models.Sum('amount')
         )['total'] or Decimal('0.00')
 
-        # Somar negativas (amount já é negativo para transações negativas)
+        # Somar negativas (amount sempre positivo)
         negative = transactions.filter(is_positive=False).aggregate(
             total=models.Sum('amount')
         )['total'] or Decimal('0.00')
 
-        # Net = positivas + negativas (negative já é negativo)
-        net = positive + negative
+        # Net = positivas - negativas (subtrair despesas)
+        net = positive - negative
 
         return {
             'total_positive': positive,
