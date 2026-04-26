@@ -11,6 +11,11 @@
         {% block pre_alpine_scripts %}
         {% endblock pre_alpine_scripts %}
         <script defer src="{% static 'js/alpinejs.min.js' %}"></script>
+        <script src="{% static 'js/date-helpers.js' %}"></script>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4/dist/flatpickr.min.css">
+        <script src="https://cdn.jsdelivr.net/npm/flatpickr@4"></script>
+        <script src="https://cdn.jsdelivr.net/npm/flatpickr@4/dist/l10n/pt.js"></script>
+        <script src="{% static 'js/datepicker-init.js' %}"></script>
         <link rel="stylesheet" href="{% static 'css/tailwind/output.css' %}">
         {% block extra_head %}{% endblock %}
     </head>

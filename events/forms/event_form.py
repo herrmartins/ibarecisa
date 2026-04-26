@@ -2,7 +2,6 @@ from django import forms
 from events.models import Event
 from users.models import CustomUser
 from django.core.exceptions import ValidationError
-from datetime import datetime
 from django.utils import timezone
 
 
@@ -34,9 +33,11 @@ class EventForm(forms.ModelForm):
         widgets = {
             "user": forms.HiddenInput(),
             "start_date": forms.DateTimeInput(
-                attrs={"class": "app-input", 'type': 'datetime-local'}),
+                attrs={"class": "datepicker app-input", 'type': 'text', 'placeholder': 'DD/MM/AAAA HH:MM'},
+                format='%d/%m/%Y %H:%M'),
             "end_date": forms.DateTimeInput(
-                attrs={"class": "app-input", 'type': 'datetime-local'}),
+                attrs={"class": "datepicker app-input", 'type': 'text', 'placeholder': 'DD/MM/AAAA HH:MM'},
+                format='%d/%m/%Y %H:%M'),
             "price": forms.NumberInput(attrs={"class": "app-input"}),
             "contact_name": forms.TextInput(attrs={"class": "app-input"}),
             "contact_user": forms.Select(attrs={"class": "app-input"}),
@@ -58,44 +59,15 @@ class EventForm(forms.ModelForm):
             )
             self.fields["user"].widget = forms.HiddenInput()
 
-        initial_start_date = self.initial.get("start_date")
-        if initial_start_date:
-            self.initial["start_date"] = initial_start_date.strftime(
-                "%Y-%m-%d %H:%M:%S")
+    def clean_start_date(self):
+        start_date = self.cleaned_data.get("start_date")
+        if start_date and start_date < timezone.now():
+            raise ValidationError('A data não pode ser passada')
+        return start_date
 
-        initial_end_date = self.initial.get("end_date")
-        if initial_end_date:
-            self.initial["end_date"] = initial_end_date.strftime(
-                "%Y-%m-%d %H:%M:%S")
-
-        def clean_start_date(self):
-            start_date = self.cleaned_data.get("start_date")
-            if start_date and start_date < timezone.now():
-                raise ValidationError('A data não pode ser passada')
-
-            if start_date:
-                if isinstance(start_date, datetime):
-                    start_date = start_date.strftime("%Y-%m-%d %H:%M:%S")
-
-                try:
-                    datetime.strptime(start_date, "%Y-%m-%d %H:%M:%S")
-                except ValueError:
-                    raise ValidationError(
-                        "Invalid date format. Please use YYYY-MM-DD HH:MM:SS.")
-            return start_date
-
-        def clean_end_date(self):
-            end_date = self.cleaned_data.get("end_date")
-            if end_date:
-                if isinstance(end_date, datetime):
-                    end_date = end_date.strftime("%Y-%m-%d %H:%M:%S")
-
-                try:
-                    datetime.strptime(end_date, "%Y-%m-%d %H:%M:%S")
-                except ValueError:
-                    raise ValidationError(
-                        "Invalid date format. Please use YYYY-MM-DD HH:MM:SS.")
-            return end_date
+    def clean_end_date(self):
+        end_date = self.cleaned_data.get("end_date")
+        return end_date
 
     def clean(self):
         cleaned_data = super().clean()

@@ -15,9 +15,6 @@ class MinuteProjectEditForm(forms.ModelForm):
         self.fields["secretary"].queryset = CustomUser.objects.filter(
             is_secretary=True)
 
-        self.fields['meeting_date'].input_formats = [
-            '%Y-%m-%d', '%d/%m/%Y', '%m/%d/%Y']
-
     class Meta:
         model = MinuteProjectModel
         fields = ["meeting_date", "number_of_attendees",
@@ -35,7 +32,7 @@ class MinuteProjectEditForm(forms.ModelForm):
         widgets = {
             "meeting_date": forms.DateInput(
                 attrs={
-                    "class": "w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all",
+                    "class": "datepicker w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all",
                     "type": "text",
                     "placeholder": "DD/MM/YYYY",
                 },

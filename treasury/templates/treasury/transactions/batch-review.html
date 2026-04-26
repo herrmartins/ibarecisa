@@ -26,8 +26,8 @@
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
-        <p class="text-gray-600">Processando imagem com OCR...</p>
-        <p class="text-sm text-gray-400 mt-2">Isso pode levar alguns segundos</p>
+        <p class="text-gray-600">Processando documento com OCR...</p>
+        <p class="text-sm text-gray-400 mt-2">Analisando texto e extraindo transações. Isso pode levar alguns segundos.</p>
     </div>
 
     <!-- Error State -->
@@ -124,11 +124,11 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
                                 <div class="flex gap-4">
                                     <label class="flex items-center cursor-pointer">
-                                        <input type="radio" x-model="tx.is_positive" :value="true" class="mr-2">
+                                        <input type="radio" :checked="tx.is_positive === true" @change="tx.is_positive = true" :name="'is_positive_' + tx._id" class="mr-2">
                                         <span class="text-green-600 font-medium">Entrada</span>
                                     </label>
                                     <label class="flex items-center cursor-pointer">
-                                        <input type="radio" x-model="tx.is_positive" :value="false" class="mr-2">
+                                        <input type="radio" :checked="tx.is_positive === false" @change="tx.is_positive = false" :name="'is_positive_' + tx._id" class="mr-2">
                                         <span class="text-red-600 font-medium">Saída</span>
                                     </label>
                                 </div>
@@ -137,7 +137,11 @@
                             <!-- Date -->
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Data</label>
-                                <input type="date" x-model="tx.date" class="app-input">
+                                <input type="text" class="datepicker app-input"
+                                    x-init="$nextTick(() => {
+                                        const fp = initDatePicker($el, { defaultDate: dateISOtoBR(tx.date), onChange: (dates, str) => { tx.date = dateBRtoISO(str) } });
+                                        $watch('tx.date', (val) => { fp.setDate(dateISOtoBR(val)) });
+                                    })">
                             </div>
 
                             <!-- Description -->
@@ -155,10 +159,10 @@
                             <!-- Category -->
                             <div class="md:col-span-2">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
-                                <select x-model="tx.category" class="app-input">
+                                <select @change="tx.category_id = parseInt($event.target.value); tx.category = $event.target.selectedOptions[0]?.text || ''" class="app-input">
                                     <option value="">Selecione...</option>
-                                    <template x-for="cat in categories" :key="cat">
-                                        <option :value="cat" x-text="cat"></option>
+                                    <template x-for="cat in categoryList" :key="cat.id">
+                                        <option :value="cat.id" :selected="tx.category_id === cat.id" x-text="cat.name"></option>
                                     </template>
                                 </select>
                             </div>
@@ -205,10 +209,12 @@ function batchReview() {
         error: null,
         saving: false,
         categories: [],
+        categoryList: [],
+        categoryMap: {},
         transactions: [],
         allSelected: false,
-        saveReceipt: true,  // Marcado por padrão
-        receiptData: null,  // Guarda a imagem base64 para anexar
+        saveReceipt: false,
+        receiptData: null,
 
         get selectedCount() {
             return this.transactions.filter(t => t.selected).length;
@@ -253,7 +259,11 @@ function batchReview() {
                     headers: { 'X-CSRFToken': this.getCookie('csrftoken') }
                 });
                 const data = await response.json();
-                this.categories = (data.results || data).map(c => c.name);
+                const cats = data.results || data;
+                this.categoryList = cats;
+                this.categories = cats.map(c => c.name);
+                this.categoryMap = {};
+                cats.forEach(c => { this.categoryMap[c.name] = c.id; });
             } catch (e) {
                 console.error('Error loading categories:', e);
             }
@@ -261,9 +271,11 @@ function batchReview() {
 
         async processOCR(base64Image) {
             try {
+                console.log('[OCR MULTIPLO JS] Iniciando processOCR...');
                 // Convert base64 to blob
                 const fetchResponse = await fetch(base64Image);
                 const blob = await fetchResponse.blob();
+                console.log('[OCR MULTIPLO JS] Blob criado, size=' + blob.size);
                 const formData = new FormData();
                 formData.append('receipt', blob, 'image.jpg');
 
@@ -273,18 +285,25 @@ function batchReview() {
                     body: formData
                 });
 
+                console.log('[OCR MULTIPLO JS] Response status=' + response.status);
                 const data = await response.json();
+                console.log('[OCR MULTIPLO JS] Categorias carregadas:', this.categories);
+                console.log('[OCR MULTIPLO JS] Response data:', JSON.stringify(data, null, 2));
 
                 if (data.error) {
                     this.error = data.error;
                 } else {
-                    this.transactions = data.transactions.map((tx, i) => ({
-                        ...tx,
-                        category: tx.category_name || tx.category || '',
-                        _id: Date.now() + i,
-                        selected: true,
-                        is_positive: true  // Forçar positivo por padrão
-                    }));
+                    this.transactions = data.transactions.map((tx, i) => {
+                        const cat = tx.category_name || tx.category || '';
+                        console.log('[DEBUG] TX ' + i + ' category_name=' + tx.category_name + ' resolved="' + cat + '" in categories=' + this.categories.includes(cat));
+                        return {
+                            ...tx,
+                            category: cat,
+                            category_id: tx.category_id || null,
+                            _id: Date.now() + Math.random() + i,
+                            selected: true,
+                        };
+                    });
                 }
             } catch (e) {
                 this.error = 'Erro ao processar imagem: ' + e.message;
@@ -323,34 +342,37 @@ function batchReview() {
             this.saving = true;
 
             try {
+                const payload = selected.map(tx => ({
+                    description: tx.description,
+                    amount: parseFloat(tx.amount),
+                    is_positive: tx.is_positive,
+                    date: tx.date,
+                    category: this.categoryMap[tx.category] || tx.category_id || null,
+                }));
+
                 let response;
                 const saveReceipt = this.saveReceipt && this.receiptData;
 
                 if (saveReceipt) {
-                    // Usar FormData para incluir o arquivo
                     const formData = new FormData();
                     formData.append('receipt', this.dataURLtoBlob(this.receiptData), 'comprovante.jpg');
-                    formData.append('transactions', JSON.stringify(selected));
+                    formData.append('transactions', JSON.stringify(payload));
 
                     response = await fetch('/treasury/api/transactions/batch/', {
                         method: 'POST',
                         headers: {
                             'X-CSRFToken': this.getCookie('csrftoken')
-                            // Não definir Content-Type para FormData, o navegador define automaticamente
                         },
                         body: formData
                     });
                 } else {
-                    // Usar JSON normal sem arquivo
                     response = await fetch('/treasury/api/transactions/batch/', {
                         method: 'POST',
                         headers: {
                             'X-CSRFToken': this.getCookie('csrftoken'),
                             'Content-Type': 'application/json'
                         },
-                        body: JSON.stringify({
-                            transactions: selected
-                        })
+                        body: JSON.stringify({ transactions: payload })
                     });
                 }
 

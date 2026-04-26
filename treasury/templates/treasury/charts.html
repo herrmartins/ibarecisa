@@ -106,11 +106,13 @@
                 <div x-show="periodPreset === 'custom'" x-cloak class="flex gap-4 flex-wrap">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Data Inicial</label>
-                        <input type="date" x-model="customStartDate" @change="applyCustomDates()" class="app-input">
+                        <input type="text" class="datepicker app-input"
+                            x-init="$nextTick(() => { initDatePicker($el, { onChange: (dates, str) => { customStartDate = dateBRtoISO(str); applyCustomDates() } }) })">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Data Final</label>
-                        <input type="date" x-model="customEndDate" @change="applyCustomDates()" class="app-input">
+                        <input type="text" class="datepicker app-input"
+                            x-init="$nextTick(() => { initDatePicker($el, { onChange: (dates, str) => { customEndDate = dateBRtoISO(str); applyCustomDates() } }) })">
                     </div>
                 </div>
             </div>

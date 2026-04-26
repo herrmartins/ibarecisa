@@ -578,7 +578,9 @@ document.addEventListener('alpine:init', () => {
         ocrResult: null,
         ocrError: null,
         ocrPreviewImage: null,
-        ocrFile: null,  // Arquivo original para anexar ao formulário
+        ocrFile: null,
+        _ocrPdfFileName: null,
+        _ocrPdfFileSize: null,
 
         // Mostrar notificação
         notify(message, type = 'info') {
@@ -632,6 +634,8 @@ document.addEventListener('alpine:init', () => {
             this.ocrResult = null;
             this.ocrError = null;
             this.ocrPreviewImage = null;
+            this._ocrPdfFileName = null;
+            this._ocrPdfFileSize = null;
         },
 
         // Close OCR modal
@@ -641,7 +645,9 @@ document.addEventListener('alpine:init', () => {
             this.ocrError = null;
             this.ocrPreviewImage = null;
             this.ocrProcessing = false;
-            this.ocrFile = null;  // Limpar arquivo
+            this.ocrFile = null;
+            this._ocrPdfFileName = null;
+            this._ocrPdfFileSize = null;
         },
     });
 });
@@ -711,6 +717,10 @@ window.ocrHandlers = {
                 store.ocrPreviewImage = e.target.result;
             };
             reader.readAsDataURL(file);
+        } else if (file.type === 'application/pdf') {
+            store.ocrPreviewImage = null;
+            store._ocrPdfFileName = file.name;
+            store._ocrPdfFileSize = (file.size / 1024).toFixed(1) + ' KB';
         } else {
             store.ocrPreviewImage = null;
         }

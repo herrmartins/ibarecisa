@@ -11,3 +11,14 @@ class Hymnal(models.Model):
 
     def __str__(self):
         return f"{self.title}"
+
+
+class HymnalAlias(models.Model):
+    hymnal = models.ForeignKey(Hymnal, on_delete=models.CASCADE, related_name="aliases")
+    alias = models.CharField(max_length=80, unique=True)
+
+    class Meta:
+        ordering = ["alias"]
+
+    def __str__(self):
+        return self.alias

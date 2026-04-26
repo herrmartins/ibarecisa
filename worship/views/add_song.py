@@ -1,7 +1,7 @@
 from django.http import JsonResponse
 from django.views import View
 import json
-from worship.models import Song, Composer, SongTheme
+from worship.models import Song, Composer, SongTheme, Hymnal
 import reversion
 
 class SongAddView(View):
@@ -11,6 +11,8 @@ class SongAddView(View):
             title = data.get('title')
             artist_id = data.get('artist')
             theme_id = data.get('theme')
+            hymnal_id = data.get('hymnal')
+            hymn_number = data.get('hymn_number')
             lyrics = data.get('lyrics')
             metrics = data.get('metrics')
             key = data.get('key')
@@ -35,6 +37,21 @@ class SongAddView(View):
                 except SongTheme.DoesNotExist:
                     return JsonResponse({"success": False, "error": "Tema não encontrado."}, status=400)
 
+            hymnal = None
+            if hymnal_id:
+                try:
+                    hymnal = Hymnal.objects.get(id=hymnal_id)
+                except Hymnal.DoesNotExist:
+                    return JsonResponse({"success": False, "error": "Hinário não encontrado."}, status=400)
+
+            if hymn_number in (None, ""):
+                hymn_number = None
+            else:
+                try:
+                    hymn_number = int(hymn_number)
+                except (TypeError, ValueError):
+                    return JsonResponse({"success": False, "error": "Número do hino inválido."}, status=400)
+
             with reversion.create_revision():
                 reversion.set_user(request.user)
                 song = Song.objects.create(
@@ -42,7 +59,9 @@ class SongAddView(View):
                     artist=artist,
                     lyrics=lyrics,
                     metrics=metrics,
-                    key=key
+                    key=key,
+                    hymnal=hymnal,
+                    hymn_number=hymn_number,
                 )
 
                 if theme:

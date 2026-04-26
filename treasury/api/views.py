@@ -1186,6 +1186,8 @@ class ReceiptMultipleOCRView(APIView):
         """Processa uma imagem e extrai múltiplas transações."""
         from treasury.services.ocr_service import ReceiptOCRService
 
+        print(f'\n[OCR MULTIPLO API] Requisicao recebida, FILES={list(request.FILES.keys())}', flush=True)
+
         # Verificar se foi enviado arquivo
         if 'receipt' not in request.FILES:
             return Response(
@@ -1194,6 +1196,7 @@ class ReceiptMultipleOCRView(APIView):
             )
 
         receipt_file = request.FILES['receipt']
+        print(f'[OCR MULTIPLO API] Arquivo: {receipt_file.name}, tamanho: {receipt_file.size}', flush=True)
 
         # Validar tamanho (10MB)
         if receipt_file.size > 10 * 1024 * 1024:
@@ -1207,8 +1210,13 @@ class ReceiptMultipleOCRView(APIView):
             service = ReceiptOCRService()
             result = service.extract_multiple_from_receipt(receipt_file)
 
+            print(f'[OCR MULTIPLO API] Resultado: {len(result.get("transactions", []))} transacoes', flush=True)
+            for i, tx in enumerate(result.get('transactions', [])):
+                print(f'  TX {i}: desc={tx.get("description")} amount={tx.get("amount")} category_name={tx.get("category_name")} category_id={tx.get("category_id")} raw={tx.get("raw_data", {}).get("category")}', flush=True)
+
             # Verificar se houve erro
             if 'error' in result:
+                print(f'[OCR MULTIPLO API] ERRO: {result["error"]}', flush=True)
                 return Response(
                     {'error': result['error']},
                     status=status.HTTP_400_BAD_REQUEST

@@ -4,44 +4,25 @@ from users.models import CustomUser
 from django.forms.widgets import DateInput
 from django.forms.widgets import ClearableFileInput
 from django.core.exceptions import ValidationError
-from datetime import datetime, date
+from datetime import date
 
 
 class UpdateUserProfileModelForm(ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        initial_date = self.initial.get("date_of_birth")
-        if initial_date:
-            self.initial["date_of_birth"] = initial_date.strftime("%Y-%m-%d")
-
-        initial_baptism_date = self.initial.get("baptism_date")
-        if initial_baptism_date:
-            self.initial["baptism_date"] = initial_baptism_date.strftime("%Y-%m-%d")
-
     def clean_date_of_birth(self):
         date_of_birth = self.cleaned_data.get("date_of_birth")
         if date_of_birth:
-            if isinstance(date_of_birth, date):  # Using the imported 'date' from datetime module
-                date_of_birth = date_of_birth.strftime("%Y-%m-%d")
-
-            try:
-                datetime.strptime(date_of_birth, "%Y-%m-%d")
-            except ValueError:
-                raise ValidationError("Invalid date format. Please use YYYY-MM-DD.")
+            if not isinstance(date_of_birth, date):
+                raise ValidationError("Formato de data inválido. Use DD/MM/AAAA.")
         return date_of_birth
-
 
     def clean_baptism_date(self):
         baptism_date = self.cleaned_data.get("baptism_date")
         if baptism_date:
-            if isinstance(baptism_date, date):
-                baptism_date = baptism_date.strftime("%Y-%m-%d")
-
-            try:
-                datetime.strptime(baptism_date, "%Y-%m-%d")
-            except ValueError:
-                raise ValidationError("Invalid date format. Please use YYYY-MM-DD.")
+            if not isinstance(baptism_date, date):
+                raise ValidationError("Formato de data inválido. Use DD/MM/AAAA.")
         return baptism_date
     
     def clean_profile_image(self):
@@ -115,9 +96,11 @@ class UpdateUserProfileModelForm(ModelForm):
             ),
             "date_of_birth": DateInput(
                 attrs={
-                    "class": "app-input",
-                    "type": "date",
+                    "class": "datepicker app-input",
+                    "type": "text",
+                    "placeholder": "DD/MM/AAAA",
                 },
+                format='%d/%m/%Y'
             ),
             "about": forms.Textarea(
                 attrs={
@@ -139,8 +122,10 @@ class UpdateUserProfileModelForm(ModelForm):
             ),
             "baptism_date": DateInput(
                 attrs={
-                    "class": "app-input",
-                    "type": "date",
+                    "class": "datepicker app-input",
+                    "type": "text",
+                    "placeholder": "DD/MM/AAAA",
                 },
+                format='%d/%m/%Y'
             ),
         }

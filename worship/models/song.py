@@ -1,6 +1,6 @@
 from django.db import models
 from core.models import BaseModel
-from ckeditor.fields import RichTextField
+
 from worship.models.worship_utils import count_syllables_portuguese
 # from bs4 import BeautifulSoup
 
@@ -35,7 +35,7 @@ class Song(models.Model):
         related_name="songs",
     )
     key = models.CharField(max_length=2, choices=MUSICAL_KEYS, blank=True, null=True)
-    lyrics = RichTextField(blank=True, null=True)
+    lyrics = models.TextField(blank=True, null=True)
     category = models.CharField(max_length=50, blank=True, null=True)
     themes = models.ManyToManyField("SongTheme", related_name="songs", blank=True)
     hymnal = models.ForeignKey(
@@ -45,6 +45,7 @@ class Song(models.Model):
         blank=True,
         null=True,
     )
+    hymn_number = models.PositiveIntegerField(blank=True, null=True)
     metrics = models.CharField(max_length=50, blank=True, null=True)
     """ syllable_counts_json = models.JSONField(default=dict) """
 

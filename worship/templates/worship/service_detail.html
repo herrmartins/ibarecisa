@@ -1,0 +1,138 @@
+{% extends 'core/base.html' %}
+
+{% block extra_head %}
+<style>
+  .program-scaled {
+    line-height: 1.35;
+  }
+
+  .program-scaled * {
+    font-size: inherit !important;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+  <div class="app-page-header">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
+      <div class="mb-6">
+        <a href="{% url 'worship:service-list' %}" class="app-back-link">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+          Voltar para Cultos
+        </a>
+      </div>
+      <div class="text-center">
+        <h1 class="app-page-title">{{ service.title }}</h1>
+        <p class="app-page-subtitle">{{ service.service_date|date:"d/m/Y" }}{% if service.service_time %} - {{ service.service_time|time:"H:i" }}{% endif %} · {{ service.get_service_kind_display }}</p>
+        {% if service.leaders_text %}
+        <p class="text-white font-medium mt-3">{{ service.leaders_text }}</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-4">
+      <div class="flex flex-wrap gap-2">
+        <a href="{% url 'worship:service-edit' service.pk %}" class="app-btn app-btn-secondary">Editar</a>
+        <form method="post" action="{% url 'worship:service-duplicate' service.pk %}">{% csrf_token %}<button class="app-btn app-btn-secondary" type="submit">Duplicar</button></form>
+        <a href="{% url 'worship:service-print' service.pk %}" class="app-btn app-btn-secondary">Imprimir</a>
+        <a href="{% url 'worship:service-pdf' service.pk %}?layout=1up" class="app-btn app-btn-primary">PDF 1/página</a>
+        <a href="{% url 'worship:service-pdf' service.pk %}?layout=2up" class="app-btn app-btn-primary">PDF 2/página</a>
+        <form method="post" action="{% url 'worship:service-delete' service.pk %}" onsubmit="return confirm('Excluir este culto? Esta ação não pode ser desfeita.')">{% csrf_token %}<button class="app-btn app-btn-danger" type="submit">Excluir</button></form>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+        <h2 class="text-lg font-semibold text-slate-800">Programação</h2>
+        <div class="flex items-center gap-2">
+          <form method="post" action="{% url 'worship:service-font-scale' service.pk %}">{% csrf_token %}<input type="hidden" name="action" value="decrease"><button class="app-btn app-btn-secondary" type="submit">A-</button></form>
+          <span class="text-xs font-medium text-slate-600">{{ program_font_scale }}%</span>
+          <form method="post" action="{% url 'worship:service-font-scale' service.pk %}">{% csrf_token %}<input type="hidden" name="action" value="increase"><button class="app-btn app-btn-secondary" type="submit">A+</button></form>
+          <form method="post" action="{% url 'worship:service-font-scale' service.pk %}">{% csrf_token %}<input type="hidden" name="action" value="reset"><button class="app-btn app-btn-secondary" type="submit">100%</button></form>
+        </div>
+      </div>
+      <div class="prose max-w-none program-scaled" style="font-size: {{ program_font_scale }}%;">{{ service.program_html|safe }}</div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+      <h2 class="text-lg font-semibold text-slate-800 mb-2">Canções Cantadas (registro)</h2>
+      <p class="text-sm text-slate-600 mb-4">Este bloco guarda o histórico real do que foi cantado, inclusive quando houver ajustes de última hora.</p>
+      <p class="text-xs text-slate-500 mb-4">Cada ação salva imediatamente: use <strong>Vincular</strong>, <strong>Manter avulsa</strong>, <strong>Tentar novamente</strong> ou <strong>Remover</strong> em cada item.</p>
+
+      <div class="mb-4">
+        <form method="post" action="{% url 'worship:service-song-sync' service.pk %}">
+          {% csrf_token %}
+          <button class="app-btn app-btn-secondary" type="submit">Extrair da programação</button>
+        </form>
+      </div>
+
+      <ul class="space-y-2 mb-5">
+        {% for song in service.sung_songs.all %}
+        <li class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
+          <div class="flex items-center justify-between gap-3">
+            <span class="text-sm">
+              {% if song.order_ref %}{{ song.order_ref }}. {% endif %}
+              {% if song.song %}<a href="{% url 'worship:song-detail' song.song.pk %}" class="text-primary-700 hover:text-primary-800 font-medium">{{ song.song_snapshot }}</a>{% else %}{{ song.song_snapshot }}{% endif %}
+              <span class="text-xs text-slate-500">({{ song.get_source_display }})</span>
+              <span class="text-xs font-medium px-2 py-0.5 rounded-full {% if song.resolution_status == 'LINKED' %}bg-emerald-100 text-emerald-700{% elif song.resolution_status == 'UNLINKED' %}bg-amber-100 text-amber-700{% else %}bg-slate-200 text-slate-700{% endif %}">{{ song.get_resolution_status_display }}</span>
+            </span>
+            <form method="post" action="{% url 'worship:service-song-delete' service.pk song.pk %}">{% csrf_token %}<button class="app-btn app-btn-danger" type="submit">Remover</button></form>
+          </div>
+          {% if song.resolution_note %}
+          <p class="text-xs text-slate-500 mt-1">{{ song.resolution_note }}</p>
+          {% endif %}
+          <div class="mt-2 border-t border-slate-200 pt-2 grid gap-2 md:grid-cols-3">
+            <form method="post" action="{% url 'worship:service-song-resolve' service.pk song.pk %}" class="flex flex-wrap gap-2 items-center">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="link">
+              <select name="song" class="app-input">
+                <option value="">Vincular com canção cadastrada</option>
+                {% for song_choice in song_choices %}
+                <option value="{{ song_choice.pk }}"{% if song.song and song.song.pk == song_choice.pk %} selected{% endif %}>{{ song_choice.title }}</option>
+                {% endfor %}
+              </select>
+              <button class="app-btn app-btn-secondary" type="submit">Vincular</button>
+            </form>
+            {% if song.resolution_status != 'UNLINKED' %}
+            <form method="post" action="{% url 'worship:service-song-resolve' service.pk song.pk %}" class="flex flex-wrap gap-2 items-center justify-start md:justify-center">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="unlink">
+              <button class="app-btn app-btn-secondary" type="submit">Manter avulsa</button>
+            </form>
+            {% endif %}
+            {% if song.resolution_status != 'LINKED' %}
+            <form method="post" action="{% url 'worship:service-song-resolve' service.pk song.pk %}" class="flex flex-wrap gap-2 items-center justify-start md:justify-end">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="retry">
+              <button class="app-btn app-btn-secondary" type="submit">Tentar novamente</button>
+            </form>
+            {% endif %}
+          </div>
+        </li>
+        {% empty %}
+        <li class="text-sm text-slate-500">Nenhuma canção registrada.</li>
+        {% endfor %}
+      </ul>
+
+      {% if pending_songs %}
+      <p class="text-sm text-amber-700 mb-1">Existem {{ pending_songs|length }} canções pendentes de revisão.</p>
+      <p class="text-xs text-slate-500 mb-4">Pendente significa que o sistema registrou a canção, mas não encontrou vínculo confiável com o cadastro. O registro do culto foi mantido normalmente.</p>
+      {% endif %}
+
+      <details class="mt-4 border border-slate-200 rounded-lg p-3 bg-slate-50">
+        <summary class="cursor-pointer text-sm font-medium text-slate-700">Adicionar canção extra (não listada acima) - clique para abrir</summary>
+        <form method="post" action="{% url 'worship:service-song-add' service.pk %}" class="space-y-2 mt-3">
+          {% csrf_token %}
+          {{ song_form.as_p }}
+          <button class="app-btn app-btn-primary" type="submit">Salvar canção extra</button>
+        </form>
+      </details>
+    </div>
+  </div>
+</div>
+{% endblock %}

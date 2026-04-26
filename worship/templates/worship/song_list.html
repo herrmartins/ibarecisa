@@ -1,0 +1,93 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+  <div class="app-page-header">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
+      <div class="mb-6">
+        <a href="{% url 'worship:home' %}" class="app-back-link">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+          Voltar para Música
+        </a>
+      </div>
+      <div class="text-center">
+        <h1 class="app-page-title">Catálogo de Canções</h1>
+        <p class="app-page-subtitle">Consulta por título, compositor, tema e hinário</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <form method="get" class="bg-white rounded-xl shadow-sm border border-slate-100 p-5">
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3">
+        <input type="search" name="q" value="{{ filters.q }}" class="app-input w-full xl:col-span-2" placeholder="Buscar por título, trecho ou compositor">
+
+        <select name="composer" class="app-input w-full">
+          <option value="">Todos os compositores</option>
+          {% for composer_id, composer_name in composers %}
+          <option value="{{ composer_id }}" {% if filters.composer == composer_id|stringformat:'s' %}selected{% endif %}>{{ composer_name }}</option>
+          {% endfor %}
+        </select>
+
+        <select name="theme" class="app-input w-full">
+          <option value="">Todos os temas</option>
+          {% for theme in themes %}
+          <option value="{{ theme.id }}" {% if filters.theme == theme.id|stringformat:'s' %}selected{% endif %}>{{ theme.title }}</option>
+          {% endfor %}
+        </select>
+
+        <select name="hymnal" class="app-input w-full">
+          <option value="">Todos os hinários</option>
+          {% for hymnal in hymnals %}
+          <option value="{{ hymnal.id }}" {% if filters.hymnal == hymnal.id|stringformat:'s' %}selected{% endif %}>{{ hymnal.title }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="flex flex-wrap gap-2 mt-4">
+        <button class="app-btn app-btn-primary" type="submit">Filtrar</button>
+        <a href="{% url 'worship:song-list' %}" class="app-btn app-btn-secondary">Limpar</a>
+        <a href="{% url 'worship:song-create' %}" class="app-btn app-btn-secondary">Nova canção</a>
+      </div>
+    </form>
+
+    <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+      <table class="w-full text-sm">
+        <thead class="bg-slate-50 text-slate-600 border-b border-slate-200">
+          <tr>
+            <th class="text-left p-3">Título</th>
+            <th class="text-left p-3">Compositor</th>
+            <th class="text-left p-3">Hinário</th>
+            <th class="text-left p-3">Nº</th>
+            <th class="text-left p-3">Tom</th>
+            <th class="text-right p-3">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for song in songs %}
+          <tr class="border-b border-slate-100 hover:bg-slate-50/60">
+            <td class="p-3 font-medium text-slate-800">{{ song.title }}</td>
+            <td class="p-3">{% if song.artist %}{{ song.artist.name }}{% else %}-{% endif %}</td>
+            <td class="p-3">
+              {% if song.hymnal %}
+                {{ song.hymnal.title }}
+              {% else %}
+                -
+              {% endif %}
+            </td>
+            <td class="p-3">{{ song.hymn_number|default:'-' }}</td>
+            <td class="p-3">{{ song.key|default:'-' }}</td>
+            <td class="p-3 text-right"><a href="{% url 'worship:song-detail' song.pk %}" class="text-primary-700 hover:text-primary-800 font-semibold">Abrir</a></td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="p-8 text-center text-slate-500">Nenhuma canção encontrada com os filtros atuais.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

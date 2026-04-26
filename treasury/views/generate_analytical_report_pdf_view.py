@@ -85,7 +85,7 @@ def generate_analytical_report_pdf(request, period_id):
 
     context = {
         "church_info": church_info,
-        "month": period.month.strftime('%B'),
+        "month": period.month_name,
         "year": period.month.year,
         "date": period.month,
         "pm_balance": pm_balance,

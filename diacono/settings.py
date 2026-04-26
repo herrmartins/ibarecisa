@@ -1,4 +1,5 @@
 import os
+import importlib.util
 from pathlib import Path
 from decouple import config
 import mimetypes
@@ -37,7 +38,6 @@ INSTALLED_APPS = [
     "corsheaders",
     "reversion",
     "reversion_compare",
-    "storages",
     "blog.apps.BlogConfig",
     "events.apps.EventsConfig",
     "core.apps.CoreConfig",
@@ -47,6 +47,10 @@ INSTALLED_APPS = [
     "worship.apps.WorshipConfig",
     "api2",
 ]
+
+HAS_DJANGO_STORAGES = importlib.util.find_spec("storages") is not None
+if HAS_DJANGO_STORAGES:
+    INSTALLED_APPS.append("storages")
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -150,12 +154,26 @@ USE_I18N = True
 
 USE_TZ = True
 
+DATE_FORMAT = "d/m/Y"
+DATETIME_FORMAT = "d/m/Y H:i"
+DATE_INPUT_FORMATS = [
+    "%d/%m/%Y",
+    "%Y-%m-%d",
+]
+DATETIME_INPUT_FORMATS = [
+    "%d/%m/%Y %H:%M",
+    "%d/%m/%Y %H:%M:%S",
+    "%Y-%m-%d %H:%M:%S",
+    "%Y-%m-%dT%H:%M",
+    "%Y-%m-%dT%H:%M:%S",
+]
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 
-if not DEBUG:
+if not DEBUG and HAS_DJANGO_STORAGES:
     STATIC_ROOT = BASE_DIR / "staticfiles"
     STATICFILES_DIRS = [
         BASE_DIR / "static",
@@ -200,6 +218,8 @@ if not DEBUG:
     }
 else:
     # Desenvolvimento: armazenamento local
+    if not DEBUG and not HAS_DJANGO_STORAGES:
+        sys.stderr.write("[settings] django-storages nao encontrado; usando FileSystemStorage.\n")
     STORAGES = {
         "default": {
             "BACKEND": "django.core.files.storage.FileSystemStorage",
@@ -225,10 +245,6 @@ mimetypes.add_type("image/jpeg", ".jpg", strict=True)
 mimetypes.add_type("image/jpeg", ".jpeg", strict=True)
 mimetypes.init()
 
-
-LANGUAGE_CODE = "pt-br"
-USE_I18N = True
-USE_L10N = True
 
 EMAIL_BACKEND = config("EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
 EMAIL_HOST = config("EMAIL_HOST")

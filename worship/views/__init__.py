@@ -7,3 +7,22 @@ from .song_file_listview import SongFileListView
 
 from .search.composer_list_view import ComposerListView
 from .search.song_themes_list_view import ThemeListView
+from .service_views import (
+    WorshipServiceCreateView,
+    WorshipServiceDetailView,
+    WorshipServiceDeleteView,
+    WorshipServiceDuplicateView,
+    WorshipServiceFontScaleView,
+    WorshipServiceGenerateProgramView,
+    WorshipServiceImportView,
+    WorshipServiceListView,
+    WorshipServicePdfView,
+    WorshipServicePrintView,
+    WorshipServiceSongCreateView,
+    WorshipServiceSongDeleteView,
+    WorshipServiceSongResolveView,
+    WorshipServiceSongSyncFromProgramView,
+    WorshipServiceUpdateView,
+)
+from .song_pages import SongCreateView, SongListView
+from .catalog_views import WorshipCatalogSettingsView

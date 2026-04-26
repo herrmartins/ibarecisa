@@ -1,16 +1,15 @@
 from django.db import models
 from users.models import CustomUser
 from core.models import BaseModel
-from ckeditor.fields import RichTextField
 from blog.models import Category
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
-from datetime import datetime
+from django.utils import timezone
 
 
 class Post(BaseModel):
     title = models.CharField(max_length=200, null=False, blank=False)
-    content = RichTextField(null=False, blank=False)
+    content = models.TextField(null=False, blank=False)
     author = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     summary = models.CharField(max_length=500, null=True, blank=True)
     keywords = models.CharField(max_length=200, null=True, blank=True)
@@ -29,7 +28,7 @@ class Post(BaseModel):
 
 @receiver(pre_save, sender=Post)
 def update_post_modified_date(sender, instance, **kwargs):
-    current_date = datetime.now().date()
+    current_date = timezone.now().date()
     if instance.pk:
         pre_save.disconnect(update_post_modified_date, sender=Post)
         instance.modified = current_date

@@ -11,8 +11,8 @@ class MinuteProjectModelForm(forms.ModelForm):
         self.fields["president"].queryset = CustomUser.objects.filter(is_pastor=True)
         self.fields["secretary"].queryset = CustomUser.objects.filter(is_secretary=True)
 
-        # Garantir formatos de entrada para a data
-        self.fields['meeting_date'].input_formats = ['%Y-%m-%d', '%d/%m/%Y', '%m/%d/%Y']
+        if not self.initial.get("meeting_date"):
+            self.initial["meeting_date"] = date.today()
 
     class Meta:
         model = MinuteProjectModel
@@ -26,10 +26,9 @@ class MinuteProjectModelForm(forms.ModelForm):
         widgets = {
             "meeting_date": forms.DateInput(
                 attrs={
-                    "class": "form-control",
+                    "class": "datepicker form-control",
                     "type": "text",
                     "placeholder": "DD/MM/YYYY",
-                    "value": date.today().strftime('%d/%m/%Y'),
                 },
                 format='%d/%m/%Y'
             ),

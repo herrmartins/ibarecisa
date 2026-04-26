@@ -17,6 +17,31 @@ class SearchMinuteForm(forms.Form):
     )
     start_date = forms.DateField(
         label="Data inicial",
+        initial=date.today() + relativedelta(months=-6),
+        widget=forms.DateInput(
+            attrs={
+                "class": "datepicker form-control",
+                "type": "text",
+                "placeholder": "DD/MM/AAAA",
+            },
+            format='%d/%m/%Y'
+        ),
+    )
+
+    end_date = forms.DateField(
+        label="Data final",
+        initial=date.today(),
+        widget=forms.DateInput(
+            attrs={
+                "class": "datepicker form-control",
+                "type": "text",
+                "placeholder": "DD/MM/AAAA",
+            },
+            format='%d/%m/%Y'
+        ),
+    )
+    start_date = forms.DateField(
+        label="Data inicial",
         widget=forms.DateInput(
             attrs={
                 "class": "form-control",

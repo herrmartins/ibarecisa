@@ -1,11 +1,21 @@
 const defaultDates = () => {
     let currentDate = new Date();
     const defaultStartDate = currentDate.toISOString().split('T')[0];
-    document.querySelector("#start_date").valueAsDate = currentDate;
+    const startEl = document.querySelector("#start_date");
+    if (startEl._flatpickr) {
+        startEl._flatpickr.setDate(dateISOtoBR(defaultStartDate));
+    } else {
+        startEl.value = dateISOtoBR(defaultStartDate);
+    }
 
     currentDate.setMonth(currentDate.getMonth() + 1)
-    document.querySelector("#end_date").valueAsDate = currentDate;
     const defaultEndDate = currentDate.toISOString().split('T')[0];
+    const endEl = document.querySelector("#end_date");
+    if (endEl._flatpickr) {
+        endEl._flatpickr.setDate(dateISOtoBR(defaultEndDate));
+    } else {
+        endEl.value = dateISOtoBR(defaultEndDate);
+    }
 
     return {
         defaultStartDate,
@@ -81,14 +91,17 @@ document.addEventListener('alpine:init', () => {
                 throw new Error(message);
             }
 
-            if ((new Date(endDate)) <= (new Date(startDate))) {
+            const isoStart = dateBRtoISO(startDate) || startDate;
+            const isoEnd = dateBRtoISO(endDate) || endDate;
+
+            if ((new Date(isoEnd)) <= (new Date(isoStart))) {
                 const message = "A data do fim não pode ser anterior a de início...";
                 alert(message);
                 throw new Error(message);
             }
 
             (async () => {
-                let data = await fetchEvents(startDate, endDate);
+                let data = await fetchEvents(isoStart, isoEnd);
 
                 this.eventItems = data;
 

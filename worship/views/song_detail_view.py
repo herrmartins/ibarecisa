@@ -1,5 +1,7 @@
 from django.views.generic import DetailView
+
 from worship.models import Song
+
 
 class SongDetailView(DetailView):
     model = Song

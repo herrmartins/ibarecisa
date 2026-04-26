@@ -1,0 +1,76 @@
+{% extends 'core/base.html' %}
+
+{% block pre_alpine_scripts %}
+<script src="https://cdn.tiny.cloud/1/{{ TINYMCE_API_KEY }}/tinymce/8/tinymce.min.js" referrerpolicy="origin"></script>
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+  <div class="app-page-header">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
+      <div class="mb-6">
+        <a href="{% url 'worship:song-list' %}" class="app-back-link">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+          Voltar para Catálogo
+        </a>
+      </div>
+      <div class="text-center">
+        <h1 class="app-page-title">Cadastrar Canção</h1>
+        <p class="app-page-subtitle">Preencha os dados essenciais para busca e rastreio</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <form method="post" class="bg-white rounded-xl shadow-sm border border-slate-100 p-6">
+      {% csrf_token %}
+      {% if form.non_field_errors %}
+      <div class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 mb-4">{{ form.non_field_errors }}</div>
+      {% endif %}
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {% for field in form.visible_fields %}
+        <div class="{% if field.name == 'lyrics' or field.name == 'themes' %}md:col-span-2{% endif %}">
+          <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-slate-700 mb-1">{{ field.label }}</label>
+          {{ field }}
+          {% if field.help_text %}
+          <p class="text-xs text-slate-500 mt-1">{{ field.help_text }}</p>
+          {% endif %}
+          {% if field.errors %}
+          <p class="text-xs text-red-600 mt-1">{{ field.errors|striptags }}</p>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+
+      <div class="mt-4 text-xs text-slate-500">
+        Não encontrou compositor, hinário ou tema? Cadastre em
+        <a href="{% url 'worship:catalog-settings' %}" class="text-primary-700 font-semibold">Cadastros Base</a>.
+      </div>
+
+      <div class="flex flex-wrap gap-2 pt-4 mt-4 border-t border-slate-100">
+        <button type="submit" class="app-btn app-btn-primary">Salvar canção</button>
+        <a href="{% url 'worship:song-list' %}" class="app-btn app-btn-secondary">Cancelar</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  if (window.tinymce) {
+    tinymce.init({
+      selector: '#id_lyrics',
+      language: 'pt-BR',
+      height: 320,
+      menubar: false,
+      plugins: 'lists link',
+      toolbar: 'undo redo | bold italic underline | bullist numlist | link | removeformat',
+      branding: false,
+      promotion: false,
+      license_key: 'gpl'
+    });
+  }
+</script>
+{% endblock %}

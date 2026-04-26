@@ -26,6 +26,7 @@ document.addEventListener('alpine:init', () => {
       artist: '',
       theme: '',
       hymnal: '',
+      hymn_number: '',
       lyrics: '',
       key: '',
       metrics: '',
@@ -118,6 +119,7 @@ document.addEventListener('alpine:init', () => {
         this.artist = null;
         this.theme = null;
         this.hymnal = null;
+        this.hymn_number = '';
         this.lyrics = '';
         this.metrics = '';
         this.key = null;
@@ -141,6 +143,7 @@ document.addEventListener('alpine:init', () => {
               artist: this.artist,
               theme: this.theme,
               hymnal: this.hymnal,
+              hymn_number: this.hymn_number,
               lyrics: this.lyrics,
               metrics: this.metrics,
               key: this.key,

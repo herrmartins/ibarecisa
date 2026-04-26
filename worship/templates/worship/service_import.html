@@ -1,0 +1,79 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+  <div class="app-page-header">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
+      <div class="mb-6">
+        <a href="{% url 'worship:service-list' %}" class="app-back-link">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+          Voltar para Cultos
+        </a>
+      </div>
+      <div class="text-center">
+        <h1 class="app-page-title">Gerar Programação com IA</h1>
+        <p class="app-page-subtitle">Cole o texto do culto e revise o resultado antes de criar</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <form method="post" class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 space-y-4">
+      {% csrf_token %}
+      {% if form.non_field_errors %}
+        <div class="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{{ form.non_field_errors }}</div>
+      {% endif %}
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {% for field in form.visible_fields %}
+        <div class="{% if forloop.first %}lg:col-span-2{% endif %}">
+          <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-slate-700 mb-1">{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}<p class="text-xs text-red-600 mt-1">{{ field.errors|striptags }}</p>{% endif %}
+          {% if field.help_text %}<p class="text-xs text-slate-500 mt-1">{{ field.help_text }}</p>{% endif %}
+        </div>
+        {% endfor %}
+      </div>
+
+      <button name="action" value="preview" class="app-btn app-btn-primary">Gerar pré-visualização</button>
+    </form>
+
+    {% if preview %}
+    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-6 space-y-4">
+      <h2 class="text-lg font-semibold text-slate-800">Pré-visualização</h2>
+      <p><strong>Título:</strong> {{ preview.title }}</p>
+      <p><strong>Data:</strong> {{ preview.service_date|default:"Não detectada" }}</p>
+      <p><strong>Tipo:</strong> {{ preview.service_kind }}</p>
+      <p><strong>Confiança:</strong> {{ preview.confidence }}</p>
+      <p><strong>Liderança:</strong> {{ preview.leaders_text|default:"Não detectada" }}</p>
+
+      <div>
+        <h3 class="font-semibold mb-2">Programação (HTML)</h3>
+        <div class="prose max-w-none border border-slate-200 rounded-lg p-3">{{ preview.program_html|safe }}</div>
+      </div>
+
+      <div>
+        <h3 class="font-semibold mb-2">Canções detectadas</h3>
+        <ul class="list-disc pl-5 text-sm">
+          {% for item in preview.songs %}
+          <li>{% if item.order_ref %}{{ item.order_ref }}. {% endif %}{{ item.song_snapshot }}</li>
+          {% empty %}
+          <li>Nenhuma canção detectada pela IA.</li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <form method="post" class="pt-2">
+        {% csrf_token %}
+        <textarea name="raw_text" class="hidden">{{ form.raw_text.value|default:'' }}</textarea>
+        <input type="hidden" name="model_hint" value="{{ form.model_hint.value|default:'' }}">
+        <textarea name="parsed_payload" class="hidden">{{ parsed_payload }}</textarea>
+        <button name="action" value="create" class="app-btn app-btn-primary">Criar culto com esta estrutura</button>
+      </form>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

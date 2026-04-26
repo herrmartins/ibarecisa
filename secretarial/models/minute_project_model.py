@@ -1,7 +1,6 @@
 from django.db import models
 from core.models import BaseModel
 from users.models import CustomUser
-from ckeditor.fields import RichTextField
 
 
 class MinuteProjectModel(BaseModel):
@@ -13,7 +12,7 @@ class MinuteProjectModel(BaseModel):
     )
     meeting_date = models.DateField()
     number_of_attendees = models.CharField(max_length=3)
-    body = RichTextField(blank=True, null=True)
+    body = models.TextField(blank=True, null=True)
 
     class Meta:
         verbose_name = "Projeto de Ata"
