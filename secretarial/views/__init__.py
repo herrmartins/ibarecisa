@@ -8,7 +8,7 @@ from .minutes_project_list_view import MinutesProjectListView
 from .minute_create_view import MinuteCreateView
 from .create_minute_form_view import CreateMinuteFormView
 from .minute_detail_view import MinuteDetailView
-from .pdf_generate_view import GeneratePDF
+from .pdf_generate_view import GeneratePDF, GenerateProjectPDF
 from .minutes_list_view import MinutesListView
 from .minute_excerpt_list_view import MinutesExcerptsListView
 from .minute_template_listview import MinuteTemplatesListView

@@ -281,11 +281,16 @@
   <div class="document-wrapper">
     <!-- Header -->
     <div class="pdf-header">
-      <h1 class="pdf-header-title">Ata de Reunião</h1>
+      <h1 class="pdf-header-title">{% if is_draft %}Projeto de Ata{% else %}Ata de Reunião{% endif %}</h1>
       {% if church_info %}
       <p class="pdf-header-subtitle">{{church_info.name}}{% if church_info.CNPJ %} - CNPJ: {{church_info.CNPJ}}{% endif %}</p>
       {% endif %}
       <div class="pdf-header-divider"></div>
+      {% if is_draft %}
+      <div style="text-align: center; color: #e74c3c; font-size: 12pt; font-weight: bold; margin-top: 10px;">
+        DOCUMENTO PROVISÓRIO - PROJETO DE ATA
+      </div>
+      {% endif %}
     </div>
 
     <!-- Meeting Information -->

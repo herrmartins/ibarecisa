@@ -20,6 +20,7 @@ from secretarial.views import (
     ExcerptDetailView,
     ExcerptDeleteView,
     GeneratePDF,
+    GenerateProjectPDF,
     TemplateCreateView,
     TemplateFormView,
     TemplateDeleteView,
@@ -99,6 +100,8 @@ urlpatterns = [
     ),
     path("meeting/genpdf/<int:pk>", GeneratePDF.as_view(),
          name="minute-generate-pdf"),
+    path("meeting/project/genpdf/<int:pk>", GenerateProjectPDF.as_view(),
+         name="minute-project-generate-pdf"),
     path(
         "meeting/<int:minute_pk>/attachments/add",
         MinuteFileUploadView.as_view(),
