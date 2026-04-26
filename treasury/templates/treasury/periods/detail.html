@@ -75,7 +75,7 @@
       </svg>
       <span class="text-sm font-medium text-white/90">Saldo Final</span>
     </div>
-    <div class="text-3xl font-bold text-white" x-text="period ? formatBalance(period.closing_balance || calculatedBalance) : '-'"></div>
+    <div class="text-3xl font-bold text-white" x-text="period ? formatBalance(period.status === 'open' ? calculatedBalance : period.closing_balance) : '-'"></div>
   </div>
 </div>
 

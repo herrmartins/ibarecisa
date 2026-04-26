@@ -258,8 +258,8 @@ function dashboardContent() {
         },
 
         getPeriodBalance(period) {
-            // Se o período tem closing_balance (fechado), usa ele
-            if (period.closing_balance !== null && period.closing_balance !== undefined) {
+            // Se o período está fechado ou arquivado, usa closing_balance
+            if (period.status === 'closed' || period.status === 'archived') {
                 return period.closing_balance;
             }
             // Senão, calcula: opening_balance + net do transactions_summary
