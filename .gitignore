@@ -136,3 +136,5 @@ htmlcov/*
 gunicorn-error-log
 
 *tre*.*
+!treasury/management/commands/*.py
+!docs/treasury_check_fix.md
