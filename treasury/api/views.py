@@ -443,13 +443,24 @@ class TransactionViewSet(viewsets.ModelViewSet):
         if period_id:
             queryset = queryset.filter(accounting_period_id=period_id)
 
-        # Filtro por data (início e fim)
+        # Filtro por data (início e fim) - garantir que seja apenas data, não datetime
         date_from = self.request.query_params.get('date_from')
         date_to = self.request.query_params.get('date_to')
+        print(f'[DATE FILTER] date_from={date_from} date_to={date_to}', flush=True)
         if date_from:
-            queryset = queryset.filter(date__gte=date_from)
+            try:
+                date_from_obj = datetime.strptime(date_from, '%Y-%m-%d').date()
+                queryset = queryset.filter(date__gte=date_from_obj)
+                print(f'[DATE FILTER] filtering date__gte={date_from_obj}', flush=True)
+            except ValueError as e:
+                print(f'[DATE FILTER] invalid date_from: {e}', flush=True)
         if date_to:
-            queryset = queryset.filter(date__lte=date_to)
+            try:
+                date_to_obj = datetime.strptime(date_to, '%Y-%m-%d').date()
+                queryset = queryset.filter(date__lte=date_to_obj)
+                print(f'[DATE FILTER] filtering date__lte={date_to_obj}', flush=True)
+            except ValueError as e:
+                print(f'[DATE FILTER] invalid date_to: {e}', flush=True)
 
         # Filtro por tipo (excluir reversals por padrão, exceto para action summary)
         show_reversals = self.request.query_params.get('show_reversals', 'false') == 'true'

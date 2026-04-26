@@ -527,10 +527,8 @@ Retorne APENAS o array JSON."""
                 }
             logger.info(f"PDF múltiplo convertido para imagem ({page_count} página(s))")
 
-            if use_mistral:
-                return self._extract_multiple_with_mistral(file_base64, 'image/png', categories)
-            else:
-                return self._extract_multiple_with_ollama(file_base64, 'image/png', categories)
+            # Forçar Ollama para imagens também (Mistral instável)
+            return self._extract_multiple_with_ollama(file_base64, 'image/png', categories)
 
         try:
             img = Image.open(io.BytesIO(file_content))
@@ -1402,10 +1400,12 @@ Retorne APENAS este JSON:
         content_type = getattr(image_file, 'content_type', '').lower()
 
         is_pdf = (file_name.lower().endswith('.pdf') or
-                   content_type == 'application/pdf')
+                    content_type == 'application/pdf')
 
         categories = list(CategoryModel.objects.values_list('name', flat=True))
         use_mistral = (not self.debug_mode) or self.force_mistral
+
+        print(f'[OCR MULTIPLO] file_name={file_name} content_type={content_type} is_pdf={is_pdf} use_mistral={use_mistral} debug_mode={self.debug_mode} force_mistral={self.force_mistral}', flush=True)
 
         if is_pdf:
             file_content = image_file.read()
