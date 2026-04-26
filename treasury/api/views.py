@@ -1252,20 +1252,23 @@ class BatchTransactionCreateView(APIView):
 
         # Verificar se é FormData (com arquivo) ou JSON
         receipt_file = request.FILES.get('receipt')
-        transactions_str = request.data.get('transactions')
+        transactions_raw = request.data.get('transactions')
 
-        if transactions_str:
-            # FormData: parsear string JSON
-            try:
-                transactions_data = json.loads(transactions_str)
-            except json.JSONDecodeError:
-                return Response(
-                    {'error': 'Formato de transações inválido.'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+        if transactions_raw:
+            if isinstance(transactions_raw, str):
+                # FormData: parsear string JSON
+                try:
+                    transactions_data = json.loads(transactions_raw)
+                except json.JSONDecodeError:
+                    return Response(
+                        {'error': 'Formato de transações inválido.'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+            else:
+                # Já é uma lista (JSON direto)
+                transactions_data = transactions_raw
         else:
-            # JSON normal
-            transactions_data = request.data.get('transactions', [])
+            transactions_data = []
 
         if not transactions_data:
             return Response(
