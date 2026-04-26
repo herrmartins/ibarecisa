@@ -381,25 +381,28 @@ Retorne APENAS o JSON, sem texto adicional."""
         categories_formatted = ", ".join(categories)
 
         if multiple:
-            prompt = f"""Extraia TODAS as transações deste texto de lista/envelopes.
+            prompt = f"""Extraia TODAS as transações financeiras deste relatório.
 
 Categorias disponíveis: {categories_formatted}
 
-Retorne APENAS este array JSON:
-[
-  {{"description": "Envelope X - Categoria", "amount": 100.00, "date": "2026-02-02", "category": "Dízimos", "is_positive": true, "confidence": 90}}
-]
+IMPORTANTE:
+- Liste TODAS as transações. NÃO resuma, NÃO omita nenhuma.
+- Cada entrada de receita ou despesa DEVE ser uma transação separada.
+
+Retorne um objeto JSON com a chave "transactions" contendo o array:
+{{"transactions": [
+  {{"description": "Descrição da transação", "amount": 100.00, "date": "2026-01-15", "category": "Dízimos", "is_positive": true, "confidence": 90}}
+]}}
 
 Regras:
-- Cada envelope com múltiplas categorias = múltiplas transações
-- is_positive: SEMPRE true para envelopes/dízimos/ofertas. Use false APENAS para despesas.
-- amount: número decimal
-- date: YYYY-MM-DD ou data de hoje
+- is_positive: true para receitas (dízimos, ofertas, etc.), false APENAS para despesas
+- amount: número decimal positivo
+- date: YYYY-MM-DD
+- category: use a categoria mais próxima da lista disponível
+- description: descrição clara da transação
 
 Texto extraído:
-{text}
-
-Retorne APENAS o array JSON."""
+{text}"""
             system_msg = "Você é um assistente especializado em extrair dados de listas de transações. Responda APENAS com um array JSON válido, sem qualquer texto adicional."
         else:
             prompt = self._build_extraction_prompt(categories)
@@ -416,26 +419,34 @@ Retorne APENAS o array JSON."""
                     {"role": "user", "content": prompt}
                 ],
                 response_format={"type": "json_object"},
-                max_tokens=2000 if multiple else 1000,
+                max_tokens=16384 if multiple else 1000,
                 temperature=0.1
             )
 
             response_text = chat_response.choices[0].message.content
-            logger.info(f"[OCR TEXTO MISTRAL] Resposta: {response_text[:200]}...")
+            finish_reason = getattr(chat_response.choices[0], 'finish_reason', None)
+            print(f'[OCR TEXTO MISTRAL] Resposta ({len(response_text)} chars, finish_reason={finish_reason}): {response_text[:500]}', flush=True)
 
             if multiple:
-                result = json.loads(response_text)
+                try:
+                    result = json.loads(response_text)
 
-                if isinstance(result, dict):
-                    for key in ['transactions', 'data', 'results', 'items']:
-                        if key in result and isinstance(result[key], list):
-                            result = result[key]
-                            break
+                    if isinstance(result, dict):
+                        for key in ['transactions', 'data', 'results', 'items']:
+                            if key in result and isinstance(result[key], list):
+                                result = result[key]
+                                break
 
-                if not isinstance(result, list):
+                    if isinstance(result, list):
+                        transactions = [self._normalize_extracted_data(tx, categories) for tx in result]
+                    else:
+                        transactions = self._parse_multiple_json(response_text, categories)
+                except json.JSONDecodeError:
+                    logger.warning(f"[OCR TEXTO MISTRAL] JSON truncado, usando fallback de parsing")
+                    print(f'[OCR TEXTO MISTRAL] JSON inválido, tentando recuperar transações parciais...', flush=True)
                     transactions = self._parse_multiple_json(response_text, categories)
-                else:
-                    transactions = [self._normalize_extracted_data(tx, categories) for tx in result]
+                    if not transactions:
+                        transactions = self._recover_truncated_json(response_text, categories)
 
                 return {'transactions': transactions}
             else:
@@ -665,6 +676,35 @@ RETORNE APENAS O ARRAY JSON. COMECE COM [ E TERMINA COM ]."""
             'is_positive': True,
             'confidence': 10
         }
+
+    def _recover_truncated_json(self, text: str, categories: list) -> list:
+        """Recupera transações de JSON truncado encontrando objetos completos."""
+        transactions = []
+        obj_pattern = re.compile(
+            r'\{\s*"description"\s*:\s*"[^"]*"\s*,\s*"amount"\s*:\s*[\d.]+\s*,\s*'
+            r'"date"\s*:\s*"[^"]*"\s*,\s*"category"\s*:\s*"[^"]*"\s*',
+            re.DOTALL
+        )
+        for match in obj_pattern.finditer(text):
+            start = match.start()
+            depth = 0
+            end = start
+            for i in range(start, min(start + 2000, len(text))):
+                if text[i] == '{':
+                    depth += 1
+                elif text[i] == '}':
+                    depth -= 1
+                    if depth == 0:
+                        end = i + 1
+                        break
+            if end > start:
+                try:
+                    obj = json.loads(text[start:end])
+                    transactions.append(self._normalize_extracted_data(obj, categories))
+                except (json.JSONDecodeError, Exception):
+                    pass
+        print(f'[OCR RECOVER] Recuperadas {len(transactions)} transações de JSON truncado', flush=True)
+        return transactions
 
     def _parse_multiple_json(self, text: str, categories: list) -> list:
         """Parseia array JSON de múltiplas transações."""
@@ -1412,6 +1452,7 @@ Retorne APENAS este JSON:
         if is_pdf:
             file_content = image_file.read()
             pdf_text = self._extract_text_from_pdf(file_content)
+            print(f'[OCR MULTIPLO] PDF texto extraído: {len(pdf_text)} chars | Primeiros 300: {pdf_text[:300]}', flush=True)
             if self._is_pdf_text_sufficient(pdf_text):
                 logger.info(f"PDF múltiplo com texto ({len(pdf_text)} chars), extração via texto direto")
                 if use_mistral:

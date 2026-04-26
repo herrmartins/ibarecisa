@@ -306,6 +306,8 @@ document.addEventListener('alpine:init', () => {
                 const reader = new FileReader();
                 reader.onload = (event) => {
                     sessionStorage.setItem('ocrMultipleImage', event.target.result);
+                    sessionStorage.setItem('ocrMultipleFileName', file.name);
+                    sessionStorage.setItem('ocrMultipleFileType', file.type);
                     // Ir para página de revisão
                     window.location.href = '/treasury/transacoes/importacao-multipla/';
                 };

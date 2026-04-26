@@ -87,7 +87,7 @@
 
         <!-- Total Summary -->
         <div class="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg p-4 mb-6 border border-purple-200">
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+            <div class="grid grid-cols-2 md:grid-cols-6 gap-4 text-center">
                 <div>
                     <p class="text-xs text-gray-600 uppercase tracking-wide">Total Transações</p>
                     <p class="text-2xl font-bold text-gray-900" x-text="transactions.length"></p>
@@ -97,7 +97,15 @@
                     <p class="text-2xl font-bold text-purple-600" x-text="selectedCount"></p>
                 </div>
                 <div>
-                    <p class="text-xs text-gray-600 uppercase tracking-wide">Valor Total</p>
+                    <p class="text-xs text-gray-600 uppercase tracking-wide">Entradas (+)</p>
+                    <p class="text-2xl font-bold text-green-600" x-text="formatBRL(totalEntradas)"></p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-600 uppercase tracking-wide">Saídas (-)</p>
+                    <p class="text-2xl font-bold text-red-600" x-text="formatBRL(totalSaidas)"></p>
+                </div>
+                <div>
+                    <p class="text-xs text-gray-600 uppercase tracking-wide">Líquido</p>
                     <p class="text-2xl font-bold" :class="totalAmount >= 0 ? 'text-green-600' : 'text-red-600'" x-text="formatBRL(totalAmount)"></p>
                 </div>
                 <div>
@@ -226,9 +234,20 @@ function batchReview() {
                 .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
         },
 
-        get totalAmount() {
+        get totalEntradas() {
             return this.transactions
+                .filter(t => t.is_positive === true)
                 .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+        },
+
+        get totalSaidas() {
+            return this.transactions
+                .filter(t => t.is_positive === false)
+                .reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0);
+        },
+
+        get totalAmount() {
+            return this.totalEntradas - this.totalSaidas;
         },
 
         async init() {
@@ -276,8 +295,9 @@ function batchReview() {
                 const fetchResponse = await fetch(base64Image);
                 const blob = await fetchResponse.blob();
                 console.log('[OCR MULTIPLO JS] Blob criado, size=' + blob.size);
+                const fileName = sessionStorage.getItem('ocrMultipleFileName') || 'upload';
                 const formData = new FormData();
-                formData.append('receipt', blob, 'image.jpg');
+                formData.append('receipt', blob, fileName);
 
                 const response = await fetch('/treasury/api/ocr/receipt-multiple/', {
                     method: 'POST',
@@ -384,6 +404,8 @@ function batchReview() {
                         'success'
                     );
                     sessionStorage.removeItem('ocrMultipleImage');
+                    sessionStorage.removeItem('ocrMultipleFileName');
+                    sessionStorage.removeItem('ocrMultipleFileType');
                     window.location.href = '/treasury/transacoes/';
                 } else {
                     this.error = 'Erro ao criar transações: ' + (result.errors?.[0]?.error || 'Erro desconhecido');
