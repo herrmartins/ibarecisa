@@ -835,19 +835,17 @@ Regras:
                 result = json.loads(response_text)
                 print(f'[OCR MULTIPLO MISTRAL] JSON parseado com sucesso: tipo={type(result)}', flush=True)
             except json.JSONDecodeError as e:
-                print(f'[OCR MULTIPLO MISTRAL] JSON direto falhou: {e}, tentando extrair array', flush=True)
+                print(f'[OCR MULTIPLO MISTRAL] JSON direto falhou: {e}, tentando Ollama diretamente', flush=True)
                 try:
-                    transactions = self._parse_multiple_json(response_text, categories)
-                    print(f'[OCR MULTIPLO MISTRAL] Fallback parsing conseguiu {len(transactions)} transacoes', flush=True)
-                    return {'transactions': transactions}
-                except Exception as fallback_e:
-                    print(f'[OCR MULTIPLO MISTRAL] Fallback parsing tambem falhou: {fallback_e}', flush=True)
-                    # Último recurso: tentar Ollama
-                    print(f'[OCR MULTIPLO MISTRAL] Tentando Ollama como último recurso', flush=True)
+                    return self._extract_multiple_with_ollama(file_base64, file_type, categories)
+                except Exception as ollama_e:
+                    print(f'[OCR MULTIPLO MISTRAL] Ollama também falhou: {ollama_e}, tentando parsing manual', flush=True)
                     try:
-                        return self._extract_multiple_with_ollama(file_base64, file_type, categories)
-                    except Exception as ollama_e:
-                        print(f'[OCR MULTIPLO MISTRAL] Ollama também falhou: {ollama_e}', flush=True)
+                        transactions = self._parse_multiple_json(response_text, categories)
+                        print(f'[OCR MULTIPLO MISTRAL] Parsing manual conseguiu {len(transactions)} transacoes', flush=True)
+                        return {'transactions': transactions}
+                    except Exception as parse_e:
+                        print(f'[OCR MULTIPLO MISTRAL] Parsing manual também falhou: {parse_e}', flush=True)
                         raise e  # Re-raise the original JSON error
 
             print(f'[OCR MULTIPLO MISTRAL] JSON tipo={type(result).__name__} keys={list(result.keys()) if isinstance(result, dict) else "N/A"}', flush=True)
@@ -1349,7 +1347,12 @@ Retorne APENAS este JSON:
         else:
             # Categoria não existe - tentar inferir
             raw_text = data.get('raw_text', '')
-            category_name = self._infer_category(description, raw_text, categories)
+            inferred = self._infer_category(description, raw_text, categories)
+            if inferred:
+                category_name = inferred
+                print(f'[CATEGORY] Inferida: {category_name} de desc="{description}" raw="{raw_text[:100]}"', flush=True)
+            else:
+                print(f'[CATEGORY] Não conseguiu inferir de desc="{description}" raw="{raw_text[:100]}", usando Outros', flush=True)
 
         # Buscar ID da categoria
         category_id = None
@@ -1425,10 +1428,8 @@ Retorne APENAS este JSON:
                 }
             logger.info(f"PDF múltiplo convertido para imagem ({page_count} página(s))")
 
-            if use_mistral:
-                return self._extract_multiple_with_mistral(file_base64, 'image/png', categories)
-            else:
-                return self._extract_multiple_with_ollama(file_base64, 'image/png', categories)
+            # Forçar Ollama para PDFs por enquanto (Mistral com problemas)
+            return self._extract_multiple_with_ollama(file_base64, 'image/png', categories)
         else:
             # Handle images (non-PDF)
             try:
