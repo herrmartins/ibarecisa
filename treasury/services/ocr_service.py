@@ -18,6 +18,7 @@ import requests
 from django.conf import settings
 from PIL import Image
 from pdf2image import convert_from_bytes
+import pypdf
 
 logger = logging.getLogger(__name__)
 
@@ -40,10 +41,55 @@ class ReceiptOCRService:
 
     @property
     def ocr_timeout(self) -> int:
-        """Retorna o timeout de OCR baseado no ambiente."""
-        # Em desenvolvimento (DEBUG=True): 360 segundos (6 minutos)
-        # Em produção (DEBUG=False): 60 segundos
         return 360 if self.debug_mode else 60
+
+    def _extract_text_from_pdf(self, file_content: bytes) -> str:
+        """Extrai texto selecionável de um PDF usando pypdf."""
+        try:
+            reader = pypdf.PdfReader(io.BytesIO(file_content))
+            text_parts = []
+            for page in reader.pages:
+                page_text = page.extract_text()
+                if page_text:
+                    text_parts.append(page_text.strip())
+            return "\n".join(text_parts)
+        except Exception as e:
+            logger.warning(f"Erro ao extrair texto do PDF com pypdf: {e}")
+            return ""
+
+    def _prepare_pdf_for_vision(self, file_content: bytes) -> tuple:
+        """
+        Converte todas as páginas de PDF em uma única imagem combinada.
+        Retorna (base64_string, page_count) ou (None, 0).
+        """
+        try:
+            images = convert_from_bytes(file_content, dpi=200, fmt='png')
+            if not images:
+                return None, 0
+
+            if len(images) == 1:
+                img = images[0]
+            else:
+                max_width = max(i.width for i in images)
+                total_height = sum(i.height for i in images)
+                combined = Image.new('RGB', (max_width, total_height), 'white')
+                y_offset = 0
+                for page_img in images:
+                    combined.paste(page_img, (0, y_offset))
+                    y_offset += page_img.height
+                img = combined
+
+            buffer = io.BytesIO()
+            img.save(buffer, format='PNG')
+            buffer.seek(0)
+            return base64.b64encode(buffer.read()).decode('utf-8'), len(images)
+        except Exception as e:
+            logger.error(f"Erro ao converter PDF para imagem: {e}")
+            return None, 0
+
+    def _is_pdf_text_sufficient(self, text: str) -> bool:
+        """Verifica se o texto extraído do PDF é suficiente para extração."""
+        return len(text.strip()) >= 50
 
     def extract_from_receipt(self, image_file) -> Dict[str, Any]:
         """
@@ -55,91 +101,74 @@ class ReceiptOCRService:
         Returns:
             Dict com: description, amount, date, category_id, is_positive, confidence
         """
-        # Ler arquivo
-        file_content = image_file.read()
         file_name = getattr(image_file, 'name', 'receipt.jpg')
+        content_type = getattr(image_file, 'content_type', '').lower()
 
-        # Detectar tipo de arquivo
-        is_pdf = file_name.lower().endswith('.pdf')
+        is_pdf = (file_name.lower().endswith('.pdf') or
+                   content_type == 'application/pdf')
+
+        categories = list(CategoryModel.objects.values_list('name', flat=True))
+        use_mistral = (not self.debug_mode) or self.force_mistral
 
         if is_pdf:
-            # Converter PDF para imagem
-            try:
-                images = convert_from_bytes(file_content, dpi=200, fmt='png')
-                if not images:
-                    return {
-                        'error': 'PDF vazio ou não foi possível converter.',
-                        'description': '',
-                        'amount': None,
-                        'date': None,
-                        'category_name': None,
-                        'category_id': None,
-                        'is_positive': True,
-                        'confidence': 0,
-                    }
-                # Usar primeira página
-                img = images[0]
-            except Exception as e:
+            file_content = image_file.read()
+            pdf_text = self._extract_text_from_pdf(file_content)
+            if self._is_pdf_text_sufficient(pdf_text):
+                logger.info(f"PDF com texto ({len(pdf_text)} chars), extração via texto direto")
+                if use_mistral:
+                    return self._extract_text_with_mistral(pdf_text, categories)
+                else:
+                    return self._extract_text_with_ollama(pdf_text, categories)
+
+            if use_mistral and MISTRAL_SDK_AVAILABLE:
+                try:
+                    return self._extract_pdf_native_mistral(file_content, categories)
+                except Exception as e:
+                    logger.warning(f"Mistral PDF nativo falhou: {e}, usando conversão para imagem")
+
+            file_base64, page_count = self._prepare_pdf_for_vision(file_content)
+            if file_base64 is None:
                 return {
-                    'error': f'Erro ao converter PDF: {str(e)}',
-                    'description': '',
-                    'amount': None,
-                    'date': None,
-                    'category_name': None,
-                    'category_id': None,
-                    'is_positive': True,
-                    'confidence': 0,
+                    'error': 'PDF vazio ou não foi possível converter.',
+                    'description': '', 'amount': None, 'date': None,
+                    'category_name': None, 'category_id': None,
+                    'is_positive': True, 'confidence': 0,
                 }
+            logger.info(f"PDF convertido para imagem ({page_count} página(s))")
+
+            if use_mistral:
+                return self._extract_with_mistral(file_base64, 'image/png', categories)
+            else:
+                return self._extract_with_ollama(file_base64, 'image/png', categories)
         else:
-            # Abrir imagem diretamente
             try:
-                img = Image.open(io.BytesIO(file_content))
+                img = Image.open(image_file)
             except Exception as e:
                 return {
                     'error': f'Erro ao ler imagem: {str(e)}',
-                    'description': '',
-                    'amount': None,
-                    'date': None,
-                    'category_name': None,
-                    'category_id': None,
-                    'is_positive': True,
-                    'confidence': 0,
+                    'description': '', 'amount': None, 'date': None,
+                    'category_name': None, 'category_id': None,
+                    'is_positive': True, 'confidence': 0,
                 }
 
-        # Validar tamanho da imagem (mínimo 50x50 pixels para qwen3-vl)
-        width, height = img.size
-        if width < 50 or height < 50:
-            return {
-                'error': f'Imagem muito pequena ({width}x{height}). Mínimo: 50x50 pixels.',
-                'description': '',
-                'amount': None,
-                'date': None,
-                'category_name': None,
-                'category_id': None,
-                'is_positive': True,
-                'confidence': 0,
-            }
+            width, height = img.size
+            if width < 50 or height < 50:
+                return {
+                    'error': f'Imagem muito pequena ({width}x{height}). Mínimo: 50x50 pixels.',
+                    'description': '', 'amount': None, 'date': None,
+                    'category_name': None, 'category_id': None,
+                    'is_positive': True, 'confidence': 0,
+                }
 
-        # Converter para PNG e depois base64
-        img_buffer = io.BytesIO()
-        img.save(img_buffer, format='PNG')
-        img_buffer.seek(0)
-        file_base64 = base64.b64encode(img_buffer.read()).decode('utf-8')
+            img_buffer = io.BytesIO()
+            img.save(img_buffer, format='PNG')
+            img_buffer.seek(0)
+            file_base64 = base64.b64encode(img_buffer.read()).decode('utf-8')
 
-        # Buscar categorias disponíveis
-        categories = list(CategoryModel.objects.values_list('name', flat=True))
-
-        # Chamar OCR apropriado
-        # Produção (DEBUG=False): SEMPRE Mistral
-        # Desenvolvimento (DEBUG=True): Ollama, a menos que USE_MISTRAL_OCR=True
-        use_mistral = (not self.debug_mode) or self.force_mistral
-
-        if use_mistral:
-            result = self._extract_with_mistral(file_base64, 'image/png', categories)
-        else:
-            result = self._extract_with_ollama(file_base64, 'image/png', categories)
-
-        return result
+            if use_mistral:
+                return self._extract_with_mistral(file_base64, 'image/png', categories)
+            else:
+                return self._extract_with_ollama(file_base64, 'image/png', categories)
 
     def _extract_with_ollama(self, file_base64: str, file_type: str, categories: list) -> Dict[str, Any]:
         """
@@ -228,9 +257,238 @@ class ReceiptOCRService:
                 'confidence': 0,
             }
 
-    def extract_multiple_from_receipt(self, image_file) -> Dict[str, Any]:
+    def _extract_text_with_ollama(self, text: str, categories: list, multiple: bool = False) -> Dict[str, Any]:
+        """Extrai dados de texto (PDF com texto selecionável) usando modelo de texto do Ollama."""
+        ollama_host = getattr(settings, 'OLLAMA_HOST', 'http://localhost:11434')
+        ollama_text_model = getattr(settings, 'OLLAMA_TEXT_MODEL', None)
+        ollama_model = ollama_text_model or getattr(settings, 'OLLAMA_OCR_MODEL', 'qwen3-vl:8b')
+
+        categories_formatted = "\n".join([f"- {cat}" for cat in categories]) if categories else "- Outros"
+
+        if multiple:
+            prompt = f"""Analise este texto de lista/envelopes e retorne APENAS um array JSON.
+
+CATEGORIAS DISPONÍVEIS (use EXATAMENTE estes nomes):
+{categories_formatted}
+
+Formatação NORMALIZAÇÃO:
+- "Dízimo" → use "dízimo"
+- "Oferta" ou "Ofertas" → use "oferta voluntária"
+
+Formato OBRIGATÓRIO:
+[
+  {{"description": "Envelope 895 - dízimo", "amount": 2.50, "date": "2026-02-02", "category": "dízimo", "is_positive": true, "confidence": 90}},
+]
+
+Texto extraído do documento:
+{text}
+
+Retorne APENAS o array JSON, sem texto adicional."""
+        else:
+            prompt = f"""Extraia as informações deste comprovante de pagamento e retorne APENAS no formato JSON.
+
+Categorias disponíveis:
+{categories_formatted}
+
+Retorne EXATAMENTE este JSON:
+{{
+"description": "Nome da Loja - tipo de produtos (quantidade itens)",
+"amount": 0.00,
+"date": "2026-01-15",
+"category": "nome da categoria",
+"is_positive": false,
+"confidence": 80
+}}
+
+Regras:
+- description: Formato "Loja - tipo de itens (X itens)" ou apenas nome da loja
+- amount: Valor TOTAL em decimal (ex: 123.45)
+- date: Data no formato YYYY-MM-DD
+- category: Escolha UMA categoria da lista acima
+- is_positive: false (comprovantes são despesas), true (receitas/dízimos)
+- confidence: 0-100 baseado na clareza dos dados
+
+Texto extraído do comprovante:
+{text}
+
+Retorne APENAS o JSON, sem texto adicional."""
+
+        try:
+            payload = {
+                'model': ollama_model,
+                'prompt': prompt,
+                'stream': False
+            }
+
+            response = requests.post(
+                f'{ollama_host}/api/generate',
+                json=payload,
+                timeout=self.ocr_timeout
+            )
+            response.raise_for_status()
+
+            result = response.json()
+            ocr_text = result.get('response', '')
+
+            logger.info(f"[OCR TEXTO OLLAMA] Resposta: {ocr_text[:200]}...")
+
+            if multiple:
+                transactions = self._parse_multiple_json(ocr_text, categories)
+                return {'transactions': transactions}
+            else:
+                extracted = self._parse_fallback_json(ocr_text)
+                if not extracted:
+                    extracted = self._parse_receipt_text(ocr_text, categories)
+
+                extracted['raw_text'] = ocr_text
+                return self._normalize_extracted_data(extracted, categories)
+
+        except Exception as e:
+            if multiple:
+                return {'error': f'Erro ao comunicar com Ollama: {str(e)}', 'transactions': []}
+            return {
+                'error': f'Erro ao comunicar com Ollama: {str(e)}',
+                'description': '', 'amount': None, 'date': None,
+                'category_name': None, 'category_id': None,
+                'is_positive': True, 'confidence': 0,
+            }
+
+    def _extract_text_with_mistral(self, text: str, categories: list, multiple: bool = False) -> Dict[str, Any]:
+        """Extrai dados de texto (PDF com texto) usando Mistral chat."""
+        if not MISTRAL_SDK_AVAILABLE:
+            if multiple:
+                return {'error': 'SDK Mistral não instalado.', 'transactions': []}
+            return {
+                'error': 'SDK Mistral não instalado.',
+                'description': '', 'amount': None, 'date': None,
+                'category_name': None, 'category_id': None,
+                'is_positive': True, 'confidence': 0,
+            }
+
+        if not hasattr(settings, 'MISTRAL_API_KEY') or not settings.MISTRAL_API_KEY:
+            if multiple:
+                return {'error': 'MISTRAL_API_KEY não configurado', 'transactions': []}
+            return {
+                'error': 'MISTRAL_API_KEY não configurado',
+                'description': '', 'amount': None, 'date': None,
+                'category_name': None, 'category_id': None,
+                'is_positive': True, 'confidence': 0,
+            }
+
+        client = Mistral(api_key=settings.MISTRAL_API_KEY)
+        categories_formatted = ", ".join(categories)
+
+        if multiple:
+            prompt = f"""Extraia TODAS as transações deste texto de lista/envelopes.
+
+Categorias disponíveis: {categories_formatted}
+
+Retorne APENAS este array JSON:
+[
+  {{"description": "Envelope X - Categoria", "amount": 100.00, "date": "2026-02-02", "category": "Dízimos", "is_positive": true, "confidence": 90}}
+]
+
+Regras:
+- Cada envelope com múltiplas categorias = múltiplas transações
+- is_positive: SEMPRE true para envelopes/dízimos/ofertas. Use false APENAS para despesas.
+- amount: número decimal
+- date: YYYY-MM-DD ou data de hoje
+
+Texto extraído:
+{text}
+
+Retorne APENAS o array JSON."""
+            system_msg = "Você é um assistente especializado em extrair dados de listas de transações. Responda APENAS com um array JSON válido, sem qualquer texto adicional."
+        else:
+            prompt = self._build_extraction_prompt(categories)
+            prompt += f"\n\nTexto do comprovante:\n{text}"
+            system_msg = "Você é um assistente especializado em extrair dados de comprovantes de pagamento. Responda APENAS com um JSON válido, sem qualquer texto adicional."
+
+        try:
+            model = getattr(settings, 'MISTRAL_MODEL', 'mistral-small-latest')
+
+            chat_response = client.chat.complete(
+                model=model,
+                messages=[
+                    {"role": "system", "content": system_msg},
+                    {"role": "user", "content": prompt}
+                ],
+                response_format={"type": "json_object"},
+                max_tokens=2000 if multiple else 1000,
+                temperature=0.1
+            )
+
+            response_text = chat_response.choices[0].message.content
+            logger.info(f"[OCR TEXTO MISTRAL] Resposta: {response_text[:200]}...")
+
+            if multiple:
+                result = json.loads(response_text)
+
+                if isinstance(result, dict):
+                    for key in ['transactions', 'data', 'results', 'items']:
+                        if key in result and isinstance(result[key], list):
+                            result = result[key]
+                            break
+
+                if not isinstance(result, list):
+                    transactions = self._parse_multiple_json(response_text, categories)
+                else:
+                    transactions = [self._normalize_extracted_data(tx, categories) for tx in result]
+
+                return {'transactions': transactions}
+            else:
+                extracted = json.loads(response_text)
+                return self._normalize_extracted_data(extracted, categories)
+
+        except Exception as e:
+            if multiple:
+                return {'error': f'Erro ao processar com Mistral: {str(e)}', 'transactions': []}
+            return {
+                'error': f'Erro ao processar com Mistral: {str(e)}',
+                'description': '', 'amount': None, 'date': None,
+                'category_name': None, 'category_id': None,
+                'is_positive': True, 'confidence': 0,
+            }
+
+    def _extract_pdf_native_mistral(self, file_content: bytes, categories: list, multiple: bool = False) -> Dict[str, Any]:
+        """Extrai dados de PDF usando Mistral OCR nativo (suporta múltiplas páginas)."""
+        if not MISTRAL_SDK_AVAILABLE:
+            raise Exception('SDK Mistral não instalado.')
+        if not hasattr(settings, 'MISTRAL_API_KEY') or not settings.MISTRAL_API_KEY:
+            raise Exception('MISTRAL_API_KEY não configurado')
+
+        client = Mistral(api_key=settings.MISTRAL_API_KEY)
+        pdf_base64 = base64.b64encode(file_content).decode('utf-8')
+
+        ocr_response = client.ocr.process(
+            document={
+                "type": "document_url",
+                "document_url": f"data:application/pdf;base64,{pdf_base64}"
+            },
+            model="mistral-ocr-latest"
+        )
+
+        ocr_text = ""
+        if hasattr(ocr_response, 'pages') and ocr_response.pages:
+            for page in ocr_response.pages:
+                if hasattr(page, 'markdown') and page.markdown:
+                    ocr_text += page.markdown + "\n"
+
+        if not ocr_text.strip():
+            if multiple:
+                return {'error': 'Nenhum texto encontrado no PDF.', 'transactions': []}
+            return {
+                'error': 'Nenhum texto encontrado no PDF.',
+                'description': '', 'amount': None, 'date': None,
+                'category_name': None, 'category_id': None,
+                'is_positive': True, 'confidence': 0,
+            }
+
+        logger.info(f"[OCR PDF NATIVO MISTRAL] Extraído {len(ocr_text)} chars de {len(ocr_response.pages) if hasattr(ocr_response, 'pages') else '?'} páginas")
+
+        return self._extract_text_with_mistral(ocr_text, categories, multiple=multiple)
         """
-        Extrai múltiplas transações de uma imagem (lista, envelopes, urna, etc).
+        Extrai múltiplas transações de uma imagem ou PDF (lista, envelopes, urna, etc).
 
         Args:
             image_file: Arquivo de imagem (JPEG, PNG, PDF)
@@ -238,38 +496,50 @@ class ReceiptOCRService:
         Returns:
             Dict com: transactions (array), error (opcional)
         """
-        # Ler arquivo
         file_content = image_file.read()
         file_name = getattr(image_file, 'name', 'receipt.jpg')
 
-        # Detectar tipo de arquivo
         is_pdf = file_name.lower().endswith('.pdf')
 
-        if is_pdf:
-            # Converter PDF para imagem
-            try:
-                images = convert_from_bytes(file_content, dpi=200, fmt='png')
-                if not images:
-                    return {
-                        'error': 'PDF vazio ou não foi possível converter.',
-                        'transactions': []
-                    }
-                img = images[0]
-            except Exception as e:
-                return {
-                    'error': f'Erro ao converter PDF: {str(e)}',
-                    'transactions': []
-                }
-        else:
-            try:
-                img = Image.open(io.BytesIO(file_content))
-            except Exception as e:
-                return {
-                    'error': f'Erro ao ler imagem: {str(e)}',
-                    'transactions': []
-                }
+        categories = list(CategoryModel.objects.values_list('name', flat=True))
+        use_mistral = (not self.debug_mode) or self.force_mistral
 
-        # Validar tamanho
+        if is_pdf:
+            pdf_text = self._extract_text_from_pdf(file_content)
+            if self._is_pdf_text_sufficient(pdf_text):
+                logger.info(f"PDF múltiplo com texto ({len(pdf_text)} chars), extração via texto direto")
+                if use_mistral:
+                    return self._extract_text_with_mistral(pdf_text, categories, multiple=True)
+                else:
+                    return self._extract_text_with_ollama(pdf_text, categories, multiple=True)
+
+            if use_mistral and MISTRAL_SDK_AVAILABLE:
+                try:
+                    return self._extract_pdf_native_mistral(file_content, categories, multiple=True)
+                except Exception as e:
+                    logger.warning(f"Mistral PDF nativo falhou: {e}, usando conversão para imagem")
+
+            file_base64, page_count = self._prepare_pdf_for_vision(file_content)
+            if file_base64 is None:
+                return {
+                    'error': 'PDF vazio ou não foi possível converter.',
+                    'transactions': []
+                }
+            logger.info(f"PDF múltiplo convertido para imagem ({page_count} página(s))")
+
+            if use_mistral:
+                return self._extract_multiple_with_mistral(file_base64, 'image/png', categories)
+            else:
+                return self._extract_multiple_with_ollama(file_base64, 'image/png', categories)
+
+        try:
+            img = Image.open(io.BytesIO(file_content))
+        except Exception as e:
+            return {
+                'error': f'Erro ao ler imagem: {str(e)}',
+                'transactions': []
+            }
+
         width, height = img.size
         if width < 50 or height < 50:
             return {
@@ -277,24 +547,6 @@ class ReceiptOCRService:
                 'transactions': []
             }
 
-        # Converter para PNG e depois base64
-        img_buffer = io.BytesIO()
-        img.save(img_buffer, format='PNG')
-        img_buffer.seek(0)
-        file_base64 = base64.b64encode(img_buffer.read()).decode('utf-8')
-
-        # Buscar categorias
-        categories = list(CategoryModel.objects.values_list('name', flat=True))
-
-        # Chamar OCR múltiplo
-        # Produção (DEBUG=False): SEMPRE Mistral
-        # Desenvolvimento (DEBUG=True): Ollama, a menos que USE_MISTRAL_OCR=True
-        use_mistral = (not self.debug_mode) or self.force_mistral
-
-        if use_mistral:
-            return self._extract_multiple_with_mistral(file_base64, 'image/png', categories)
-        else:
-            return self._extract_multiple_with_ollama(file_base64, 'image/png', categories)
 
     def _extract_multiple_with_ollama(self, file_base64: str, file_type: str, categories: list) -> Dict[str, Any]:
         """
@@ -376,6 +628,43 @@ RETORNE APENAS O ARRAY JSON. COMECE COM [ E TERMINA COM ]."""
                 'error': f'Erro ao comunicar com Ollama: {str(e)}',
                 'transactions': []
             }
+
+    def _parse_single_fallback(self, text: str, categories: list) -> Dict[str, Any]:
+        """Fallback parsing para resposta JSON malformada de single transaction."""
+        # Tentar encontrar objeto JSON entre ```
+        import re
+        object_match = re.search(r'```(?:json)?\s*(\{.*?\})\s*```', text, re.DOTALL)
+        if object_match:
+            try:
+                return json.loads(object_match.group(1))
+            except json.JSONDecodeError:
+                pass
+
+        # Tentar encontrar o primeiro {
+        start = text.find('{')
+        if start != -1:
+            # Tentar encontrar o fechamento balanceado
+            brace_count = 0
+            for i in range(start, len(text)):
+                if text[i] == '{':
+                    brace_count += 1
+                elif text[i] == '}':
+                    brace_count -= 1
+                    if brace_count == 0:
+                        try:
+                            return json.loads(text[start:i+1])
+                        except json.JSONDecodeError:
+                            break
+
+        # Fallback final: retornar objeto vazio
+        return {
+            'description': 'Erro no parsing',
+            'amount': None,
+            'date': datetime.now().strftime('%Y-%m-%d'),
+            'category': 'Outros',
+            'is_positive': True,
+            'confidence': 10
+        }
 
     def _parse_multiple_json(self, text: str, categories: list) -> list:
         """Parseia array JSON de múltiplas transações."""
@@ -483,17 +772,19 @@ RETORNE APENAS O ARRAY JSON. COMECE COM [ E TERMINA COM ]."""
 
 Categorias disponíveis: {categories_formatted}
 
-Retorne APENAS este array JSON:
-[
-  {{"description": "Envelope X - Categoria", "amount": 100.00, "date": "2026-02-02", "category": "Dízimos", "is_positive": true, "confidence": 90}}
-]
+Retorne APENAS um objeto JSON neste formato:
+{{
+  "transactions": [
+    {{"description": "Envelope X - Categoria", "amount": 100.00, "date": "2026-02-02", "category": "Dízimos", "is_positive": true, "confidence": 90}}
+  ]
+}}
 
 Regras:
 - Cada envelope com múltiplas categorias = múltiplas transações
 - is_positive: SEMPRE true para envelopes/dízimos/ofertas. Use false APENAS para despesas.
 - amount: número decimal
 - date: YYYY-MM-DD ou data de hoje
-- Retorne APENAS o array JSON"""
+- Retorne APENAS o objeto JSON"""
 
         try:
             # Usar OCR do Mistral
@@ -522,26 +813,42 @@ Regras:
                 messages=[
                     {
                         "role": "system",
-                        "content": "Você é um assistente especializado em extrair dados de listas de transações. Responda APENAS com um array JSON válido, sem qualquer texto adicional."
+                        "content": "Você é um assistente especializado em extrair dados de listas de transações. Responda APENAS com JSON válido, sem markdown, sem explicações, sem texto adicional. O JSON deve ser parseável diretamente."
                     },
                     {
                         "role": "user",
                         "content": f"{prompt}\n\nTexto extraído:\n{ocr_text}"
                     }
                 ],
-                response_format={"type": "json_object"},
-                max_tokens=2000,
+                max_tokens=8000,
                 temperature=0.1
             )
 
             response_text = chat_response.choices[0].message.content
 
             print(f'\n{"="*60}', flush=True)
-            print(f'[OCR MULTIPLO MISTRAL] Resposta bruta:\n{response_text}', flush=True)
+            print(f'[OCR MULTIPLO MISTRAL] Resposta bruta (len={len(response_text)}):\n{response_text}', flush=True)
             print(f'{"="*60}', flush=True)
 
-            # A resposta pode ter um wrapper, tentar extrair o array
-            result = json.loads(response_text)
+            # Tentar parsear JSON diretamente
+            try:
+                result = json.loads(response_text)
+                print(f'[OCR MULTIPLO MISTRAL] JSON parseado com sucesso: tipo={type(result)}', flush=True)
+            except json.JSONDecodeError as e:
+                print(f'[OCR MULTIPLO MISTRAL] JSON direto falhou: {e}, tentando extrair array', flush=True)
+                try:
+                    transactions = self._parse_multiple_json(response_text, categories)
+                    print(f'[OCR MULTIPLO MISTRAL] Fallback parsing conseguiu {len(transactions)} transacoes', flush=True)
+                    return {'transactions': transactions}
+                except Exception as fallback_e:
+                    print(f'[OCR MULTIPLO MISTRAL] Fallback parsing tambem falhou: {fallback_e}', flush=True)
+                    # Último recurso: tentar Ollama
+                    print(f'[OCR MULTIPLO MISTRAL] Tentando Ollama como último recurso', flush=True)
+                    try:
+                        return self._extract_multiple_with_ollama(file_base64, file_type, categories)
+                    except Exception as ollama_e:
+                        print(f'[OCR MULTIPLO MISTRAL] Ollama também falhou: {ollama_e}', flush=True)
+                        raise e  # Re-raise the original JSON error
 
             print(f'[OCR MULTIPLO MISTRAL] JSON tipo={type(result).__name__} keys={list(result.keys()) if isinstance(result, dict) else "N/A"}', flush=True)
 
@@ -565,6 +872,14 @@ Regras:
             return {'transactions': transactions}
 
         except Exception as e:
+            error_str = str(e).lower()
+            if 'api error' in error_str or 'status 500' in error_str or 'service unavailable' in error_str:
+                print(f'[OCR MULTIPLO] Mistral API indisponível ({e}), tentando Ollama', flush=True)
+                try:
+                    return self._extract_multiple_with_ollama(file_base64, file_type, categories)
+                except Exception as ollama_e:
+                    print(f'[OCR MULTIPLO] Ollama fallback também falhou: {ollama_e}', flush=True)
+
             return {
                 'error': f'Erro ao processar com Mistral: {str(e)}',
                 'transactions': []
@@ -631,11 +946,32 @@ Regras:
             )
 
             response_text = chat_response.choices[0].message.content
-            extracted = json.loads(response_text)
 
+            print(f'\n{"="*50}', flush=True)
+            print(f'[OCR SINGLE MISTRAL] Resposta bruta (len={len(response_text) if response_text else 0}):\n{response_text}', flush=True)
+            print(f'{"="*50}', flush=True)
+
+            try:
+                extracted = json.loads(response_text)
+                print(f'[OCR SINGLE MISTRAL] JSON parseado com sucesso: tipo={type(extracted)}', flush=True)
+            except json.JSONDecodeError as e:
+                print(f'[OCR SINGLE MISTRAL] JSON parsing falhou: {e}, tentando fallback', flush=True)
+                # Fallback: tentar extrair dados do texto
+                extracted = self._parse_single_fallback(response_text, categories)
+                print(f'[OCR SINGLE MISTRAL] Fallback result: {extracted}', flush=True)
+
+            print(f'[OCR SINGLE MISTRAL] Chamando normalize com: {type(extracted)} - {extracted}', flush=True)
             return self._normalize_extracted_data(extracted, categories)
 
         except Exception as e:
+            error_str = str(e).lower()
+            if 'api error' in error_str or 'status 500' in error_str or 'service unavailable' in error_str:
+                print(f'[OCR SINGLE] Mistral API indisponível ({e}), tentando Ollama', flush=True)
+                try:
+                    return self._extract_with_ollama(file_base64, file_type, categories)
+                except Exception as ollama_e:
+                    print(f'[OCR SINGLE] Ollama fallback também falhou: {ollama_e}', flush=True)
+
             return {
                 'error': f'Erro ao processar com Mistral: {str(e)}',
                 'description': '',
@@ -952,6 +1288,9 @@ Retorne APENAS este JSON:
 
     def _normalize_extracted_data(self, data: Dict, categories: list) -> Dict[str, Any]:
         """Normaliza e valida os dados extraídos."""
+        if data is None:
+            data = {}
+
         description = data.get('description', '') or ''
 
         # Valor
@@ -1042,3 +1381,77 @@ Retorne APENAS este JSON:
             'confidence': min(max(confidence, 0), 100),
             'raw_data': data,  # Para debug
         }
+
+    def extract_multiple_from_receipt(self, image_file) -> Dict[str, Any]:
+        """
+        Extrai múltiplas transações de uma imagem ou PDF (lista, envelopes, urna, etc).
+
+        Args:
+            image_file: Arquivo de imagem (JPEG, PNG, PDF)
+
+        Returns:
+            Dict com: transactions (array), error (opcional)
+        """
+        file_name = getattr(image_file, 'name', 'receipt.jpg')
+        content_type = getattr(image_file, 'content_type', '').lower()
+
+        is_pdf = (file_name.lower().endswith('.pdf') or
+                   content_type == 'application/pdf')
+
+        categories = list(CategoryModel.objects.values_list('name', flat=True))
+        use_mistral = (not self.debug_mode) or self.force_mistral
+
+        if is_pdf:
+            file_content = image_file.read()
+            pdf_text = self._extract_text_from_pdf(file_content)
+            if self._is_pdf_text_sufficient(pdf_text):
+                logger.info(f"PDF múltiplo com texto ({len(pdf_text)} chars), extração via texto direto")
+                if use_mistral:
+                    return self._extract_text_with_mistral(pdf_text, categories, multiple=True)
+                else:
+                    return self._extract_text_with_ollama(pdf_text, categories, multiple=True)
+
+            if use_mistral and MISTRAL_SDK_AVAILABLE:
+                try:
+                    return self._extract_pdf_native_mistral(file_content, categories, multiple=True)
+                except Exception as e:
+                    logger.warning(f"Mistral PDF nativo falhou: {e}, usando conversão para imagem")
+
+            file_base64, page_count = self._prepare_pdf_for_vision(file_content)
+            if file_base64 is None:
+                return {
+                    'error': 'PDF vazio ou não foi possível converter.',
+                    'transactions': []
+                }
+            logger.info(f"PDF múltiplo convertido para imagem ({page_count} página(s))")
+
+            if use_mistral:
+                return self._extract_multiple_with_mistral(file_base64, 'image/png', categories)
+            else:
+                return self._extract_multiple_with_ollama(file_base64, 'image/png', categories)
+        else:
+            # Handle images (non-PDF)
+            try:
+                img = Image.open(image_file)
+            except Exception as e:
+                return {
+                    "error": f"Erro ao ler imagem: {str(e)}",
+                    "transactions": []
+                }
+
+            width, height = img.size
+            if width < 50 or height < 50:
+                return {
+                    "error": f"Imagem muito pequena ({width}x{height}). Mínimo: 50x50 pixels.",
+                    "transactions": []
+                }
+
+            img_buffer = io.BytesIO()
+            img.save(img_buffer, format="PNG")
+            img_buffer.seek(0)
+            file_base64 = base64.b64encode(img_buffer.read()).decode("utf-8")
+
+            if use_mistral:
+                return self._extract_multiple_with_mistral(file_base64, "image/png", categories)
+            else:
+                return self._extract_multiple_with_ollama(file_base64, "image/png", categories)
