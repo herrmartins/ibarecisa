@@ -1,0 +1,401 @@
+{% extends "treasury/base.html" %}
+{% load static %}
+
+{% block header_title %}Diagnóstico da Tesouraria{% endblock %}
+{% block header_subtitle %}Painel de diagnóstico para superusuários{% endblock %}
+
+{% block treasury_content %}
+<div x-data="diagnosisDashboard()" x-init="init()" x-cloak>
+
+    <!-- Loading -->
+    <div x-show="loading" class="flex justify-center py-12">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+    </div>
+
+    <!-- Error -->
+    <div x-show="error && !loading" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+        <p class="text-red-700" x-text="error"></p>
+    </div>
+
+    <!-- Content -->
+    <div x-show="!loading && !error">
+
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4 mb-8" x-show="report.summary">
+            <div class="bg-white rounded-lg shadow p-4">
+                <p class="text-xs text-gray-500 uppercase">Períodos</p>
+                <p class="text-2xl font-bold" x-text="report.summary?.total_periods || 0"></p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4">
+                <p class="text-xs text-gray-500 uppercase">Abertos</p>
+                <p class="text-2xl font-bold text-green-600" x-text="report.summary?.open_periods || 0"></p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4">
+                <p class="text-xs text-gray-500 uppercase">Fechados</p>
+                <p class="text-2xl font-bold text-yellow-600" x-text="report.summary?.closed_periods || 0"></p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4">
+                <p class="text-xs text-gray-500 uppercase">Arquivados</p>
+                <p class="text-2xl font-bold text-gray-600" x-text="report.summary?.archived_periods || 0"></p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4">
+                <p class="text-xs text-gray-500 uppercase">Transações</p>
+                <p class="text-2xl font-bold" x-text="report.summary?.total_transactions || 0"></p>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4">
+                <p class="text-xs text-gray-500 uppercase">Snapshots</p>
+                <p class="text-2xl font-bold" x-text="report.summary?.total_snapshots || 0"></p>
+            </div>
+        </div>
+
+        <!-- Issues Alert -->
+        <div x-show="report.issues && report.issues.length > 0" class="mb-8">
+            <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                <div class="flex items-center gap-2 mb-2">
+                    <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                    <h3 class="font-bold text-red-800" x-text="report.issues?.length + ' problemas encontrados'"></h3>
+                </div>
+                <div class="space-y-2 max-h-48 overflow-y-auto">
+                    <template x-for="(issue, idx) in report.issues" :key="idx">
+                        <div class="flex items-start gap-2 text-sm">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium flex-shrink-0"
+                                  :class="issue.severity === 'error' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'"
+                                  x-text="issue.severity === 'error' ? 'ERRO' : 'AVISO'"></span>
+                            <span x-show="issue.period" class="text-gray-500 flex-shrink-0" x-text="'[' + issue.period + ']'"></span>
+                            <span x-text="issue.message"></span>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        </div>
+
+        <!-- No issues -->
+        <div x-show="report.issues && report.issues.length === 0" class="mb-8">
+            <div class="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-2">
+                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span class="text-green-800 font-medium">Nenhum problema encontrado!</span>
+            </div>
+        </div>
+
+        <!-- Periods Table -->
+        <div class="bg-white rounded-lg shadow overflow-hidden mb-8">
+            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h2 class="text-lg font-semibold text-gray-800">Períodos Contábeis</h2>
+                <button @click="loadReport()" class="text-sm text-blue-600 hover:text-blue-800">Atualizar</button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Mês</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Abertura</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Fechamento</th>
+                            <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Tx</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cadeia</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Problemas</th>
+                            <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <template x-for="p in report.periods" :key="p.id">
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-4 py-3 text-sm font-medium text-gray-900" x-text="p.month_label"></td>
+                                <td class="px-4 py-3">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                                          :class="{
+                                              'bg-green-100 text-green-800': p.status === 'open',
+                                              'bg-yellow-100 text-yellow-800': p.status === 'closed',
+                                              'bg-gray-100 text-gray-800': p.status === 'archived',
+                                          }"
+                                          x-text="p.status === 'open' ? 'Aberto' : p.status === 'closed' ? 'Fechado' : 'Arquivado'"></span>
+                                </td>
+                                <td class="px-4 py-3 text-sm text-right text-gray-600" x-text="formatBRL(p.opening_balance)"></td>
+                                <td class="px-4 py-3 text-sm text-right text-gray-600"
+                                    x-text="p.closing_balance != null ? formatBRL(p.closing_balance) : '-'"></td>
+                                <td class="px-4 py-3 text-sm text-right text-gray-600" x-text="p.transactions_count"></td>
+                                <td class="px-4 py-3">
+                                    <span x-show="p.chain_ok" class="text-green-600 text-sm font-medium">OK</span>
+                                    <span x-show="!p.chain_ok" class="text-red-600 text-sm font-bold">QUEBRADA</span>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <template x-for="(issue, idx) in p.issues" :key="idx">
+                                        <div class="text-xs mb-1"
+                                             :class="issue.severity === 'error' ? 'text-red-600' : 'text-yellow-600'"
+                                             x-text="issue.message"></div>
+                                    </template>
+                                    <span x-show="p.issues.length === 0" class="text-xs text-gray-400">-</span>
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    <div class="flex items-center justify-center gap-1">
+                                        <template x-if="p.status !== 'open'">
+                                            <button @click="reopenPeriod(p)"
+                                                    class="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200"
+                                                    title="Reabrir período (cria snapshot automático)">
+                                                Reabrir
+                                            </button>
+                                        </template>
+                                        <button @click="createSnapshot(p)"
+                                                class="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded hover:bg-blue-200"
+                                                title="Criar snapshot">
+                                            Snapshot
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Snapshots & Audit -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Snapshots -->
+            <div class="bg-white rounded-lg shadow overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-lg font-semibold text-gray-800">Snapshots Disponíveis</h2>
+                    <p class="text-xs text-gray-500 mt-1">Pontos de restauração para revertir alterações</p>
+                </div>
+                <div class="divide-y divide-gray-100 max-h-96 overflow-y-auto">
+                    <template x-for="snap in report.snapshots" :key="snap.id">
+                        <div class="px-6 py-3 hover:bg-gray-50">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <span class="text-sm font-medium" x-text="snap.period_label"></span>
+                                    <span class="text-xs text-gray-400 ml-2" x-text="snap.created_at?.substring(0, 16).replace('T', ' ')"></span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs text-gray-500" x-text="snap.transactions_count + ' tx'"></span>
+                                    <span x-show="snap.was_closed" class="text-xs bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded">fechado</span>
+                                    <button @click="restoreSnapshot(snap)"
+                                            class="px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200">
+                                        Restaurar
+                                    </button>
+                                </div>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1 truncate" x-text="snap.created_by + ': ' + snap.reason"></p>
+                        </div>
+                    </template>
+                    <div x-show="!report.snapshots || report.snapshots.length === 0" class="px-6 py-8 text-center text-gray-400 text-sm">
+                        Nenhum snapshot encontrado
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Audit -->
+            <div class="bg-white rounded-lg shadow overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-lg font-semibold text-gray-800">Auditoria Recente</h2>
+                    <p class="text-xs text-gray-500 mt-1">Últimas ações registradas</p>
+                </div>
+                <div class="divide-y divide-gray-100 max-h-96 overflow-y-auto">
+                    <template x-for="(log, idx) in report.audit_recent" :key="idx">
+                        <div class="px-6 py-3 hover:bg-gray-50">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-medium px-2 py-0.5 rounded"
+                                      :class="{
+                                          'bg-green-100 text-green-800': log.action.includes('created') || log.action.includes('restored'),
+                                          'bg-red-100 text-red-800': log.action.includes('deleted') || log.action.includes('reset'),
+                                          'bg-yellow-100 text-yellow-800': log.action.includes('closed') || log.action.includes('reopened'),
+                                          'bg-blue-100 text-blue-800': log.action.includes('updated') || log.action.includes('snapshot'),
+                                      }"
+                                      x-text="log.action"></span>
+                                <span class="text-xs text-gray-400" x-text="log.timestamp?.substring(0, 16).replace('T', ' ')"></span>
+                            </div>
+                            <p class="text-sm text-gray-700 mt-1" x-text="log.description || log.user_name"></p>
+                            <p class="text-xs text-gray-400" x-text="log.user_name"></p>
+                        </div>
+                    </template>
+                    <div x-show="!report.audit_recent || report.audit_recent.length === 0" class="px-6 py-8 text-center text-gray-400 text-sm">
+                        Nenhum registro encontrado
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CLI Reference -->
+        <div class="mt-8 bg-gray-50 border border-gray-200 rounded-lg p-6">
+            <h3 class="text-sm font-bold text-gray-700 mb-3">Comandos CLI equivalentes</h3>
+            <div class="space-y-2 text-xs font-mono text-gray-600">
+                <p><span class="text-gray-400"># Diagnóstico completo</span></p>
+                <p class="bg-white rounded px-3 py-1">python manage.py treasury_diagnosis</p>
+                <p class="bg-white rounded px-3 py-1">python manage.py treasury_diagnosis --output json --json-file diag.json</p>
+                <p class="mt-2"><span class="text-gray-400"># Criar snapshot</span></p>
+                <p class="bg-white rounded px-3 py-1">python manage.py snapshot_period --month 01/2024 --reason "Antes de editar"</p>
+                <p class="mt-2"><span class="text-gray-400"># Restaurar de snapshot</span></p>
+                <p class="bg-white rounded px-3 py-1">python manage.py restore_period --snapshot-id UUID</p>
+                <p class="mt-2"><span class="text-gray-400"># Verificação de integridade</span></p>
+                <p class="bg-white rounded px-3 py-1">python manage.py check_treasury --checks T</p>
+                <p class="bg-white rounded px-3 py-1">python manage.py fix_treasury --fixes 6</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Modal -->
+    <div x-show="confirmModal.show"
+         x-transition
+         class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+         style="display: none;">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full shadow-xl">
+            <h3 class="text-lg font-bold text-gray-900 mb-2" x-text="confirmModal.title"></h3>
+            <p class="text-sm text-gray-600 mb-4" x-text="confirmModal.message"></p>
+            <div x-show="confirmModal.showReason" class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Motivo</label>
+                <textarea x-model="confirmModal.reason" rows="2" class="w-full rounded-md border-gray-300 shadow-sm text-sm" placeholder="Descreva o motivo..."></textarea>
+            </div>
+            <div class="flex justify-end gap-3">
+                <button @click="confirmModal.show = false" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg text-sm">Cancelar</button>
+                <button @click="confirmAction()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm" x-text="confirmModal.actionLabel"></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function diagnosisDashboard() {
+    return {
+        loading: true,
+        error: null,
+        report: { summary: {}, periods: [], issues: [], snapshots: [], audit_recent: [] },
+        confirmModal: {
+            show: false,
+            title: '',
+            message: '',
+            reason: '',
+            showReason: true,
+            actionLabel: 'Confirmar',
+            callback: null,
+        },
+
+        async init() {
+            await this.loadReport();
+        },
+
+        async loadReport() {
+            this.loading = true;
+            this.error = null;
+            try {
+                const response = await fetch('/treasury/api/diagnosis/', {
+                    headers: { 'X-CSRFToken': this.getCookie('csrftoken') }
+                });
+                if (!response.ok) {
+                    if (response.status === 403) throw new Error('Acesso negado. Apenas superusuários.');
+                    throw new Error('Erro ao carregar diagnóstico: ' + response.status);
+                }
+                this.report = await response.json();
+            } catch (e) {
+                this.error = e.message;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        createSnapshot(period) {
+            this.confirmModal = {
+                show: true,
+                title: `Criar Snapshot: ${period.month_label}`,
+                message: `Criar ponto de restauração para ${period.month_label}? Isso permite reverter as transações depois.`,
+                reason: '',
+                showReason: true,
+                actionLabel: 'Criar Snapshot',
+                callback: async () => {
+                    const response = await fetch('/treasury/api/diagnosis/snapshot/', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': this.getCookie('csrftoken') },
+                        body: JSON.stringify({
+                            period_id: period.id,
+                            reason: this.confirmModal.reason || `Snapshot de ${period.month_label}`,
+                        }),
+                    });
+                    if (response.ok) {
+                        const data = await response.json();
+                        Alpine.store('treasuryUi')?.notify(`Snapshot criado: ${data.transactions_count} transações`, 'success');
+                        await this.loadReport();
+                    } else {
+                        const data = await response.json().catch(() => ({}));
+                        Alpine.store('treasuryUi')?.notify(data.error || 'Erro ao criar snapshot', 'error');
+                    }
+                },
+            };
+        },
+
+        reopenPeriod(period) {
+            this.confirmModal = {
+                show: true,
+                title: `Reabrir Período: ${period.month_label}`,
+                message: `ATENÇÃO: Reabrir ${period.month_label}? Um snapshot automático será criado antes. O closing_balance será limpo.`,
+                reason: '',
+                showReason: true,
+                actionLabel: 'Reabrir Período',
+                callback: async () => {
+                    const response = await fetch('/treasury/api/diagnosis/reopen/', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': this.getCookie('csrftoken') },
+                        body: JSON.stringify({
+                            period_id: period.id,
+                            reason: this.confirmModal.reason || 'Reabertura via dashboard',
+                        }),
+                    });
+                    if (response.ok) {
+                        Alpine.store('treasuryUi')?.notify(`${period.month_label} reaberto com sucesso!`, 'success');
+                        await this.loadReport();
+                    } else {
+                        const data = await response.json().catch(() => ({}));
+                        Alpine.store('treasuryUi')?.notify(data.error || 'Erro ao reabrir', 'error');
+                    }
+                },
+            };
+        },
+
+        restoreSnapshot(snapshot) {
+            this.confirmModal = {
+                show: true,
+                title: `Restaurar Snapshot: ${snapshot.period_label}`,
+                message: `ATENÇÃO: Isso vai DELETAR todas as transações atuais de ${snapshot.period_label} e restaurar do snapshot. Um snapshot automático será criado antes. Deseja continuar?`,
+                reason: '',
+                showReason: false,
+                actionLabel: 'Restaurar',
+                callback: async () => {
+                    const response = await fetch('/treasury/api/diagnosis/restore/', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': this.getCookie('csrftoken') },
+                        body: JSON.stringify({ snapshot_id: snapshot.id }),
+                    });
+                    if (response.ok) {
+                        const data = await response.json();
+                        Alpine.store('treasuryUi')?.notify(data.message, 'success');
+                        await this.loadReport();
+                    } else {
+                        const data = await response.json().catch(() => ({}));
+                        Alpine.store('treasuryUi')?.notify(data.error || 'Erro ao restaurar', 'error');
+                    }
+                },
+            };
+        },
+
+        async confirmAction() {
+            this.confirmModal.show = false;
+            if (this.confirmModal.callback) {
+                await this.confirmModal.callback();
+            }
+        },
+
+        formatBRL(value) {
+            const num = value != null ? parseFloat(value) : 0;
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(num);
+        },
+
+        getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        },
+    };
+}
+</script>
+{% endblock %}

@@ -35,6 +35,10 @@ class AuditLog(models.Model):
         ('snapshot_created', 'Snapshot Criado'),
         ('snapshot_restored', 'Snapshot Restaurado'),
 
+        # Reset de período
+        ('period_reset', 'Período Resetado'),
+        ('period_restored', 'Período Restaurado'),
+
         # Relatórios
         ('report_generated', 'Relatório Gerado'),
         ('report_regenerated', 'Relatório Regenerado'),

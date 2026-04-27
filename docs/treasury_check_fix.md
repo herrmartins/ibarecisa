@@ -140,3 +140,90 @@ A verificacao [10] (Consistencia de sinal) alerta quando ha mistura de padroes.
 # Verificacao diaria com JSON
 0 2 * * * cd /path/to/project && python manage.py check_treasury --checks 1,2,3,4,5,6,8,9,10 --output json --json-file /var/log/treasury_check.json
 ```
+
+---
+
+## Diagnostico e Restauracao (Superuser)
+
+### `treasury_diagnosis` — Relatorio completo do estado
+
+```bash
+# Terminal interativo
+python manage.py treasury_diagnosis
+
+# JSON (para scripts)
+python manage.py treasury_diagnosis --output json
+python manage.py treasury_diagnosis --output json --json-file diag.json
+```
+
+**O que diagnostica:**
+- Status de todos os periodos (aberto/fechado/arquivado)
+- Cadeia de saldos (opening_balance herda do closing_balance anterior?)
+- Transacoes orfas (sem accounting_period)
+- Gaps entre periodos
+- Mistura de padroes de sinal
+- Transacoes vinculadas ao periodo errado
+- Snapshots disponiveis para restore
+- Auditoria recente
+
+**Pagina web:** `/treasury/admin/diagnostico/` (apenas superuser)
+
+---
+
+### `snapshot_period` — Criar ponto de restauracao
+
+```bash
+python manage.py snapshot_period --month 01/2024 --reason "Antes de editar"
+```
+
+Cria um `PeriodSnapshot` com todas as transacoes e saldos. Permite restaurar depois.
+
+---
+
+### `restore_period` — Restaurar a partir de snapshot
+
+```bash
+# Ver o que seria restaurado (dry-run)
+python manage.py restore_period --snapshot-id UUID --dry-run
+
+# Executar restauracao
+python manage.py restore_period --snapshot-id UUID --no-confirm
+
+# Com usuario para auditoria
+python manage.py restore_period --snapshot-id UUID --user-id 1
+```
+
+**O que faz:**
+1. Cria auto-snapshot do estado atual (para reverter o restore)
+2. Deleta transacoes, estornos, relatorios e frozen reports do periodo
+3. Recria transacoes a partir do snapshot
+4. Registra tudo no AuditLog
+
+---
+
+## Fluxo: Editar periodo fechado
+
+```bash
+# 1. Diagnosticar
+python manage.py treasury_diagnosis
+
+# 2. Criar snapshot antes de reabrir
+python manage.py snapshot_period --month 01/2024 --reason "Antes de reabrir para edicao"
+
+# 3. Reabrir (via dashboard ou API)
+# Dashboard: /treasury/admin/diagnostico/ -> botao "Reabrir"
+# API: POST /treasury/api/diagnosis/reopen/ { period_id: X }
+
+# 4. Editar/transacoes livremente
+
+# 5. Se algo deu errado, restaurar:
+python manage.py restore_period --snapshot-id UUID
+```
+
+## Bugs corrigidos
+
+| Bug | Arquivo | Correcao |
+|-----|---------|----------|
+| `TransactionUpdateSerializer` checava `is_closed` em vez de `not is_open` | `serializers/__init__.py` | Período `archived` agora também bloqueia edição |
+| `TransactionViewSet.perform_destroy` sem verificação de período | `api/views.py` | Adicionado bloqueio para períodos fechados/arquivados |
+| `TransactionListSerializer` sem `can_be_reversed` | `serializers/__init__.py` | Botão "Estornar" agora aparece na lista de transações |

@@ -491,7 +491,12 @@ class TransactionViewSet(viewsets.ModelViewSet):
 
     def perform_destroy(self, instance):
         """Registra log de auditoria antes de deletar transação."""
-        # Salvar valores para auditoria
+        if instance.accounting_period and not instance.accounting_period.is_open:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied(
+                "Não é possível excluir transações de períodos fechados ou arquivados."
+            )
+
         old_values = {
             'description': instance.description,
             'amount': float(instance.amount),
@@ -502,7 +507,6 @@ class TransactionViewSet(viewsets.ModelViewSet):
 
         period_id = instance.accounting_period.id if instance.accounting_period else None
 
-        # Log de auditoria
         AuditLog.log(
             action='transaction_deleted',
             entity_type='TransactionModel',
@@ -515,7 +519,6 @@ class TransactionViewSet(viewsets.ModelViewSet):
             request=self.request,
         )
 
-        # Deletar a transação
         instance.delete()
 
     @action(detail=True, methods=['get'])

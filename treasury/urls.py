@@ -1,6 +1,5 @@
 from django.urls import path
 
-# New template-based views
 from treasury.views.template_views import (
     TreasuryDashboardView,
     PeriodListView,
@@ -17,20 +16,24 @@ from treasury.views.template_views import (
     BalanceSheetView,
     AuditLogView,
     ChartsView,
+    DiagnosisView,
 )
 
-# PDF generation views (used by new system)
 from treasury.views.generate_balance_sheet_pdf_view import GenerateBalanceSheetPDFView
 from treasury.views.generate_analytical_report_pdf_view import generate_analytical_report_pdf
-
-# Excel export view
 from treasury.views.generate_monthly_excel_view import generate_monthly_excel
+
+from treasury.api.diagnosis_views import (
+    DiagnosisView as DiagnosisAPIView,
+    DiagnosisSnapshotView,
+    DiagnosisRestoreView,
+    DiagnosisReopenView,
+)
 
 app_name = "treasury"
 
 urlpatterns = [
     # ===== MAIN ROUTE =====
-    # Point to dashboard instead of old home
     path("", TreasuryDashboardView.as_view(), name="dashboard"),
 
     # ===== PERIODS =====
@@ -61,4 +64,11 @@ urlpatterns = [
 
     # ===== CHARTS =====
     path('graficos/', ChartsView.as_view(), name='charts'),
+
+    # ===== SUPERUSER DIAGNOSIS =====
+    path('admin/diagnostico/', DiagnosisView.as_view(), name='diagnosis'),
+    path('api/diagnosis/', DiagnosisAPIView.as_view(), name='api-diagnosis'),
+    path('api/diagnosis/snapshot/', DiagnosisSnapshotView.as_view(), name='api-diagnosis-snapshot'),
+    path('api/diagnosis/restore/', DiagnosisRestoreView.as_view(), name='api-diagnosis-restore'),
+    path('api/diagnosis/reopen/', DiagnosisReopenView.as_view(), name='api-diagnosis-reopen'),
 ]

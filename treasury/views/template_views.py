@@ -311,3 +311,13 @@ class ChartsView(IsTreasuryUserMixin, LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         context['page_title'] = 'Gráficos'
         return context
+
+
+class DiagnosisView(IsSuperUserOnlyMixin, LoginRequiredMixin, TemplateView):
+    """Dashboard de diagnóstico para superusuários."""
+    template_name = 'treasury/admin/diagnosis.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['page_title'] = 'Diagnóstico da Tesouraria'
+        return context

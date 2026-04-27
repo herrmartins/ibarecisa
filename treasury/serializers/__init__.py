@@ -285,6 +285,8 @@ class TransactionListSerializer(serializers.ModelSerializer):
     period_name = serializers.SerializerMethodField()
     period_status = serializers.CharField(source='accounting_period.status', read_only=True, allow_null=True)
     can_be_edited = serializers.BooleanField(read_only=True)
+    can_be_reversed = serializers.BooleanField(read_only=True)
+    can_be_deleted = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = TransactionModel
@@ -302,6 +304,8 @@ class TransactionListSerializer(serializers.ModelSerializer):
             'period_status',
             'transaction_type',
             'can_be_edited',
+            'can_be_reversed',
+            'can_be_deleted',
         ]
 
     def get_period_name(self, obj):
@@ -443,10 +447,9 @@ class TransactionUpdateSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         """Atualiza a transação com validação de período."""
-        # Verificar se o período está fechado
-        if instance.accounting_period and instance.accounting_period.is_closed:
+        if instance.accounting_period and not instance.accounting_period.is_open:
             raise serializers.ValidationError(
-                "Não é possível editar transações de períodos fechados. "
+                "Não é possível editar transações de períodos fechados ou arquivados. "
                 "Utilize a funcionalidade de estorno."
             )
 
