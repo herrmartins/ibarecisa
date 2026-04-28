@@ -349,6 +349,7 @@ class AccountingPeriod(models.Model):
         para garantir integridade.
         """
         from treasury.models import FrozenReport
+        from .monthly_report_model import MonthlyReportModel
         from django.template.loader import render_to_string
         import weasyprint
 

@@ -238,9 +238,6 @@ class TemplateViewPermissionsTest(TreasuryPermissionTestCase):
 class APIViewPermissionsTest(APITestCase):
     """Testa permissões das views da API."""
 
-    # Permitir acesso ao banco de dados audit para os testes
-    databases = ['default', 'audit']
-
     def setUp(self):
         """Configura usuários e dados básicos para os testes."""
         # Criar usuários

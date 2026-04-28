@@ -21,7 +21,6 @@ from treasury.models import (
 
 
 class DiagnosisTestBase(APITestCase):
-    databases = ['default', 'audit']
 
     def setUp(self):
         self.superuser = CustomUser.objects.create_superuser(

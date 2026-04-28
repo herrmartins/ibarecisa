@@ -104,24 +104,7 @@ DATABASES = {
                     ),
                 },
     },
-    "audit": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "audit.sqlite3",
-        "OPTIONS": {
-                    'timeout': 20,
-                    'init_command': (
-                        'PRAGMA journal_mode=WAL;'
-                        'PRAGMA synchronous=NORMAL;'
-                        'PRAGMA busy_timeout=5000;'
-                    ),
-                },
-    }
 }
-
-# Router para direcionar models de auditoria para banco separado
-DATABASE_ROUTERS = [
-    "treasury.routers.AuditRouter",
-]
 
 
 # Password validation
