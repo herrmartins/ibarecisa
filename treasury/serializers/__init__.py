@@ -176,7 +176,6 @@ class AccountingPeriodSimpleSerializer(serializers.ModelSerializer):
         fields = ['id', 'month', 'month_name', 'year', 'status', 'opening_balance', 'closing_balance', 'transactions_summary']
 
     def get_transactions_summary(self, obj):
-        """Retorna o resumo das transações do período."""
         from treasury.models.transaction import TransactionModel
 
         transactions = TransactionModel.objects.filter(
@@ -188,11 +187,13 @@ class AccountingPeriodSimpleSerializer(serializers.ModelSerializer):
             total=models.Sum('amount')
         )['total'] or 0
 
-        negative = transactions.filter(is_positive=False).aggregate(
+        neg_signed = transactions.filter(is_positive=False, amount__lt=0).aggregate(
             total=models.Sum('amount')
         )['total'] or 0
-
-        # Net = positivas + negativas (negative já é negativo)
+        neg_unsigned = transactions.filter(is_positive=False, amount__gt=0).aggregate(
+            total=models.Sum('amount')
+        )['total'] or 0
+        negative = neg_signed - neg_unsigned
         net = positive + negative
 
         return {

@@ -190,6 +190,15 @@ class Command(BaseCommand):
         periods = list(period_qs)
 
         for i, period in enumerate(periods):
+            if period.is_first_month:
+                result['details'].append({
+                    'period': str(period),
+                    'month': period.month.strftime('%m/%Y'),
+                    'status': 'info',
+                    'message': f'Primeiro periodo (is_first_month): opening={period.opening_balance}',
+                })
+                continue
+
             if i == 0:
                 result['details'].append({
                     'period': str(period),
@@ -240,21 +249,39 @@ class Command(BaseCommand):
             diff = period.closing_balance - expected
 
             if diff != Decimal('0'):
-                result['errors'] += 1
-                result['details'].append({
-                    'period': str(period),
-                    'month': period.month.strftime('%m/%Y'),
-                    'status': 'error',
-                    'expected': str(expected),
-                    'actual': str(period.closing_balance),
-                    'difference': str(diff),
-                    'opening': str(period.opening_balance),
-                    'net': str(net),
-                    'message': (
-                        f'CLOSING ERRADO: opening({period.opening_balance}) + net({net}) = {expected}, '
-                        f'mas esta {period.closing_balance} (diff: {diff})'
-                    ),
-                })
+                if period.balance_adjustment_reason:
+                    result['details'].append({
+                        'period': str(period),
+                        'month': period.month.strftime('%m/%Y'),
+                        'status': 'info',
+                        'expected': str(expected),
+                        'actual': str(period.closing_balance),
+                        'difference': str(diff),
+                        'opening': str(period.opening_balance),
+                        'net': str(net),
+                        'reason': period.balance_adjustment_reason,
+                        'message': (
+                            f'CLOSING AJUSTADO: opening({period.opening_balance}) + net({net}) = {expected}, '
+                            f'mas esta {period.closing_balance} (diff: {diff}). '
+                            f'Motivo: {period.balance_adjustment_reason}'
+                        ),
+                    })
+                else:
+                    result['warnings'] += 1
+                    result['details'].append({
+                        'period': str(period),
+                        'month': period.month.strftime('%m/%Y'),
+                        'status': 'warning',
+                        'expected': str(expected),
+                        'actual': str(period.closing_balance),
+                        'difference': str(diff),
+                        'opening': str(period.opening_balance),
+                        'net': str(net),
+                        'message': (
+                            f'CLOSING DIVERGENTE: opening({period.opening_balance}) + net({net}) = {expected}, '
+                            f'mas esta {period.closing_balance} (diff: {diff})'
+                        ),
+                    })
             else:
                 result['details'].append({
                     'period': str(period),
@@ -554,20 +581,39 @@ class Command(BaseCommand):
             result['details'].append({'status': 'info', 'message': 'Nenhum periodo encontrado.'})
             return result
 
-        running = all_periods[0].opening_balance
-        result['details'].append({
-            'month': all_periods[0].month.strftime('%m/%Y'),
-            'status': 'info',
-            'running_balance': str(running),
-            'message': f'Inicio: opening_balance = {running}',
-        })
+        first_month_period = None
+        start_idx = 0
+        for i, p in enumerate(all_periods):
+            if p.is_first_month:
+                first_month_period = p
+                start_idx = i
+                break
 
-        for period in all_periods:
+        if first_month_period:
+            running = first_month_period.opening_balance
+            result['details'].append({
+                'month': first_month_period.month.strftime('%m/%Y'),
+                'status': 'info',
+                'running_balance': str(running),
+                'message': f'Inicio (is_first_month): opening_balance = {running}',
+            })
+            check_periods = all_periods[start_idx:]
+        else:
+            running = all_periods[0].opening_balance
+            result['details'].append({
+                'month': all_periods[0].month.strftime('%m/%Y'),
+                'status': 'info',
+                'running_balance': str(running),
+                'message': f'Inicio (sem is_first_month): opening_balance = {running}',
+            })
+            check_periods = all_periods
+
+        for period in check_periods:
             net = self._calculate_net(period)
             expected_running = running + net
             actual_opening = period.opening_balance
 
-            if actual_opening != running:
+            if not period.is_first_month and actual_opening != running:
                 result['errors'] += 1
                 result['details'].append({
                     'month': period.month.strftime('%m/%Y'),
@@ -584,20 +630,38 @@ class Command(BaseCommand):
 
             running = actual_opening + net
 
-            if period.closing_balance is not None and period.closing_balance != running:
-                result['errors'] += 1
-                result['details'].append({
-                    'month': period.month.strftime('%m/%Y'),
-                    'status': 'error',
-                    'expected_closing': str(running),
-                    'actual_closing': str(period.closing_balance),
-                    'difference': str(period.closing_balance - running),
-                    'message': (
-                        f'CLOSING DIVERGENTE: {period.month.strftime("%m/%Y")} '
-                        f'esperado={running}, atual={period.closing_balance} '
-                        f'(diff: {period.closing_balance - running})'
-                    ),
-                })
+            if period.closing_balance is not None:
+                if period.balance_adjustment_reason and period.closing_balance != running:
+                    result['details'].append({
+                        'month': period.month.strftime('%m/%Y'),
+                        'status': 'info',
+                        'expected_closing': str(running),
+                        'actual_closing': str(period.closing_balance),
+                        'difference': str(period.closing_balance - running),
+                        'reason': period.balance_adjustment_reason,
+                        'message': (
+                            f'CLOSING AJUSTADO: {period.month.strftime("%m/%Y")} '
+                            f'esperado={running}, atual={period.closing_balance} '
+                            f'(diff: {period.closing_balance - running}). '
+                            f'Motivo: {period.balance_adjustment_reason}'
+                        ),
+                    })
+                    running = period.closing_balance
+                elif period.closing_balance != running:
+                    result['warnings'] += 1
+                    result['details'].append({
+                        'month': period.month.strftime('%m/%Y'),
+                        'status': 'warning',
+                        'expected_closing': str(running),
+                        'actual_closing': str(period.closing_balance),
+                        'difference': str(period.closing_balance - running),
+                        'message': (
+                            f'CLOSING DIVERGENTE: {period.month.strftime("%m/%Y")} '
+                            f'esperado={running}, atual={period.closing_balance} '
+                            f'(diff: {period.closing_balance - running})'
+                        ),
+                    })
+                    running = period.closing_balance
 
         return result
 

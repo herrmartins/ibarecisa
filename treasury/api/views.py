@@ -545,11 +545,13 @@ class TransactionViewSet(viewsets.ModelViewSet):
             total=Coalesce(Sum('amount'), Decimal('0.00'), output_field=DecimalField())
         )['total']
 
-        negative = queryset.filter(is_positive=False).aggregate(
+        neg_signed = queryset.filter(is_positive=False, amount__lt=0).aggregate(
             total=Coalesce(Sum('amount'), Decimal('0.00'), output_field=DecimalField())
         )['total']
-
-        # Net: positivas + negativas (negative já é negativo)
+        neg_unsigned = queryset.filter(is_positive=False, amount__gt=0).aggregate(
+            total=Coalesce(Sum('amount'), Decimal('0.00'), output_field=DecimalField())
+        )['total']
+        negative = neg_signed - neg_unsigned
         net = positive + negative
 
         count = queryset.count()
@@ -698,17 +700,17 @@ class MonthlyReportView(APIView):
                 if transaction.is_positive:
                     categories[cat_name]['positive'] += transaction.amount
                 else:
-                    categories[cat_name]['negative'] += transaction.amount
+                    categories[cat_name]['negative'] += abs(transaction.amount)
                 categories[cat_name]['count'] += 1
 
-            # Formatar categorias para resposta
             categories_list = []
             for name, data in categories.items():
+                net_cat = data['positive'] - data['negative']
                 categories_list.append({
                     'name': name,
                     'total_positive': float(data['positive']),
                     'total_negative': float(data['negative']),
-                    'net': float(data['positive'] + data['negative']),  # negative já é negativo
+                    'net': float(net_cat),
                     'count': data['count'],
                 })
 
@@ -1371,37 +1373,36 @@ class CashflowChartView(APIView):
                 month=TruncMonth('date')
             ).values('month').annotate(
                 revenues=Sum(Case(When(is_positive=True, then=F('amount')), default=Decimal('0.00'), output_field=DecimalField())),
-                expenses=Sum(Case(When(is_positive=False, then=F('amount')), default=Decimal('0.00'), output_field=DecimalField()))
+                expenses_signed=Sum(Case(When(is_positive=False, amount__lt=0, then=F('amount')), default=Decimal('0.00'), output_field=DecimalField())),
+                expenses_unsigned=Sum(Case(When(is_positive=False, amount__gt=0, then=F('amount')), default=Decimal('0.00'), output_field=DecimalField()))
             ).order_by('month')
 
-            # Build response
             months = []
             revenues = []
             expenses = []
             balance = []
             running_balance = Decimal('0.00')
 
-            # Get initial balance from transactions before start_date
             initial_balance = TransactionModel.objects.filter(
                 date__lt=start_date,
                 transaction_type='original'
             ).aggregate(
                 initial_revenue=Sum(Case(When(is_positive=True, then=F('amount')), default=Decimal('0.00'), output_field=DecimalField())),
-                initial_expense=Sum(Case(When(is_positive=False, then=F('amount')), default=Decimal('0.00'), output_field=DecimalField()))
+                initial_exp_signed=Sum(Case(When(is_positive=False, amount__lt=0, then=F('amount')), default=Decimal('0.00'), output_field=DecimalField())),
+                initial_exp_unsigned=Sum(Case(When(is_positive=False, amount__gt=0, then=F('amount')), default=Decimal('0.00'), output_field=DecimalField()))
             )
-            running_balance = (initial_balance['initial_revenue'] or Decimal('0.00')) + (initial_balance['initial_expense'] or Decimal('0.00'))
+            running_balance = (initial_balance['initial_revenue'] or Decimal('0.00')) + (initial_balance['initial_exp_signed'] or Decimal('0.00')) - (initial_balance['initial_exp_unsigned'] or Decimal('0.00'))
 
-            # Build lists from transactions (only months with data)
             for tx in transactions:
                 month_label = self._get_month_name(tx['month'].month, tx['month'].year)
                 months.append(month_label)
 
                 rev = float(tx['revenues'] or Decimal('0.00'))
-                exp = float(tx['expenses'] or Decimal('0.00'))
+                exp_val = float((tx['expenses_signed'] or Decimal('0.00')) - (tx['expenses_unsigned'] or Decimal('0.00')))
                 revenues.append(rev)
-                expenses.append(abs(exp))  # Show as positive for display
+                expenses.append(abs(exp_val))
 
-                running_balance += Decimal(str(rev)) + Decimal(str(exp))
+                running_balance += Decimal(str(rev)) + Decimal(str(exp_val))
                 balance.append(float(running_balance))
 
             return Response({
@@ -1505,27 +1506,42 @@ class ExpensesByCategoryChartView(APIView):
             else:
                 end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
 
-            # Get expenses by category - amount is already negative for expenses, so we negate to get positive
-            categories = TransactionModel.objects.filter(
+            neg_signed = TransactionModel.objects.filter(
                 date__gte=start_date,
                 date__lte=end_date,
                 is_positive=False,
+                amount__lt=0,
                 transaction_type='original'
             ).values(
                 category_name=Coalesce('category__name', Value('Sem categoria'))
             ).annotate(
                 total=Sum('amount')
-            ).order_by('total')  # Order by total (negative to positive)
+            )
 
-            labels = []
-            values = []
+            neg_unsigned = TransactionModel.objects.filter(
+                date__gte=start_date,
+                date__lte=end_date,
+                is_positive=False,
+                amount__gt=0,
+                transaction_type='original'
+            ).values(
+                category_name=Coalesce('category__name', Value('Sem categoria'))
+            ).annotate(
+                total=Sum('amount')
+            )
 
-            for cat in categories:
-                labels.append(cat['category_name'])
-                # Negate to get positive value for display
-                values.append(abs(float(cat['total'])))
+            cat_totals = {}
+            for cat in neg_signed:
+                name = cat['category_name']
+                cat_totals[name] = cat_totals.get(name, Decimal('0.00')) + (cat['total'] or Decimal('0.00'))
+            for cat in neg_unsigned:
+                name = cat['category_name']
+                cat_totals[name] = cat_totals.get(name, Decimal('0.00')) - (cat['total'] or Decimal('0.00'))
 
-            # Reverse so highest values are first
+            sorted_cats = sorted(cat_totals.items(), key=lambda x: x[1])
+            labels = [c[0] for c in sorted_cats]
+            values = [abs(float(c[1])) for c in sorted_cats]
+
             labels.reverse()
             values.reverse()
 
@@ -1575,10 +1591,10 @@ class MonthlyComparisonChartView(APIView):
                 month=TruncMonth('date')
             ).values('month').annotate(
                 revenues=Sum(Case(When(is_positive=True, then=F('amount')), default=Decimal('0.00'), output_field=DecimalField())),
-                expenses=Sum(Case(When(is_positive=False, then=F('amount')), default=Decimal('0.00'), output_field=DecimalField()))
+                expenses_signed=Sum(Case(When(is_positive=False, amount__lt=0, then=F('amount')), default=Decimal('0.00'), output_field=DecimalField())),
+                expenses_unsigned=Sum(Case(When(is_positive=False, amount__gt=0, then=F('amount')), default=Decimal('0.00'), output_field=DecimalField()))
             ).order_by('month')
 
-            # Build lists from transactions (only months with data)
             months = []
             revenues = []
             expenses = []
@@ -1588,7 +1604,8 @@ class MonthlyComparisonChartView(APIView):
                 month_label = f"{months_pt[tx['month'].month - 1]}/{str(tx['month'].year)[2:]}"
                 months.append(month_label)
                 revenues.append(float(tx['revenues'] or Decimal('0.00')))
-                expenses.append(abs(float(tx['expenses'] or Decimal('0.00'))))
+                exp_val = float((tx['expenses_signed'] or Decimal('0.00')) - (tx['expenses_unsigned'] or Decimal('0.00')))
+                expenses.append(abs(exp_val))
 
             return Response({
                 'categories': months,
@@ -1729,13 +1746,16 @@ class KPICardsView(APIView):
                 total=Sum('amount')
             )['total'] or Decimal('0.00')
 
-            total_expenses = transactions.filter(is_positive=False).aggregate(
+            total_exp_signed = transactions.filter(is_positive=False, amount__lt=0).aggregate(
                 total=Sum('amount')
             )['total'] or Decimal('0.00')
+            total_exp_unsigned = transactions.filter(is_positive=False, amount__gt=0).aggregate(
+                total=Sum('amount')
+            )['total'] or Decimal('0.00')
+            total_expenses = total_exp_signed - total_exp_unsigned
 
             current_net = total_revenues + total_expenses
 
-            # Calculate previous period for variation
             days_diff = (end_date - start_date).days
             prev_end = start_date - timedelta(days=1)
             prev_start = prev_end - timedelta(days=days_diff)
@@ -1750,9 +1770,13 @@ class KPICardsView(APIView):
                 total=Sum('amount')
             )['total'] or Decimal('0.00')
 
-            prev_expenses = prev_transactions.filter(is_positive=False).aggregate(
+            prev_exp_signed = prev_transactions.filter(is_positive=False, amount__lt=0).aggregate(
                 total=Sum('amount')
             )['total'] or Decimal('0.00')
+            prev_exp_unsigned = prev_transactions.filter(is_positive=False, amount__gt=0).aggregate(
+                total=Sum('amount')
+            )['total'] or Decimal('0.00')
+            prev_expenses = prev_exp_signed - prev_exp_unsigned
 
             prev_net = prev_revenues + prev_expenses
 
@@ -2079,20 +2103,20 @@ class AIInsightsView(APIView):
             if tx.is_positive:
                 category_totals[cat]['revenue'] += tx.amount
             else:
-                category_totals[cat]['expense'] += tx.amount  # Já é negativo
+                category_totals[cat]['expense'] += abs(tx.amount)
             category_totals[cat]['count'] += 1
 
         # Calcular totais gerais
         total_revenue = sum(d['revenue'] for d in category_totals.values())
-        total_expense = sum(d['expense'] for d in category_totals.values())  # Já é negativo
-        net_balance = total_revenue + total_expense
+        total_expense = sum(d['expense'] for d in category_totals.values())
+        net_balance = total_revenue - total_expense
 
         # Formatar resumo
         summary = f"""Período Analisado: {start_date.strftime('%d/%m/%Y')} a {end_date.strftime('%d/%m/%Y')}
 
 RESUMO FINANCEIRO:
 • Total de Receitas: R$ {float(total_revenue):,.2f}
-• Total de Despesas: R$ {abs(float(total_expense)):,.2f}
+• Total de Despesas: R$ {float(total_expense):,.2f}
 • Saldo Líquido: R$ {float(net_balance):,.2f}
 • Número de Transações: {len(transactions)}
 
@@ -2114,7 +2138,7 @@ TOP RECEITAS POR CATEGORIA:
 
         # Adicionar top categorias de despesa
         expense_by_cat = sorted(
-            [(cat, abs(float(data['expense']))) for cat, data in category_totals.items()],
+            [(cat, float(data['expense'])) for cat, data in category_totals.items()],
             key=lambda x: x[1],
             reverse=True
         )[:5]

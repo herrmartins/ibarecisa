@@ -67,6 +67,12 @@ class AccountingPeriod(models.Model):
     # Observações do fechamento
     notes = models.TextField(blank=True, help_text="Observações sobre o fechamento")
 
+    balance_adjustment_reason = models.TextField(
+        blank=True,
+        default='',
+        help_text="Motivo do ajuste manual do saldo"
+    )
+
     # Auditoria
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -290,11 +296,14 @@ class AccountingPeriod(models.Model):
             total=models.Sum('amount')
         )['total'] or Decimal('0.00')
 
-        negative = transactions.filter(is_positive=False).aggregate(
+        neg_signed = transactions.filter(is_positive=False, amount__lt=0).aggregate(
             total=models.Sum('amount')
         )['total'] or Decimal('0.00')
+        neg_unsigned = transactions.filter(is_positive=False, amount__gt=0).aggregate(
+            total=models.Sum('amount')
+        )['total'] or Decimal('0.00')
+        negative = neg_signed - neg_unsigned
 
-        # Calcular totais por categoria (para o relatório)
         positive_by_category = {}
         for tx in transactions.filter(is_positive=True):
             cat_name = tx.category.name if tx.category else 'outros'
@@ -303,14 +312,12 @@ class AccountingPeriod(models.Model):
         negative_by_category = {}
         for tx in transactions.filter(is_positive=False):
             cat_name = tx.category.name if tx.category else 'outros'
-            negative_by_category[cat_name] = negative_by_category.get(cat_name, Decimal('0.00')) + tx.amount
+            negative_by_category[cat_name] = negative_by_category.get(cat_name, Decimal('0.00')) + abs(tx.amount)
 
-        # Calcular campos específicos (ajuste conforme necessário)
-        in_cash = Decimal('0.00')  # TODO: calcular com base nas transações
-        in_current_account = Decimal('0.00')  # TODO: calcular com base nas transações
-        in_savings_account = Decimal('0.00')  # TODO: calcular com base nas transações
+        in_cash = Decimal('0.00')
+        in_current_account = Decimal('0.00')
+        in_savings_account = Decimal('0.00')
 
-        # negative já é negativo (amount armazena valores com sinal)
         monthly_result = positive + negative
         total_balance = previous_balance + monthly_result
 
@@ -515,7 +522,7 @@ class AccountingPeriod(models.Model):
         """
         Retorna um resumo das transações do período.
 
-        Nota: amount é sempre positivo, o sinal é determinado por is_positive.
+        Usa padrão dual para funcionar antes e depois da normalização de sinais.
         """
         from treasury.models.transaction import TransactionModel
 
@@ -524,18 +531,19 @@ class AccountingPeriod(models.Model):
             transaction_type='original'
         )
 
-        # Somar positivas
         positive = transactions.filter(is_positive=True).aggregate(
             total=models.Sum('amount')
         )['total'] or Decimal('0.00')
 
-        # Somar negativas (amount sempre positivo)
-        negative = transactions.filter(is_positive=False).aggregate(
+        neg_signed = transactions.filter(is_positive=False, amount__lt=0).aggregate(
             total=models.Sum('amount')
         )['total'] or Decimal('0.00')
+        neg_unsigned = transactions.filter(is_positive=False, amount__gt=0).aggregate(
+            total=models.Sum('amount')
+        )['total'] or Decimal('0.00')
+        negative = neg_signed - neg_unsigned
 
-        # Net = positivas - negativas (subtrair despesas)
-        net = positive - negative
+        net = positive + negative
 
         return {
             'total_positive': positive,
