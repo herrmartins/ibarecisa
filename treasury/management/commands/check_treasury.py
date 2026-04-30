@@ -119,10 +119,12 @@ class Command(BaseCommand):
     def _resolve_checks(self, checks_arg):
         if checks_arg:
             keys = [k.strip() for k in checks_arg.split(',')]
+            if any(k.upper() == 'T' for k in keys):
+                return list(CHECKS.keys())
             invalid = [k for k in keys if k not in CHECKS]
             if invalid:
                 self.stderr.write(self.style.ERROR(f'Check(s) invalido(s): {", ".join(invalid)}'))
-                self.stderr.write(f'Opcoes validas: {", ".join(CHECKS.keys())}')
+                self.stderr.write(f'Opcoes validas: {", ".join(CHECKS.keys())}, T (tudo)')
                 raise SystemExit(1)
             return keys
 
@@ -209,7 +211,7 @@ class Command(BaseCommand):
                 continue
 
             prev = periods[i - 1]
-            if prev.closing_balance is not None:
+            if prev.status in ('closed', 'archived'):
                 expected = prev.closing_balance
             else:
                 expected = prev.opening_balance + self._calculate_net(prev)
@@ -338,7 +340,10 @@ class Command(BaseCommand):
             prev_period = period.get_previous_period()
             expected_prev_balance = Decimal('0.00')
             if prev_period:
-                expected_prev_balance = prev_period.closing_balance or prev_period.opening_balance + self._calculate_net(prev_period)
+                if prev_period.status in ('closed', 'archived') and prev_period.closing_balance is not None:
+                    expected_prev_balance = prev_period.closing_balance
+                else:
+                    expected_prev_balance = prev_period.opening_balance + self._calculate_net(prev_period)
 
             issues = []
             if report.previous_month_balance != expected_prev_balance:
@@ -630,7 +635,7 @@ class Command(BaseCommand):
 
             running = actual_opening + net
 
-            if period.closing_balance is not None:
+            if period.status in ('closed', 'archived') and period.closing_balance is not None:
                 if period.balance_adjustment_reason and period.closing_balance != running:
                     result['details'].append({
                         'month': period.month.strftime('%m/%Y'),

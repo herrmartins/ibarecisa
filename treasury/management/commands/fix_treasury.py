@@ -213,9 +213,26 @@ class Command(BaseCommand):
         prev_closing = None
 
         for i, period in enumerate(all_periods):
+            net = self._calculate_net(period)
+
             if month_filter and period.month not in month_filter:
-                net = self._calculate_net(period)
-                prev_closing = period.closing_balance if period.closing_balance is not None else period.opening_balance + net
+                actual_opening = period.opening_balance
+                if period.status in ('closed', 'archived') and period.closing_balance is not None:
+                    prev_closing = period.closing_balance
+                else:
+                    prev_closing = actual_opening + net
+                continue
+
+            if period.is_first_month:
+                result['details'].append({
+                    'period': period.month.strftime('%m/%Y'),
+                    'action': 'skip',
+                    'message': f'is_first_month: mantido opening_balance={period.opening_balance}',
+                })
+                if period.status in ('closed', 'archived') and period.closing_balance is not None:
+                    prev_closing = period.closing_balance
+                else:
+                    prev_closing = period.opening_balance + net
                 continue
 
             if i == 0:
@@ -224,14 +241,19 @@ class Command(BaseCommand):
                     'action': 'skip',
                     'message': f'Primeiro periodo: mantido opening_balance={period.opening_balance}',
                 })
-                net = self._calculate_net(period)
-                prev_closing = period.closing_balance if period.closing_balance is not None else period.opening_balance + net
+                if period.status in ('closed', 'archived') and period.closing_balance is not None:
+                    prev_closing = period.closing_balance
+                else:
+                    prev_closing = period.opening_balance + net
                 continue
 
             if prev_closing is None:
-                net = self._calculate_net(all_periods[i - 1])
                 prev_p = all_periods[i - 1]
-                prev_closing = prev_p.closing_balance if prev_p.closing_balance is not None else prev_p.opening_balance + net
+                prev_net = self._calculate_net(prev_p)
+                if prev_p.status in ('closed', 'archived') and prev_p.closing_balance is not None:
+                    prev_closing = prev_p.closing_balance
+                else:
+                    prev_closing = prev_p.opening_balance + prev_net
 
             expected = prev_closing
 
@@ -262,8 +284,10 @@ class Command(BaseCommand):
                     'message': f'OK: {period.opening_balance}',
                 })
 
-            net = self._calculate_net(period)
-            prev_closing = period.closing_balance if period.closing_balance is not None else period.opening_balance + net
+            if period.status in ('closed', 'archived') and period.closing_balance is not None:
+                prev_closing = period.closing_balance
+            else:
+                prev_closing = period.opening_balance + net
 
         return result
 
@@ -318,7 +342,7 @@ class Command(BaseCommand):
 
     def _fix_monthly_report(self, period_qs, dry_run):
         result = {'fixed': 0, 'already_ok': 0, 'details': []}
-        periods = list(period_qs)
+        periods = list(AccountingPeriod.objects.all().order_by('month'))
 
         for period in periods:
             txs = TransactionModel.objects.filter(
@@ -343,7 +367,10 @@ class Command(BaseCommand):
             prev_period = period.get_previous_period()
             previous_balance = Decimal('0.00')
             if prev_period:
-                previous_balance = prev_period.closing_balance or prev_period.opening_balance + self._calculate_net(prev_period)
+                if prev_period.status in ('closed', 'archived') and prev_period.closing_balance is not None:
+                    previous_balance = prev_period.closing_balance
+                else:
+                    previous_balance = prev_period.opening_balance + self._calculate_net(prev_period)
 
             report = MonthlyReportModel.objects.filter(month=period.month).first()
 
@@ -488,7 +515,7 @@ class Command(BaseCommand):
             opening = Decimal('0.00')
             prev_period = AccountingPeriod.objects.filter(month=prev_month_date).first()
             if prev_period:
-                opening = prev_period.closing_balance or prev_period.opening_balance + self._calculate_net(prev_period)
+                opening = prev_period.opening_balance + self._calculate_net(prev_period)
 
             if not dry_run:
                 AccountingPeriod.objects.create(
