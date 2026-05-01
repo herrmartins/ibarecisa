@@ -210,12 +210,6 @@ class AccountingPeriodViewSet(viewsets.ReadOnlyModelViewSet):
             'user', 'category', 'created_by'
         ).filter(transaction_type='original').order_by('-date', '-created_at')
 
-        # Paginação
-        page = self.paginate_queryset(transactions)
-        if page is not None:
-            serializer = TransactionListSerializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-
         serializer = TransactionListSerializer(transactions, many=True)
         return Response(serializer.data)
 
